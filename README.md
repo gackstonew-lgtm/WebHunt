@@ -1,6 +1,6 @@
 # 🎯 WebHunt — Worldwide B2B & Remote Tech Lead Radar
 
-> A production-ready lead-generation web application designed to help agencies, software engineers, and growth hackers find high-value sales leads across two modes:
+> A production-ready lead-generation web application designed to help agencies and software engineers find high-value sales leads across two modes:
 > 1. **Physical Mode**: Local businesses anywhere in the world (including Kenya, US, UK, Canada, Europe, Africa, Asia) that have active phone numbers but **no website on record**, queried via **OpenStreetMap Overpass API** and **Google Places API**.
 > 2. **Online Mode**: Remote web-development and custom software opportunities queried via official public APIs (**Remotive API** and **Arbeitnow API**).
 
