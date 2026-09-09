@@ -1,0 +1,72 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Search {
+  id              String   @id @default(uuid())
+  niche           String
+  location        String
+  provider        String   @default("all")
+  radius          Int      @default(25)
+  totalFetched    Int      @default(0)
+  qualifiedLeads  Int      @default(0)
+  createdAt       DateTime @default(now())
+  leads           Lead[]
+
+  @@index([niche, location])
+  @@index([createdAt])
+}
+
+model Lead {
+  id                   String    @id @default(uuid())
+  searchId             String?
+  search               Search?   @relation(fields: [searchId], references: [id], onDelete: SetNull)
+  businessName         String
+  phone                String
+  phoneFormatted       String
+  address              String?
+  city                 String?
+  state                String?
+  postalCode           String?
+  category             String?
+  rating               Float?
+  reviewCount          Int?      @default(0)
+  hasWebsite           Boolean   @default(false)
+  noWebsiteConfidence  String    @default("High") // "High" | "Medium" | "Verified"
+  sourceProvider       String    @default("demo") // "google" | "yelp" | "osm" | "demo"
+  providerPlaceId      String?
+  
+  // Pipeline CRM fields
+  status               String    @default("NEW") // "NEW" | "CONTACTED" | "INTERESTED" | "CLOSED" | "NOT_INTERESTED"
+  estimatedValue       Float     @default(1500.0) // Estimated website/POS deal value
+  notes                String?
+  tags                 String?   // Comma separated tags e.g. "needs-mobile-site,pos-pitch"
+  contactedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([phone, businessName])
+  @@index([status])
+  @@index([category])
+  @@index([city])
+  @@index([createdAt])
+}
+
+model ApiCache {
+  id        String   @id @default(uuid())
+  cacheKey  String   @unique
+  provider  String
+  query     String
+  location  String
+  payload   String   // JSON stringified response
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([cacheKey])
+  @@index([expiresAt])
+}
