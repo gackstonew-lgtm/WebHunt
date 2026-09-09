@@ -1,55 +1,61 @@
-import { ILeadProvider } from "./types";
-import { ProviderRawPlace, SearchParams } from "../types";
+import { IPhysicalLeadProvider } from "./types";
+import { PhysicalLead, PhysicalSearchParams } from "../types";
+import { formatPhoneNumber, normalizeBusinessName, normalizePhoneNumber } from "../utils";
 
-export class OsmOverpassProvider implements ILeadProvider {
-  name = "OpenStreetMap Overpass API (Free)";
+export class OsmOverpassProvider implements IPhysicalLeadProvider {
+  name = "OpenStreetMap Overpass API (Free Worldwide)";
   providerKey = "osm" as const;
 
   isConfigured(): boolean {
-    return true; // OpenStreetMap Overpass is free and requires no API key!
+    return true; // Free, worldwide, zero API key required!
   }
 
-  async search(params: SearchParams): Promise<ProviderRawPlace[]> {
-    console.log(`[OSM] Searching Overpass for "${params.niche}" in "${params.location}"`);
+  async search(params: PhysicalSearchParams): Promise<PhysicalLead[]> {
+    const country = params.country || "Kenya";
+    const city = params.city || params.locationQuery || "";
+    const fullLocationQuery = [city, country].filter(Boolean).join(", ");
+    const niche = params.niche || "business";
+
+    console.log(`[OSM] Searching Overpass worldwide for "${niche}" in "${fullLocationQuery}"`);
 
     try {
-      // Step 1: Geocode location via Nominatim to get bounding box / coordinates
+      // Step 1: Geocode location via Nominatim
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        params.location
+        fullLocationQuery
       )}&format=json&limit=1`;
 
       const geoRes = await fetch(nominatimUrl, {
         headers: {
-          "User-Agent": "GacksLeadsApp/1.0 (leadgen-discovery)",
+          "User-Agent": "GacksLeadsWorldwide/2.0 (leadgen-discovery)",
         },
       });
 
       if (!geoRes.ok) {
-        console.warn("[OSM] Nominatim geocode failed.");
+        console.warn("[OSM] Nominatim geocode request failed.");
         return [];
       }
 
       const geoData = await geoRes.json();
       if (!geoData || geoData.length === 0) {
-        console.warn(`[OSM] Location "${params.location}" not resolved.`);
+        console.warn(`[OSM] Location "${fullLocationQuery}" could not be geocoded.`);
         return [];
       }
 
       const lat = parseFloat(geoData[0].lat);
       const lon = parseFloat(geoData[0].lon);
-      const radiusMeters = (params.radius || 25) * 1609.34; // convert miles to meters
+      const radiusMeters = (params.radius || 25) * 1609.34; // convert miles to meters (default 25 miles ~40km)
 
       // Step 2: Build Overpass QL query around (lat, lon) within radius
-      // Filter for nodes/ways that have phone/contact:phone and have NO website tag
+      // Filter for nodes/ways that have phone/contact:phone and NO website tag
       const query = `
         [out:json][timeout:25];
         (
-          node(around:${radiusMeters},${lat},${lon})["phone"]["website"!~"."];
+          node(around:${radiusMeters},${lat},${lon})["phone"]["website"!~"."]["contact:website"!~"."];
           node(around:${radiusMeters},${lat},${lon})["contact:phone"]["contact:website"!~"."]["website"!~"."];
-          way(around:${radiusMeters},${lat},${lon})["phone"]["website"!~"."];
+          way(around:${radiusMeters},${lat},${lon})["phone"]["website"!~"."]["contact:website"!~"."];
           way(around:${radiusMeters},${lat},${lon})["contact:phone"]["contact:website"!~"."]["website"!~"."];
         );
-        out body 50;
+        out body 60;
       `;
 
       const overpassEndpoints = [
@@ -70,7 +76,7 @@ export class OsmOverpassProvider implements ILeadProvider {
             break;
           }
         } catch (e) {
-          console.warn(`[OSM] Failed endpoint ${endpoint}, trying next...`);
+          console.warn(`[OSM] Failed endpoint ${endpoint}, trying fallback...`);
         }
       }
 
@@ -79,62 +85,77 @@ export class OsmOverpassProvider implements ILeadProvider {
       }
 
       const elements = overpassData.elements || [];
-      const nicheLower = params.niche.toLowerCase();
-
-      const results: ProviderRawPlace[] = [];
+      const nicheLower = niche.toLowerCase();
+      const results: PhysicalLead[] = [];
+      const seenPhones = new Set<string>();
 
       for (const el of elements) {
         const tags = el.tags || {};
-        const name = tags.name || tags["brand"] || tags["operator"];
+        const name = tags.name || tags["brand"] || tags["operator"] || tags["shop"] || tags["amenity"];
         if (!name) continue;
 
-        const phone = tags.phone || tags["contact:phone"] || tags["phone:mobile"];
-        if (!phone) continue;
+        const rawPhone = tags.phone || tags["contact:phone"] || tags["phone:mobile"];
+        if (!rawPhone) continue;
+
+        // Ensure no website exists
+        if (tags.website || tags["contact:website"] || tags["url"]) {
+          continue;
+        }
+
+        const normPhone = normalizePhoneNumber(rawPhone);
+        if (normPhone && seenPhones.has(normPhone)) {
+          continue;
+        }
+        if (normPhone) seenPhones.add(normPhone);
 
         const category =
           tags.shop ||
           tags.amenity ||
           tags.craft ||
           tags.office ||
-          tags.service ||
-          "local business";
-
-        // Filter or prioritize if niche matches keywords
-        const isMatch =
-          !nicheLower ||
-          name.toLowerCase().includes(nicheLower) ||
-          category.toLowerCase().includes(nicheLower) ||
-          (tags.description && tags.description.toLowerCase().includes(nicheLower));
+          tags.healthcare ||
+          tags.tourism ||
+          tags.leisure ||
+          niche;
 
         // Format address from OSM addr tags
         const street = [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ");
-        const city = tags["addr:city"] || params.location;
-        const state = tags["addr:state"] || "";
+        const itemCity = tags["addr:city"] || city || tags["addr:suburb"] || country;
+        const itemState = tags["addr:state"] || tags["addr:province"] || "";
         const postalCode = tags["addr:postcode"] || "";
 
         results.push({
-          name: name,
-          phone: phone,
-          formattedPhone: phone,
-          address: street || `${city}, ${state}`.trim(),
-          city: city,
-          state: state,
+          id: `osm-${el.type}-${el.id}`,
+          type: "physical",
+          businessName: name,
+          phone: normPhone || rawPhone,
+          phoneFormatted: formatPhoneNumber(rawPhone, country === "Kenya" ? "KE" : undefined),
+          address: street || `${itemCity}, ${country}`.trim(),
+          city: itemCity,
+          state: itemState,
+          country: country,
           postalCode: postalCode,
           category: category,
-          rating: tags["stars"] ? parseFloat(tags["stars"]) : undefined,
+          rating: tags["stars"] ? parseFloat(tags["stars"]) : null,
           reviewCount: 0,
-          website: tags.website || tags["contact:website"] || null,
-          provider: "osm",
-          providerId: `osm-${el.type}-${el.id}`,
-          raw: tags,
+          hasWebsite: false,
+          noWebsiteConfidence: "Verified",
+          sourceProvider: "osm",
+          providerPlaceId: `osm-${el.id}`,
+          status: "NEW",
+          estimatedValue: country === "Kenya" ? 1200 : 1500,
+          notes: null,
+          tags: "no-website",
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
 
-        if (results.length >= (params.maxResults || 20)) break;
+        if (results.length >= (params.maxResults || 25)) break;
       }
 
       return results;
     } catch (error) {
-      console.error("[OSM] Overpass search error:", error);
+      console.error("[OSM] Overpass worldwide query error:", error);
       return [];
     }
   }

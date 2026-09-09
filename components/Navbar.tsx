@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -10,29 +10,56 @@ import {
   ShieldAlert, 
   Download, 
   Sparkles,
-  Database,
-  ExternalLink,
-  ChevronRight
+  Store,
+  Terminal,
+  Globe
 } from "lucide-react";
 import LegalModal from "./LegalModal";
+import { getStoredPipelineLeads } from "@/lib/pipeline-store";
+import { exportLeadsToCsv } from "@/lib/export";
 
-interface NavbarProps {
-  pipelineCount?: number;
-}
-
-export default function Navbar({ pipelineCount = 0 }: NavbarProps) {
+export default function Navbar() {
   const pathname = usePathname();
   const [showLegal, setShowLegal] = useState(false);
+  const [leadCount, setLeadCount] = useState(0);
+
+  useEffect(() => {
+    // Initial read
+    const stored = getStoredPipelineLeads();
+    setLeadCount(stored.length);
+
+    // Polling / custom event listener
+    const handleStorage = () => {
+      const updated = getStoredPipelineLeads();
+      setLeadCount(updated.length);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    const interval = setInterval(handleStorage, 2000);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleExportAll = () => {
+    const leads = getStoredPipelineLeads();
+    if (leads.length === 0) {
+      alert("No leads currently in pipeline to export. Discover and save leads first!");
+      return;
+    }
+    exportLeadsToCsv(leads, "gacks-leads-full-pipeline");
+  };
 
   const navLinks = [
     { href: "/", label: "Lead Finder Radar", icon: Radar },
-    { href: "/pipeline", label: "Lead Pipeline CRM", icon: KanbanSquare, badge: pipelineCount > 0 ? pipelineCount : undefined },
+    { href: "/pipeline", label: "Lead Pipeline CRM", icon: KanbanSquare, badge: leadCount > 0 ? leadCount : undefined },
     { href: "/searches", label: "Search History", icon: History },
   ];
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/85 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Brand Logo */}
@@ -47,10 +74,10 @@ export default function Navbar({ pipelineCount = 0 }: NavbarProps) {
                   <div className="flex items-center space-x-1.5">
                     <span className="font-bold text-lg text-white tracking-tight">Gacks Leads</span>
                     <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                      PRO
+                      WORLDWIDE
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 hidden sm:block">No-Website Local Lead Discovery</p>
+                  <p className="text-[11px] text-slate-400 hidden sm:block">Physical & Online Lead Radar</p>
                 </div>
               </Link>
             </div>
@@ -84,22 +111,21 @@ export default function Navbar({ pipelineCount = 0 }: NavbarProps) {
 
             {/* Right Action buttons */}
             <div className="flex items-center space-x-3">
-              <a
-                href="/api/export"
-                download
+              <button
+                onClick={handleExportAll}
                 className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-700 transition"
-                title="Download all leads as CSV"
+                title="Download in-session leads as CSV"
               >
                 <Download className="w-3.5 h-3.5 text-slate-400" />
                 <span>Export CSV</span>
-              </a>
+              </button>
 
               <button
                 onClick={() => setShowLegal(true)}
                 className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition"
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">TCPA & DNC Rules</span>
+                <span className="hidden sm:inline">Compliance & ToS</span>
               </button>
             </div>
           </div>

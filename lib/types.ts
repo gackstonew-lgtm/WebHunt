@@ -1,68 +1,96 @@
+export type LeadMode = 'physical' | 'online';
+
 export type PipelineStatus = 'NEW' | 'CONTACTED' | 'INTERESTED' | 'CLOSED' | 'NOT_INTERESTED';
 
-export type ProviderType = 'google' | 'yelp' | 'osm' | 'demo' | 'all';
+export type PhysicalProviderType = 'osm' | 'google' | 'demo' | 'all';
+export type OnlineProviderType = 'remotive' | 'arbeitnow' | 'demo' | 'all';
 
 export type WebsiteConfidence = 'High' | 'Medium' | 'Verified';
 
-export interface LeadItem {
+export interface PhysicalLead {
   id: string;
-  searchId?: string | null;
+  type: 'physical';
   businessName: string;
   phone: string;
   phoneFormatted: string;
   address?: string | null;
   city?: string | null;
   state?: string | null;
+  country: string;
   postalCode?: string | null;
   category?: string | null;
   rating?: number | null;
   reviewCount?: number | null;
   hasWebsite: boolean;
   noWebsiteConfidence: WebsiteConfidence | string;
-  sourceProvider: ProviderType | string;
+  sourceProvider: string;
   providerPlaceId?: string | null;
   status: PipelineStatus;
   estimatedValue: number;
   notes?: string | null;
-  tags?: string | null;
+  tags?: string | string[] | null;
   contactedAt?: string | Date | null;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
 
-export interface SearchParams {
-  niche: string;
+export interface OnlineJobLead {
+  id: string;
+  type: 'online';
+  title: string;
+  company: string;
+  companyLogo?: string | null;
   location: string;
-  radius?: number; // in miles/km
-  provider?: ProviderType;
+  country?: string | null;
+  isRemote: boolean;
+  category?: string | null;
+  tags: string[];
+  url: string;
+  postedDate: string;
+  salary?: string | null;
+  source: string; // 'remotive' | 'arbeitnow' | 'demo' | 'partner'
+  descriptionSnippet?: string;
+  status: PipelineStatus;
+  estimatedValue: number;
+  notes?: string | null;
+  contactedAt?: string | Date | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export type LeadItem = PhysicalLead | OnlineJobLead;
+
+export interface PhysicalSearchParams {
+  mode: 'physical';
+  niche: string;
+  country: string;
+  city?: string;
+  locationQuery?: string;
+  radius?: number;
+  provider?: PhysicalProviderType;
   maxResults?: number;
   forceRefresh?: boolean;
 }
 
+export interface OnlineSearchParams {
+  mode: 'online';
+  query: string;
+  category?: string;
+  country?: string;
+  provider?: OnlineProviderType;
+  maxResults?: number;
+  forceRefresh?: boolean;
+}
+
+export type SearchParams = PhysicalSearchParams | OnlineSearchParams;
+
 export interface SearchResult {
-  searchId?: string;
-  niche: string;
+  mode: LeadMode;
+  query: string;
   location: string;
   provider: string;
   totalFetched: number;
-  qualifiedLeads: number;
+  qualifiedCount: number;
   fromCache: boolean;
   leads: LeadItem[];
-}
-
-export interface ProviderRawPlace {
-  name: string;
-  phone?: string;
-  formattedPhone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  category?: string;
-  rating?: number;
-  reviewCount?: number;
-  website?: string | null;
-  provider: ProviderType;
-  providerId?: string;
-  raw?: any;
 }

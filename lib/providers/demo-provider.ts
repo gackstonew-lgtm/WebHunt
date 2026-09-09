@@ -1,7 +1,8 @@
-import { ILeadProvider } from "./types";
-import { ProviderRawPlace, SearchParams } from "../types";
+import { IPhysicalLeadProvider } from "./types";
+import { PhysicalLead, PhysicalSearchParams } from "../types";
+import { formatPhoneNumber } from "../utils";
 
-export class DemoSandboxProvider implements ILeadProvider {
+export class DemoSandboxProvider implements IPhysicalLeadProvider {
   name = "Demo Sandbox Provider (Offline)";
   providerKey = "demo" as const;
 
@@ -9,40 +10,36 @@ export class DemoSandboxProvider implements ILeadProvider {
     return true;
   }
 
-  async search(params: SearchParams): Promise<ProviderRawPlace[]> {
+  async search(params: PhysicalSearchParams): Promise<PhysicalLead[]> {
     const niche = (params.niche || "local service").toLowerCase();
-    const location = params.location || "Austin, TX";
+    const country = params.country || "Kenya";
+    const city = params.city || params.locationQuery || (country === "Kenya" ? "Nairobi" : "Austin");
 
-    // Dynamic generation templates for high realism
-    const templates = [
-      { prefix: "Apex", rating: 4.8, reviews: 34 },
-      { prefix: "Heritage & Sons", rating: 4.9, reviews: 52 },
-      { prefix: "Precision", rating: 4.6, reviews: 19 },
-      { prefix: "Lone Star", rating: 4.7, reviews: 41 },
-      { prefix: "Champion", rating: 4.5, reviews: 28 },
-      { prefix: "ProCraft", rating: 4.9, reviews: 63 },
-      { prefix: "Elite Quality", rating: 4.4, reviews: 15 },
-      { prefix: "Metro Area", rating: 4.7, reviews: 39 },
-      { prefix: "Family First", rating: 4.8, reviews: 47 },
-      { prefix: "Pioneer", rating: 4.5, reviews: 22 },
-      { prefix: "Summit", rating: 4.6, reviews: 31 },
-      { prefix: "Reliable Hand", rating: 4.9, reviews: 58 },
-    ];
+    const isKenya = country.toLowerCase().includes("kenya") || country === "KE";
 
-    const streets = [
-      "Oakridge Blvd",
-      "Industrial Way",
-      "Commerce St",
-      "Main Ave",
-      "Market Square",
-      "Broadway Suite 200",
-      "Pinecrest Rd",
-      "Highland Terrace",
-      "Sycamore Lane",
-      "Riverview Dr",
-    ];
+    // Dynamic templates based on region
+    const templates = isKenya
+      ? [
+          { prefix: "Safari View", rating: 4.8, reviews: 26, phonePrefix: "0722", street: "Moi Avenue, CBD" },
+          { prefix: "Nairobi Central", rating: 4.9, reviews: 42, phonePrefix: "0733", street: "Kenyatta Avenue" },
+          { prefix: "Kilimani Premier", rating: 4.7, reviews: 18, phonePrefix: "0710", street: "Argwings Kodhek Rd" },
+          { prefix: "Westlands Elite", rating: 4.9, reviews: 64, phonePrefix: "0724", street: "Mpaka Road" },
+          { prefix: "Karen & Sons", rating: 4.8, reviews: 31, phonePrefix: "0715", street: "Ngong Road" },
+          { prefix: "Rift Valley Hand", rating: 4.6, reviews: 15, phonePrefix: "0729", street: "Enterprise Road" },
+          { prefix: "Apex Coast", rating: 4.7, reviews: 29, phonePrefix: "0701", street: "Digo Road" },
+          { prefix: "Mombasa Gateway", rating: 4.5, reviews: 12, phonePrefix: "0788", street: "Nyali Links Rd" },
+        ]
+      : [
+          { prefix: "Apex", rating: 4.8, reviews: 34, phonePrefix: "512", street: "Oakridge Blvd" },
+          { prefix: "Heritage & Sons", rating: 4.9, reviews: 52, phonePrefix: "512", street: "Commerce St" },
+          { prefix: "Precision", rating: 4.6, reviews: 19, phonePrefix: "737", street: "Main Ave" },
+          { prefix: "Lone Star", rating: 4.7, reviews: 41, phonePrefix: "512", street: "Market Square" },
+          { prefix: "Champion", rating: 4.5, reviews: 28, phonePrefix: "737", street: "Broadway Suite 200" },
+          { prefix: "ProCraft", rating: 4.9, reviews: 63, phonePrefix: "512", street: "Pinecrest Rd" },
+          { prefix: "Family First", rating: 4.8, reviews: 47, phonePrefix: "512", street: "Highland Terrace" },
+          { prefix: "Reliable Hand", rating: 4.9, reviews: 58, phonePrefix: "737", street: "Riverview Dr" },
+        ];
 
-    // Capitalize words for nice display
     const capitalize = (s: string) =>
       s
         .split(" ")
@@ -50,52 +47,45 @@ export class DemoSandboxProvider implements ILeadProvider {
         .join(" ");
 
     const cleanNiche = capitalize(niche);
-    const results: ProviderRawPlace[] = [];
+    const results: PhysicalLead[] = [];
 
-    // Parse city & state from location
-    const parts = location.split(",").map((s) => s.trim());
-    const city = parts[0] || "Austin";
-    const state = parts[1] || "TX";
-
-    // Deterministic pseudo-random seed based on niche & location
-    const hash = (niche + location)
+    const hash = (niche + country + city)
       .split("")
       .reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-    const count = Math.min(params.maxResults || 8, 12);
+    const count = Math.min(params.maxResults || 8, templates.length);
 
     for (let i = 0; i < count; i++) {
-      const template = templates[(hash + i) % templates.length];
-      const streetNum = 100 + ((hash * 7 + i * 31) % 8900);
-      const street = streets[(hash + i) % streets.length];
-      const areaCode = 200 + ((hash + i * 13) % 700);
-      const prefix = 200 + ((hash * 3 + i * 17) % 700);
-      const line = 1000 + ((hash * 11 + i * 29) % 8999);
-      const phone = `${areaCode}${prefix}${line}`;
-      const formattedPhone = `(${areaCode}) ${prefix}-${line}`;
-
-      const businessName = `${template.prefix} ${cleanNiche}`;
-
-      // 85% of results have no website (which qualifies them for the lead list)
-      // 15% have website to verify our filter actually discards them properly!
-      const hasDummyWebsite = i === 1 || i === 6;
-      const website = hasDummyWebsite ? `https://www.${template.prefix.toLowerCase().replace(/\s+/g, "")}${niche.replace(/\s+/g, "")}.com` : null;
+      const tpl = templates[(hash + i) % templates.length];
+      const suffix = 1000 + ((hash * 11 + i * 29) % 8999);
+      const rawPhone = isKenya
+        ? `${tpl.phonePrefix}${suffix.toString().padStart(6, "0")}`
+        : `${tpl.phonePrefix}555${suffix.toString().slice(0, 4)}`;
 
       results.push({
-        name: businessName,
-        phone: phone,
-        formattedPhone: formattedPhone,
-        address: `${streetNum} ${street}`,
+        id: `demo-${country}-${hash}-${i}`,
+        type: "physical",
+        businessName: `${tpl.prefix} ${cleanNiche}`,
+        phone: rawPhone,
+        phoneFormatted: formatPhoneNumber(rawPhone, isKenya ? "KE" : undefined),
+        address: `${tpl.street}`,
         city: city,
-        state: state,
-        postalCode: `${70000 + ((hash + i * 5) % 9000)}`,
+        state: isKenya ? "Nairobi" : "TX",
+        country: country,
+        postalCode: isKenya ? "00100" : "78701",
         category: cleanNiche,
-        rating: template.rating,
-        reviewCount: template.reviews,
-        website: website,
-        provider: "demo",
-        providerId: `demo-${hash}-${i}`,
-        raw: { source: "Demo Sandbox", generatedAt: new Date().toISOString() },
+        rating: tpl.rating,
+        reviewCount: tpl.reviews,
+        hasWebsite: false,
+        noWebsiteConfidence: "Verified",
+        sourceProvider: "demo",
+        providerPlaceId: `demo-${hash}-${i}`,
+        status: "NEW",
+        estimatedValue: isKenya ? 1200 : 1500,
+        notes: null,
+        tags: "demo-verified-no-website",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
     }
 

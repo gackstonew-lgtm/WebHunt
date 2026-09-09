@@ -1,230 +1,240 @@
-import { ILeadProvider } from "./types";
-import { GooglePlacesProvider } from "./google-places";
-import { YelpFusionProvider } from "./yelp-fusion";
+import { IPhysicalLeadProvider } from "./types";
+import { IOnlineJobProvider } from "./online/types";
 import { OsmOverpassProvider } from "./osm-overpass";
+import { GooglePlacesProvider } from "./google-places";
 import { DemoSandboxProvider } from "./demo-provider";
-import { LeadItem, ProviderRawPlace, ProviderType, SearchParams, SearchResult } from "../types";
-import { formatPhoneNumber, normalizeBusinessName, normalizePhoneNumber } from "../utils";
-import prisma from "../db";
+import { RemotiveJobProvider } from "./online/remotive";
+import { ArbeitnowJobProvider } from "./online/arbeitnow";
+import { DemoOnlineJobProvider } from "./online/demo-jobs";
+import { 
+  LeadItem, 
+  OnlineJobLead, 
+  OnlineSearchParams, 
+  PhysicalLead, 
+  PhysicalSearchParams, 
+  SearchParams, 
+  SearchResult 
+} from "../types";
+import { normalizeBusinessName, normalizePhoneNumber } from "../utils";
 
-export class ProviderAggregator {
-  private providers: Map<string, ILeadProvider> = new Map();
+// In-Memory Fast Cache with TTL for production responsiveness
+const memoryCache = new Map<string, { data: SearchResult; expiresAt: number }>();
+
+export class LeadProviderAggregator {
+  private physicalProviders: Map<string, IPhysicalLeadProvider> = new Map();
+  private onlineProviders: Map<string, IOnlineJobProvider> = new Map();
 
   constructor() {
-    this.register(new GooglePlacesProvider());
-    this.register(new YelpFusionProvider());
-    this.register(new OsmOverpassProvider());
-    this.register(new DemoSandboxProvider());
+    // Register Physical Providers
+    this.registerPhysical(new OsmOverpassProvider());
+    this.registerPhysical(new GooglePlacesProvider());
+    this.registerPhysical(new DemoSandboxProvider());
+
+    // Register Online Job Providers
+    this.registerOnline(new RemotiveJobProvider());
+    this.registerOnline(new ArbeitnowJobProvider());
+    this.registerOnline(new DemoOnlineJobProvider());
   }
 
-  register(provider: ILeadProvider) {
-    this.providers.set(provider.providerKey, provider);
+  registerPhysical(provider: IPhysicalLeadProvider) {
+    this.physicalProviders.set(provider.providerKey, provider);
   }
 
-  getProvider(key: string): ILeadProvider | undefined {
-    return this.providers.get(key);
+  registerOnline(provider: IOnlineJobProvider) {
+    this.onlineProviders.set(provider.providerKey, provider);
   }
 
-  getProviderStatus(): { key: string; name: string; configured: boolean; isFree: boolean }[] {
+  getPhysicalProvidersStatus() {
     return [
+      {
+        key: "osm",
+        name: "OpenStreetMap Overpass (Free Worldwide)",
+        configured: true,
+        isFree: true,
+      },
+      {
+        key: "google",
+        name: "Google Places API (New)",
+        configured: this.physicalProviders.get("google")?.isConfigured() || false,
+        isFree: false,
+      },
       {
         key: "demo",
         name: "Demo Sandbox (Offline)",
         configured: true,
         isFree: true,
       },
+    ];
+  }
+
+  getOnlineProvidersStatus() {
+    return [
       {
-        key: "osm",
-        name: "OpenStreetMap Overpass",
+        key: "remotive",
+        name: "Remotive Public API (Free)",
         configured: true,
         isFree: true,
       },
       {
-        key: "google",
-        name: "Google Places API",
-        configured: this.providers.get("google")?.isConfigured() || false,
-        isFree: false,
+        key: "arbeitnow",
+        name: "Arbeitnow Job Board API (Free)",
+        configured: true,
+        isFree: true,
       },
       {
-        key: "yelp",
-        name: "Yelp Fusion API",
-        configured: this.providers.get("yelp")?.isConfigured() || false,
-        isFree: false,
+        key: "demo",
+        name: "Demo Sandbox (Offline)",
+        configured: true,
+        isFree: true,
       },
     ];
   }
 
   async search(params: SearchParams): Promise<SearchResult> {
-    const niche = params.niche.trim();
-    const location = params.location.trim();
-    const selectedProvider = (params.provider || "all") as ProviderType;
+    const cacheKey = params.mode === "physical"
+      ? `phys:${params.country}:${params.city || ""}:${params.niche}:${params.provider || "all"}`
+      : `online:${params.query}:${params.provider || "all"}`;
 
-    const cacheKey = `search:${selectedProvider}:${niche.toLowerCase()}:${location.toLowerCase()}:${params.radius || 25}`;
-
-    // 1. Check API Cache
-    const enableCache = process.env.ENABLE_API_CACHE !== "false";
-    if (enableCache && !params.forceRefresh) {
-      try {
-        const cached = await prisma.apiCache.findUnique({
-          where: { cacheKey },
-        });
-
-        if (cached && new Date(cached.expiresAt) > new Date()) {
-          const parsed = JSON.parse(cached.payload);
-          return {
-            ...parsed,
-            fromCache: true,
-          };
-        }
-      } catch (cacheErr) {
-        console.warn("[Cache] Cache lookup warning:", cacheErr);
+    // 1. Check in-memory cache
+    if (!params.forceRefresh) {
+      const cached = memoryCache.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        console.log(`[Cache Hit] Returning cached results for: ${cacheKey}`);
+        return {
+          ...cached.data,
+          fromCache: true,
+        };
       }
     }
 
-    // 2. Determine target providers
-    const targetProviders: ILeadProvider[] = [];
-    if (selectedProvider === "all") {
-      for (const p of Array.from(this.providers.values())) {
+    if (params.mode === "physical") {
+      return this.searchPhysical(params, cacheKey);
+    } else {
+      return this.searchOnline(params, cacheKey);
+    }
+  }
+
+  private async searchPhysical(params: PhysicalSearchParams, cacheKey: string): Promise<SearchResult> {
+    const selected = params.provider || "all";
+    const targets: IPhysicalLeadProvider[] = [];
+
+    if (selected === "all") {
+      for (const p of Array.from(this.physicalProviders.values())) {
         if (p.isConfigured()) {
-          // In "all" mode, if paid providers aren't configured, skip them
-          targetProviders.push(p);
+          targets.push(p);
         }
       }
     } else {
-      const p = this.providers.get(selectedProvider);
-      if (p) targetProviders.push(p);
-      else targetProviders.push(this.providers.get("demo")!);
+      const p = this.physicalProviders.get(selected);
+      if (p) targets.push(p);
+      else targets.push(this.physicalProviders.get("osm")!);
     }
 
-    if (targetProviders.length === 0) {
-      targetProviders.push(this.providers.get("demo")!);
+    if (targets.length === 0) {
+      targets.push(this.physicalProviders.get("osm")!);
     }
 
-    // 3. Execute searches in parallel
-    const searchPromises = targetProviders.map(async (provider) => {
-      try {
-        const places = await provider.search(params);
-        return places;
-      } catch (err) {
-        console.error(`[Aggregator] Error from provider ${provider.name}:`, err);
-        return [] as ProviderRawPlace[];
-      }
-    });
+    // Parallel fetch from all providers
+    const promises = targets.map((t) => t.search(params).catch((err) => {
+      console.warn(`[PhysicalProvider] ${t.name} failed:`, err);
+      return [] as PhysicalLead[];
+    }));
 
-    const resultsByProvider = await Promise.allSettled(searchPromises);
-    const allRawPlaces: ProviderRawPlace[] = [];
+    const results = await Promise.all(promises);
+    const rawLeads = results.flat();
 
-    for (const res of resultsByProvider) {
-      if (res.status === "fulfilled") {
-        allRawPlaces.push(...res.value);
-      }
-    }
-
-    // 4. Filter: Must have NO website and MUST have a phone number
-    const qualifiedRawPlaces = allRawPlaces.filter((p) => {
-      // Must not have a website
-      const hasWebsite = Boolean(
-        p.website &&
-          p.website.trim() !== "" &&
-          p.website.trim() !== "null" &&
-          p.website.trim() !== "none" &&
-          p.website.includes(".")
-      );
-
-      // Must have an actual phone number with at least 7 digits
-      const phoneDigits = (p.phone || "").replace(/\D/g, "");
-      const hasPhone = phoneDigits.length >= 7;
-
-      return !hasWebsite && hasPhone;
-    });
-
-    // 5. De-duplicate across providers by normalized phone & normalized name
+    // Deduplicate & filter
     const seenPhones = new Set<string>();
     const seenNames = new Set<string>();
-    const deduplicatedLeads: LeadItem[] = [];
+    const deduplicated: PhysicalLead[] = [];
 
-    const now = new Date();
+    for (const lead of rawLeads) {
+      const normPhone = normalizePhoneNumber(lead.phone);
+      const normName = `${normalizeBusinessName(lead.businessName)}_${(lead.city || "").toLowerCase()}`;
 
-    for (const raw of qualifiedRawPlaces) {
-      const normPhone = normalizePhoneNumber(raw.phone);
-      const normName = `${normalizeBusinessName(raw.name)}_${(raw.city || "").toLowerCase()}`;
-
-      if (normPhone && seenPhones.has(normPhone)) {
-        continue; // duplicate phone
-      }
-      if (normName && seenNames.has(normName)) {
-        continue; // duplicate name in same city
-      }
+      if (normPhone && seenPhones.has(normPhone)) continue;
+      if (normName && seenNames.has(normName)) continue;
 
       if (normPhone) seenPhones.add(normPhone);
       if (normName) seenNames.add(normName);
 
-      const leadItem: LeadItem = {
-        id: `lead_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        businessName: raw.name,
-        phone: normPhone || raw.phone || "",
-        phoneFormatted: formatPhoneNumber(raw.formattedPhone || raw.phone),
-        address: raw.address || null,
-        city: raw.city || location,
-        state: raw.state || null,
-        postalCode: raw.postalCode || null,
-        category: raw.category || niche,
-        rating: raw.rating || null,
-        reviewCount: raw.reviewCount || 0,
-        hasWebsite: false,
-        noWebsiteConfidence: raw.provider === "google" ? "Verified" : "High",
-        sourceProvider: raw.provider,
-        providerPlaceId: raw.providerId || null,
-        status: "NEW",
-        estimatedValue: 1500,
-        notes: null,
-        tags: "no-website",
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      deduplicatedLeads.push(leadItem);
+      deduplicated.push(lead);
     }
 
     const searchResult: SearchResult = {
-      niche,
-      location,
-      provider: selectedProvider,
-      totalFetched: allRawPlaces.length,
-      qualifiedLeads: deduplicatedLeads.length,
+      mode: "physical",
+      query: params.niche,
+      location: [params.city, params.country].filter(Boolean).join(", "),
+      provider: selected,
+      totalFetched: rawLeads.length,
+      qualifiedCount: deduplicated.length,
       fromCache: false,
-      leads: deduplicatedLeads,
+      leads: deduplicated,
     };
 
-    // 6. Save in API Cache
-    if (enableCache) {
-      try {
-        const ttl = parseInt(process.env.CACHE_TTL_SECONDS || "86400", 10);
-        const expiresAt = new Date(Date.now() + ttl * 1000);
+    // Cache for 1 hour
+    memoryCache.set(cacheKey, { data: searchResult, expiresAt: Date.now() + 3600 * 1000 });
 
-        await prisma.apiCache.upsert({
-          where: { cacheKey },
-          create: {
-            cacheKey,
-            provider: selectedProvider,
-            query: niche,
-            location,
-            payload: JSON.stringify(searchResult),
-            expiresAt,
-          },
-          update: {
-            payload: JSON.stringify(searchResult),
-            expiresAt,
-          },
-        });
-      } catch (cacheSaveErr) {
-        console.warn("[Cache] Failed saving to cache:", cacheSaveErr);
+    return searchResult;
+  }
+
+  private async searchOnline(params: OnlineSearchParams, cacheKey: string): Promise<SearchResult> {
+    const selected = params.provider || "all";
+    const targets: IOnlineJobProvider[] = [];
+
+    if (selected === "all") {
+      for (const p of Array.from(this.onlineProviders.values())) {
+        if (p.isConfigured()) {
+          targets.push(p);
+        }
       }
+    } else {
+      const p = this.onlineProviders.get(selected);
+      if (p) targets.push(p);
+      else targets.push(this.onlineProviders.get("remotive")!);
     }
+
+    if (targets.length === 0) {
+      targets.push(this.onlineProviders.get("remotive")!);
+    }
+
+    // Parallel fetch from all job providers
+    const promises = targets.map((t) => t.fetchJobs(params).catch((err) => {
+      console.warn(`[OnlineJobProvider] ${t.name} failed:`, err);
+      return [] as OnlineJobLead[];
+    }));
+
+    const results = await Promise.all(promises);
+    const rawJobs = results.flat();
+
+    // Deduplicate by company + title similarity
+    const seenJobs = new Set<string>();
+    const deduplicated: OnlineJobLead[] = [];
+
+    for (const job of rawJobs) {
+      const key = `${normalizeBusinessName(job.company)}_${job.title.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      if (seenJobs.has(key)) continue;
+      seenJobs.add(key);
+      deduplicated.push(job);
+    }
+
+    const searchResult: SearchResult = {
+      mode: "online",
+      query: params.query,
+      location: "Worldwide Remote",
+      provider: selected,
+      totalFetched: rawJobs.length,
+      qualifiedCount: deduplicated.length,
+      fromCache: false,
+      leads: deduplicated,
+    };
+
+    // Cache for 1 hour
+    memoryCache.set(cacheKey, { data: searchResult, expiresAt: Date.now() + 3600 * 1000 });
 
     return searchResult;
   }
 }
 
-export const aggregator = new ProviderAggregator();
+export const aggregator = new LeadProviderAggregator();
 export default aggregator;

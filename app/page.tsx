@@ -3,23 +3,31 @@
 import React, { useState, useEffect } from "react";
 import SearchForm from "@/components/SearchForm";
 import ResultsTable from "@/components/ResultsTable";
-import { LeadItem, PipelineStatus, SearchParams, SearchResult } from "@/lib/types";
-import { executeSearchAction, getProvidersStatusAction } from "./actions/search";
-import { bulkSaveLeadsAction, saveLeadToPipelineAction, updateLeadStatusAction } from "./actions/leads";
-import { Sparkles, PhoneCall, CheckCircle2, ShieldCheck, Zap, Layers, AlertCircle } from "lucide-react";
+import { LeadItem, SearchParams, SearchResult } from "@/lib/types";
+import { executeSearchAction, getProviderStatusesAction } from "./actions/search";
+import { useLeadPipeline } from "@/lib/pipeline-store";
+import { Sparkles, PhoneCall, Globe, Layers, AlertCircle, Store, Terminal, CheckCircle2 } from "lucide-react";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [providersStatus, setProvidersStatus] = useState<
-    { key: string; name: string; configured: boolean; isFree: boolean }[]
-  >([]);
+  const [providersStatus, setProvidersStatus] = useState<{
+    physical: { key: string; name: string; configured: boolean; isFree: boolean }[];
+    online: { key: string; name: string; configured: boolean; isFree: boolean }[];
+  }>({
+    physical: [],
+    online: [],
+  });
+
+  const { leads: pipelineLeads, saveLead, bulkSaveLeads } = useLeadPipeline();
+
+  const savedLeadIds = new Set(pipelineLeads.map((l) => l.id));
 
   useEffect(() => {
     async function loadStatus() {
       try {
-        const statuses = await getProvidersStatusAction();
+        const statuses = await getProviderStatusesAction();
         setProvidersStatus(statuses);
       } catch (err) {
         console.warn(err);
@@ -36,25 +44,13 @@ export default function HomePage() {
       if (res.success && res.data) {
         setSearchResult(res.data);
       } else {
-        setErrorMessage(res.error || "No leads found matching your criteria.");
+        setErrorMessage(res.error || "No leads found matching your search parameters.");
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to execute search.");
+      setErrorMessage(err.message || "Failed to execute lead discovery search.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSaveLead = async (lead: LeadItem) => {
-    await saveLeadToPipelineAction(lead);
-  };
-
-  const handleBulkSave = async (leads: LeadItem[]) => {
-    await bulkSaveLeadsAction(leads);
-  };
-
-  const handleUpdateStatus = async (leadId: string, status: PipelineStatus) => {
-    await updateLeadStatusAction(leadId, status);
   };
 
   return (
@@ -78,30 +74,30 @@ export default function HomePage() {
       {searchResult ? (
         <ResultsTable
           searchResult={searchResult}
-          onSaveLead={handleSaveLead}
-          onBulkSave={handleBulkSave}
-          onUpdateStatus={handleUpdateStatus}
+          onSaveLead={saveLead}
+          onBulkSave={bulkSaveLeads}
+          savedLeadIds={savedLeadIds}
         />
       ) : (
-        /* Empty / Hero Feature Highlights */
+        /* Feature Highlights Grid */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-              <Zap className="w-5 h-5" />
+              <Store className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-white text-base">Zero Scraping Friction</h3>
+            <h3 className="font-bold text-white text-base">Worldwide Physical Radar</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              We query verified API endpoints (Google Places, Yelp, OpenStreetMap) and filter out entries that have a website URL registered.
+              Find local businesses across Kenya and 240+ countries that have an active phone number but zero website on record to pitch custom websites & POS systems.
             </p>
           </div>
 
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <PhoneCall className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+              <Terminal className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-white text-base">Phone Numbers Attached</h3>
+            <h3 className="font-bold text-white text-base">Remote Software Gigs</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Every lead returned is verified to have an active direct phone number formatted for one-click calling or CSV export into your dialer.
+              Query official public developer endpoints (Remotive & Arbeitnow) for remote web development and contract software jobs—without fragile or illegal scraping.
             </p>
           </div>
 
@@ -109,9 +105,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
               <Layers className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-white text-base">Built-in Cold Call Pipeline</h3>
+            <h3 className="font-bold text-white text-base">In-Session Pipeline CRM</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Move discovered prospects through New, Contacted, Interested, and Closed stages while generating custom high-converting pitch scripts on the fly.
+              Track outreach stages (New ➔ Contacted ➔ Interested ➔ Closed), generate customized pitch scripts & job proposals, and export to CSV instantly.
             </p>
           </div>
         </div>

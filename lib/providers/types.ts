@@ -1,13 +1,8 @@
-import { ProviderRawPlace, SearchParams } from "../types";
+import { PhysicalLead, PhysicalSearchParams } from "../types";
 
-export interface ILeadProvider {
+export interface IPhysicalLeadProvider {
   name: string;
-  providerKey: 'google' | 'yelp' | 'osm' | 'demo';
+  providerKey: 'osm' | 'google' | 'demo';
   isConfigured(): boolean;
-  search(params: SearchParams): Promise<ProviderRawPlace[]>;
-}
-
-export interface AggregatorOptions extends SearchParams {
-  filterNoWebsiteOnly?: boolean;
-  requirePhone?: boolean;
+  search(params: PhysicalSearchParams): Promise<PhysicalLead[]>;
 }
