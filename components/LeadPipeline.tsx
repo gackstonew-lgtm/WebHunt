@@ -24,15 +24,21 @@ import {
   Mail,
   MessageCircle,
   Globe,
-  Calendar
+  Calendar,
+  Layers,
+  CheckSquare,
+  ChevronRight
 } from "lucide-react";
 import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import PitchScriptModal from "./PitchScriptModal";
 import JobProposalModal from "./JobProposalModal";
 import LeadNotesModal from "./LeadNotesModal";
+import ApplicationTrackerDrawer from "./pipeline/ApplicationTrackerDrawer";
+import FollowUpQueue from "./pipeline/FollowUpQueue";
 import { exportLeadsToCsv } from "@/lib/export";
 import { PipelineStats } from "@/lib/pipeline-store";
+import { generateWhatsAppChatLink, createQuickWhatsAppLeadMessage } from "@/lib/outreach/whatsapp";
 
 interface LeadPipelineProps {
   leads: LeadItem[];
@@ -43,13 +49,23 @@ interface LeadPipelineProps {
   onClearPipeline?: () => void;
 }
 
-const STAGES: { key: PipelineStatus | "ALL"; label: string; icon: any }[] = [
-  { key: "ALL", label: "All Leads", icon: TrendingUp },
-  { key: "NEW", label: "New (Inbox)", icon: Clock },
+const SALES_STAGES = [
+  { key: "ALL", label: "All Sales Leads", icon: TrendingUp },
+  { key: "NEW", label: "Inbox (New)", icon: Clock },
   { key: "CONTACTED", label: "Contacted", icon: PhoneOutgoing },
   { key: "INTERESTED", label: "Pitch / Proposal Sent", icon: Sparkles },
   { key: "CLOSED", label: "Closed / Won", icon: Award },
   { key: "NOT_INTERESTED", label: "Archived", icon: Archive },
+];
+
+const JOB_STAGES = [
+  { key: "ALL", label: "All Job Apps", icon: TrendingUp },
+  { key: "SAVED", label: "Saved / Researching", icon: Clock },
+  { key: "PREPARING", label: "Preparing App", icon: FileText },
+  { key: "APPLIED", label: "Applied / Submitted", icon: PhoneOutgoing },
+  { key: "INTERVIEW", label: "Interviewing", icon: Sparkles },
+  { key: "OFFER", label: "Offer Received", icon: Award },
+  { key: "REJECTED", label: "Rejected / Withdrawn", icon: Archive },
 ];
 
 export default function LeadPipeline({
@@ -60,17 +76,25 @@ export default function LeadPipeline({
   onDeleteLead,
   onClearPipeline,
 }: LeadPipelineProps) {
-  const [currentTab, setCurrentTab] = useState<PipelineStatus | "ALL">("ALL");
-  const [modeFilter, setModeFilter] = useState<"ALL" | "physical" | "online">("ALL");
+  const [pipelineMode, setPipelineMode] = useState<"sales" | "jobs" | "all">("sales");
+  const [currentTab, setCurrentTab] = useState<string>("ALL");
   const [pitchLead, setPitchLead] = useState<PhysicalLead | null>(null);
   const [proposalJob, setProposalJob] = useState<OnlineJobLead | null>(null);
+  const [trackerJob, setTrackerJob] = useState<OnlineJobLead | null>(null);
   const [notesLead, setNotesLead] = useState<LeadItem | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [currencyMode, setCurrencyMode] = useState<"USD" | "KES">("USD");
+
+  const activeStages = pipelineMode === "jobs" ? JOB_STAGES : SALES_STAGES;
 
   const filteredLeads = leads.filter((l) => {
-    if (currentTab !== "ALL" && l.status !== currentTab) return false;
-    if (modeFilter !== "ALL" && l.type !== modeFilter) return false;
+    if (pipelineMode === "sales" && l.type !== "physical") return false;
+    if (pipelineMode === "jobs" && l.type !== "online") return false;
+
+    if (currentTab !== "ALL") {
+      if (l.status !== currentTab) return false;
+    }
     return true;
   });
 
@@ -88,8 +112,22 @@ export default function LeadPipeline({
     setTimeout(() => setCopiedEmail(null), 2000);
   };
 
+  const handleQuickWhatsApp = (lead: PhysicalLead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const msg = createQuickWhatsAppLeadMessage({
+      businessName: lead.businessName,
+      category: lead.category,
+      city: lead.city,
+      senderName: "Web Developer",
+    });
+    const wa = generateWhatsAppChatLink(lead.whatsapp || lead.phone, msg, lead.country || "KE");
+    if (wa.isValid) {
+      window.open(wa.url, "_blank");
+    }
+  };
+
   const handleExport = () => {
-    exportLeadsToCsv(filteredLeads, `webhunt-pipeline-${currentTab.toLowerCase()}`);
+    exportLeadsToCsv(filteredLeads, `webhunt-pipeline-${pipelineMode}-${currentTab.toLowerCase()}`);
   };
 
   return (
@@ -128,17 +166,17 @@ export default function LeadPipeline({
           </div>
         </div>
 
-        {/* Active Pitches */}
+        {/* Active Pitches / Apps */}
         <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#A8A196] font-medium">Active Pitches</span>
+            <span className="text-xs text-[#A8A196] font-medium">Active In Progress</span>
             <div className="p-1.5 rounded-lg bg-[#161616] text-[#F95C4B]">
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
             <span className="text-2xl font-bold text-[#F6F4F1]">{stats.interestedLeads}</span>
-            <span className="text-xs text-[#A8A196]">in progress</span>
+            <span className="text-xs text-[#A8A196]">active deals/apps</span>
           </div>
         </div>
 
@@ -158,80 +196,95 @@ export default function LeadPipeline({
         </div>
       </div>
 
-      {/* Filter Tabs & Export Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(228,222,210,0.12)] pb-4">
-        {/* Stage Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {STAGES.map((stage) => {
-            const Icon = stage.icon;
-            const count =
-              stage.key === "ALL"
-                ? leads.length
-                : leads.filter((l) => l.status === stage.key).length;
-            const isActive = currentTab === stage.key;
+      {/* Follow-up Reminders Task Queue */}
+      <FollowUpQueue />
 
-            return (
-              <button
-                key={stage.key}
-                onClick={() => setCurrentTab(stage.key)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  isActive
-                    ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-sm"
-                    : "text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]/60"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#F95C4B]" : "text-[#A8A196]"}`} />
-                <span>{stage.label}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  isActive ? "bg-[#F95C4B] text-white" : "bg-[#080808] text-[#A8A196]"
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Mode Filter & Export Actions */}
-        <div className="flex items-center space-x-2 shrink-0">
-          {/* Channel Selector */}
-          <div className="bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl p-1 flex items-center text-xs">
-            <button
-              onClick={() => setModeFilter("ALL")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition ${
-                modeFilter === "ALL" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
-              }`}
-            >
-              All Types
-            </button>
-            <button
-              onClick={() => setModeFilter("physical")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
-                modeFilter === "physical" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
-              }`}
-            >
-              <Store className="w-3 h-3 text-[#F95C4B]" />
-              <span>Local</span>
-            </button>
-            <button
-              onClick={() => setModeFilter("online")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
-                modeFilter === "online" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
-              }`}
-            >
-              <Terminal className="w-3 h-3 text-[#F95C4B]" />
-              <span>Remote</span>
-            </button>
-          </div>
+      {/* Primary Pipeline Switcher: Sales vs Jobs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-2xl">
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => {
+              setPipelineMode("sales");
+              setCurrentTab("ALL");
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
+              pipelineMode === "sales"
+                ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-md"
+                : "text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]/60"
+            }`}
+          >
+            <Store className="w-4 h-4 text-[#F95C4B]" />
+            <span>Sales Pipeline (Local Businesses)</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#080808] text-[#A8A196]">
+              {stats.physicalCount}
+            </span>
+          </button>
 
           <button
+            onClick={() => {
+              setPipelineMode("jobs");
+              setCurrentTab("ALL");
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
+              pipelineMode === "jobs"
+                ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-md"
+                : "text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]/60"
+            }`}
+          >
+            <Terminal className="w-4 h-4 text-[#F95C4B]" />
+            <span>Job Applications (Remote Gigs)</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#080808] text-[#A8A196]">
+              {stats.onlineCount}
+            </span>
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-2 pr-2">
+          <button
             onClick={handleExport}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#0D0D0D] hover:bg-[#161616] text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#161616] hover:bg-[#161616]/80 text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-semibold transition"
           >
             <Download className="w-3.5 h-3.5 text-[#A8A196]" />
             <span>Export CSV</span>
           </button>
         </div>
+      </div>
+
+      {/* Stage Tabs Strip */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-[rgba(228,222,210,0.12)] pb-4">
+        {activeStages.map((stage) => {
+          const Icon = stage.icon;
+          const count =
+            stage.key === "ALL"
+              ? (pipelineMode === "sales" ? stats.physicalCount : stats.onlineCount)
+              : leads.filter((l) => {
+                  if (pipelineMode === "sales" && l.type !== "physical") return false;
+                  if (pipelineMode === "jobs" && l.type !== "online") return false;
+                  return l.status === stage.key;
+                }).length;
+
+          const isActive = currentTab === stage.key;
+
+          return (
+            <button
+              key={stage.key}
+              onClick={() => setCurrentTab(stage.key)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+                isActive
+                  ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-sm"
+                  : "text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]/60"
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#F95C4B]" : "text-[#A8A196]"}`} />
+              <span>{stage.label}</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                isActive ? "bg-[#F95C4B] text-white" : "bg-[#080808] text-[#A8A196]"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Cards Grid */}
@@ -242,7 +295,9 @@ export default function LeadPipeline({
           </div>
           <h4 className="text-base font-bold text-[#F6F4F1]">No leads in this stage</h4>
           <p className="text-xs text-[#A8A196] max-w-sm mx-auto">
-            Use the Lead Finder Radar on the home page to discover local businesses without websites or remote software gigs.
+            {pipelineMode === "sales"
+              ? "Discover local businesses without websites from the Lead Finder Radar on the home page."
+              : "Discover remote software opportunities and track your job applications here."}
           </p>
         </div>
       ) : (
@@ -263,7 +318,7 @@ export default function LeadPipeline({
                     <div className="flex items-center space-x-2">
                       <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center space-x-1 bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
                         {isPhysical ? <Store className="w-3 h-3 text-[#F95C4B]" /> : <Terminal className="w-3 h-3 text-[#F95C4B]" />}
-                        <span>{isPhysical ? physLead?.country : "Remote Job"}</span>
+                        <span>{isPhysical ? physLead?.country : (jobLead?.source || "Remote Job")}</span>
                       </span>
                     </div>
 
@@ -273,11 +328,25 @@ export default function LeadPipeline({
                       onChange={(e) => onUpdateStatus(lead.id, e.target.value as PipelineStatus)}
                       className="bg-[#080808] border border-[rgba(228,222,210,0.12)] text-xs text-[#F6F4F1] px-2 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#F95C4B] cursor-pointer"
                     >
-                      <option value="NEW" className="bg-[#0D0D0D]">📥 New Lead</option>
-                      <option value="CONTACTED" className="bg-[#0D0D0D]">📞 Contacted</option>
-                      <option value="INTERESTED" className="bg-[#0D0D0D]">✨ Pitch / Proposal</option>
-                      <option value="CLOSED" className="bg-[#0D0D0D]">🏆 Closed / Won</option>
-                      <option value="NOT_INTERESTED" className="bg-[#0D0D0D]">⛔ Archived</option>
+                      {isPhysical ? (
+                        <>
+                          <option value="NEW" className="bg-[#0D0D0D]">📥 New Lead</option>
+                          <option value="CONTACTED" className="bg-[#0D0D0D]">📞 Contacted</option>
+                          <option value="INTERESTED" className="bg-[#0D0D0D]">✨ Pitch / Proposal</option>
+                          <option value="CLOSED" className="bg-[#0D0D0D]">🏆 Closed / Won</option>
+                          <option value="NOT_INTERESTED" className="bg-[#0D0D0D]">⛔ Archived</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="SAVED" className="bg-[#0D0D0D]">📁 Saved</option>
+                          <option value="PREPARING" className="bg-[#0D0D0D]">📝 Preparing App</option>
+                          <option value="APPLIED" className="bg-[#0D0D0D]">🚀 Applied</option>
+                          <option value="INTERVIEW" className="bg-[#0D0D0D]">🎙️ Interview</option>
+                          <option value="OFFER" className="bg-[#0D0D0D]">🏆 Offer</option>
+                          <option value="REJECTED" className="bg-[#0D0D0D]">⛔ Rejected</option>
+                          <option value="WITHDRAWN" className="bg-[#0D0D0D]">↩️ Withdrawn</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -300,17 +369,26 @@ export default function LeadPipeline({
                           <Phone className="w-3.5 h-3.5 shrink-0" />
                           <span>{physLead.phoneFormatted || physLead.phone}</span>
                         </a>
-                        <button
-                          onClick={(e) => handleCopyPhone(physLead.phone, e)}
-                          className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1]"
-                          title="Copy phone"
-                        >
-                          {copiedPhone === physLead.phone ? (
-                            <Check className="w-3 h-3 text-[#5EBA8C]" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                        </button>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={(e) => handleQuickWhatsApp(physLead, e)}
+                            className="p-1 rounded text-[#5EBA8C] hover:bg-[#5EBA8C]/10 transition"
+                            title="Chat on WhatsApp"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => handleCopyPhone(physLead.phone, e)}
+                            className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1]"
+                            title="Copy phone"
+                          >
+                            {copiedPhone === physLead.phone ? (
+                              <Check className="w-3 h-3 text-[#5EBA8C]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       {/* Enriched Contact Badges on Card */}
@@ -361,67 +439,17 @@ export default function LeadPipeline({
                               <span>Book</span>
                             </a>
                           )}
-
-                          {physLead.contactPageUrl && (
-                            <a
-                              href={physLead.contactPageUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px]"
-                              title="Contact Page"
-                            >
-                              <Globe className="w-3 h-3" />
-                              <span>Contact Page</span>
-                            </a>
-                          )}
-
-                          {physLead.socialProfiles?.facebook && (
-                            <a
-                              href={physLead.socialProfiles.facebook}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
-                              title="Facebook"
-                            >
-                              fb
-                            </a>
-                          )}
-                          {physLead.socialProfiles?.instagram && (
-                            <a
-                              href={physLead.socialProfiles.instagram}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
-                              title="Instagram"
-                            >
-                              ig
-                            </a>
-                          )}
-                          {physLead.socialProfiles?.linkedin && (
-                            <a
-                              href={physLead.socialProfiles.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
-                              title="LinkedIn"
-                            >
-                              in
-                            </a>
-                          )}
-                        </div>
-                      )}
-
-                      {physLead.address && (
-                        <div className="flex items-center space-x-1.5 text-[#A8A196] pt-1">
-                          <MapPin className="w-3.5 h-3.5 text-[#A8A196] shrink-0" />
-                          <span className="truncate">{physLead.address}</span>
                         </div>
                       )}
                     </div>
                   )}
 
                   {!isPhysical && jobLead && (
-                    <div className="mt-3 space-y-1.5">
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-[#A8A196]">
+                        <span className="text-[#5EBA8C] font-semibold">{jobLead.salary || "Competitive"}</span>
+                        <span>{formatDate(jobLead.postedDate)}</span>
+                      </div>
                       {jobLead.tags && jobLead.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {jobLead.tags.slice(0, 4).map((tag) => (
@@ -477,15 +505,14 @@ export default function LeadPipeline({
                           <Sparkles className="w-3 h-3 text-[#F95C4B]" />
                           <span>Proposal</span>
                         </button>
-                        <a
-                          href={jobLead.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-medium transition"
-                          title="Apply on site"
+                        <button
+                          onClick={() => setTrackerJob(jobLead)}
+                          className="px-2.5 py-1 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-medium flex items-center space-x-1 transition"
+                          title="Track application checklist & notes"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                          <CheckSquare className="w-3 h-3 text-[#5EBA8C]" />
+                          <span>Track App</span>
+                        </button>
                       </>
                     )}
 
@@ -512,9 +539,19 @@ export default function LeadPipeline({
         </div>
       )}
 
-      {/* Modals */}
+      {/* Modals & Drawers */}
       {pitchLead && <PitchScriptModal lead={pitchLead} onClose={() => setPitchLead(null)} />}
       {proposalJob && <JobProposalModal job={proposalJob} onClose={() => setProposalJob(null)} />}
+      {trackerJob && (
+        <ApplicationTrackerDrawer
+          job={trackerJob}
+          onClose={() => setTrackerJob(null)}
+          onStatusChange={(newStatus) => {
+            onUpdateStatus(trackerJob.id, newStatus);
+            trackerJob.status = newStatus;
+          }}
+        />
+      )}
       {notesLead && (
         <LeadNotesModal
           lead={notesLead}
@@ -528,3 +565,4 @@ export default function LeadPipeline({
     </div>
   );
 }
+

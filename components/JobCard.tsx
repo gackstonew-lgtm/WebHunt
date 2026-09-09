@@ -9,10 +9,12 @@ import {
   Sparkles, 
   Plus, 
   Check, 
-  Globe
+  Globe,
+  Clock
 } from "lucide-react";
 import { OnlineJobLead } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { checkApplicantEligibility } from "@/lib/eligibility/regional-filter";
 
 interface JobCardProps {
   job: OnlineJobLead;
@@ -29,6 +31,8 @@ export default function JobCard({
   onOpenProposal,
   onOpenNotes,
 }: JobCardProps) {
+  const eligibility = checkApplicantEligibility(job);
+
   return (
     <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] hover:border-[rgba(228,222,210,0.25)] rounded-2xl p-5 shadow-xl transition flex flex-col justify-between space-y-4 group">
       <div>
@@ -61,9 +65,19 @@ export default function JobCard({
             </div>
           </div>
 
-          <div className="flex items-center space-x-1">
+          <div className="flex flex-col items-end gap-1">
             <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
               {job.source}
+            </span>
+            <span
+              className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
+                eligibility.isEligibleKenya
+                  ? "bg-[#101914] text-[#5EBA8C] border-[rgba(94,186,140,0.3)]"
+                  : "bg-[#1f0e0e] text-[#F95C4B] border-[rgba(249,92,75,0.3)]"
+              }`}
+              title={eligibility.reasons.join(". ")}
+            >
+              {eligibility.badgeText}
             </span>
           </div>
         </div>

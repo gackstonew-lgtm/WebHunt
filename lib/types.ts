@@ -1,6 +1,20 @@
 export type LeadMode = 'physical' | 'online';
 
-export type PipelineStatus = 'NEW' | 'CONTACTED' | 'INTERESTED' | 'CLOSED' | 'NOT_INTERESTED';
+export type PipelineStatus = 
+  | 'NEW' 
+  | 'QUALIFIED'
+  | 'CONTACTED' 
+  | 'INTERESTED' 
+  | 'NEGOTIATION'
+  | 'CLOSED' 
+  | 'NOT_INTERESTED'
+  | 'SAVED'
+  | 'PREPARING'
+  | 'APPLIED'
+  | 'INTERVIEW'
+  | 'OFFER'
+  | 'REJECTED'
+  | 'WITHDRAWN';
 
 export type PhysicalProviderType = 'osm' | 'google' | 'yelp' | 'foursquare' | 'all';
 export type OnlineProviderType = 'remotive' | 'arbeitnow' | 'himalayas' | 'weworkremotely' | 'jobspresso' | 'remoteok' | 'africa' | 'all';

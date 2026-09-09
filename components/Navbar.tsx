@@ -9,20 +9,27 @@ import {
   History, 
   ShieldAlert, 
   Download, 
-  Globe
+  Globe,
+  User
 } from "lucide-react";
 import LegalModal from "./LegalModal";
+import ProfileSettingsModal from "./profile/ProfileSettingsModal";
 import { getStoredPipelineLeads } from "@/lib/pipeline-store";
 import { exportLeadsToCsv } from "@/lib/export";
+import { syncLocalStorageWithDatabase } from "@/lib/sync-bridge";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [showLegal, setShowLegal] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [leadCount, setLeadCount] = useState(0);
 
   useEffect(() => {
     const stored = getStoredPipelineLeads();
     setLeadCount(stored.length);
+
+    // Trigger seamless background sync with the database on load
+    syncLocalStorageWithDatabase().catch((e) => console.warn("Background sync info:", e));
 
     const handleStorage = () => {
       const updated = getStoredPipelineLeads();
@@ -105,7 +112,16 @@ export default function Navbar() {
             </nav>
 
             {/* Right Action buttons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2.5">
+              <button
+                onClick={() => setShowProfile(true)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition shadow-sm"
+                title="Manage Candidate & Agency Truthful Profile"
+              >
+                <User className="w-3.5 h-3.5 text-[#F95C4B]" />
+                <span className="hidden sm:inline">Profile</span>
+              </button>
+
               <button
                 onClick={handleExportAll}
                 className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition"
@@ -152,6 +168,7 @@ export default function Navbar() {
         </div>
       </header>
 
+      {showProfile && <ProfileSettingsModal onClose={() => setShowProfile(false)} />}
       {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
     </>
   );

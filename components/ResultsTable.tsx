@@ -342,14 +342,18 @@ export default function ResultsTable({
                                 </div>
                               )}
 
-                              {/* WhatsApp */}
-                              {lead.whatsapp && (
+                              {/* WhatsApp Direct Chat */}
+                              {(lead.whatsapp || hasValidPhone) && (
                                 <a
-                                  href={lead.whatsapp.startsWith("http") ? lead.whatsapp : `https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`}
+                                  href={
+                                    lead.whatsapp?.startsWith("http")
+                                      ? lead.whatsapp
+                                      : `https://wa.me/${(lead.whatsapp || lead.phone).replace(/\D/g, "").replace(/^0/, "254")}`
+                                  }
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#101914] text-[#5EBA8C] hover:bg-[#5EBA8C]/20 border border-[rgba(94,186,140,0.3)] text-[10px] font-medium transition"
-                                  title="Open WhatsApp Chat"
+                                  title="Open Direct WhatsApp Chat"
                                 >
                                   <MessageCircle className="w-3 h-3 text-[#5EBA8C] shrink-0" />
                                   <span>WhatsApp</span>

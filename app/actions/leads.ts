@@ -4,7 +4,125 @@ import prisma from "@/lib/db";
 import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
-export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
+export async function fetchPipelineLeadsAction(userId?: string): Promise<{
+  success: boolean;
+  data?: LeadItem[];
+  error?: string;
+}> {
+  try {
+    const records = await prisma.lead.findMany({
+      where: userId ? { userId } : undefined,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const leads: LeadItem[] = records.map((rec) => {
+      const isOnline = rec.pipelineType === "job_application" || rec.sourceType === "job_board" || rec.sourceProvider.match(/(remotive|arbeitnow|himalayas|weworkremotely|jobspresso|remoteok|africa)/i);
+
+      let socialProfiles: any = {};
+      if (rec.facebook || rec.instagram || rec.linkedin || rec.twitter) {
+        socialProfiles = {
+          facebook: rec.facebook,
+          instagram: rec.instagram,
+          linkedin: rec.linkedin,
+          twitter: rec.twitter,
+        };
+      }
+
+      let parsedEnrichment: any = undefined;
+      if (rec.enrichmentJson) {
+        try {
+          parsedEnrichment = JSON.parse(rec.enrichmentJson);
+        } catch (_) {}
+      }
+
+      if (isOnline) {
+        const jobLead: OnlineJobLead = {
+          id: rec.id,
+          type: "online",
+          title: rec.businessName.includes(" @ ") ? rec.businessName.split(" @ ")[0] : rec.businessName,
+          company: rec.businessName.includes(" @ ") ? rec.businessName.split(" @ ")[1] : (rec.category || "Company"),
+          location: rec.address || rec.city || "Remote",
+          country: rec.state || "Global",
+          isRemote: true,
+          remoteType: (rec.remoteType as any) || "worldwide",
+          category: rec.category,
+          tags: rec.tags ? rec.tags.split(",") : [],
+          url: rec.phone,
+          postedDate: rec.createdAt.toISOString(),
+          salary: rec.estimatedValue ? `$${rec.estimatedValue}/yr` : "Competitive",
+          source: rec.sourceProvider,
+          sourceId: rec.providerPlaceId,
+          sourceUrl: rec.sourceUrl,
+          sourceType: rec.sourceType,
+          status: rec.status as PipelineStatus,
+          estimatedValue: rec.estimatedValue,
+          notes: rec.notes,
+          verificationStatus: rec.verificationStatus as any,
+          email: rec.email,
+          whatsapp: rec.whatsapp,
+          contactPageUrl: rec.contactPageUrl,
+          bookingUrl: rec.bookingUrl,
+          hasContactForm: rec.hasContactForm || false,
+          socialProfiles,
+          enrichment: parsedEnrichment,
+          createdAt: rec.createdAt,
+          updatedAt: rec.updatedAt,
+        };
+        return jobLead;
+      } else {
+        const physLead: PhysicalLead = {
+          id: rec.id,
+          type: "physical",
+          businessName: rec.businessName,
+          phone: rec.phone,
+          phoneFormatted: rec.phoneFormatted,
+          phoneStatus: "verified",
+          address: rec.address,
+          city: rec.city,
+          state: rec.state,
+          country: rec.state || "Kenya",
+          postalCode: rec.postalCode,
+          latitude: rec.latitude,
+          longitude: rec.longitude,
+          category: rec.category,
+          rating: rec.rating,
+          reviewCount: rec.reviewCount,
+          hasWebsite: rec.hasWebsite,
+          noWebsiteConfidence: rec.noWebsiteConfidence as any,
+          sourceProvider: rec.sourceProvider,
+          sourceUrl: rec.sourceUrl,
+          sourceType: rec.sourceType,
+          providerPlaceId: rec.providerPlaceId,
+          status: rec.status as PipelineStatus,
+          estimatedValue: rec.estimatedValue,
+          notes: rec.notes,
+          tags: rec.tags ? rec.tags.split(",") : [],
+          verificationStatus: rec.verificationStatus as any,
+          email: rec.email,
+          whatsapp: rec.whatsapp,
+          contactPageUrl: rec.contactPageUrl,
+          bookingUrl: rec.bookingUrl,
+          hasContactForm: rec.hasContactForm || false,
+          socialProfiles,
+          enrichment: parsedEnrichment,
+          createdAt: rec.createdAt,
+          updatedAt: rec.updatedAt,
+        };
+        return physLead;
+      }
+    });
+
+    return { success: true, data: leads };
+  } catch (error: any) {
+    console.error("[LeadsAction] Fetch pipeline leads failed:", error);
+    return { success: false, data: [], error: error.message || "Failed to fetch leads" };
+  }
+}
+
+export async function saveLeadToPipelineAction(
+  lead: LeadItem,
+  userId?: string
+): Promise<{
   success: boolean;
   data?: any;
   error?: string;
@@ -19,6 +137,7 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
       : `${jLead!.title} @ ${jLead!.company}`;
     const phone = isPhysical ? pLead!.phone : jLead!.url;
     const phoneFormatted = isPhysical ? pLead!.phoneFormatted : jLead!.url;
+    const pipelineType = isPhysical ? "sales" : "job_application";
 
     if (!businessName || !phone) {
       return { success: false, error: "Identifier and title are required." };
@@ -32,12 +151,14 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
         },
       },
       create: {
+        userId: userId || null,
+        pipelineType,
         businessName,
         phone,
         phoneFormatted,
         address: isPhysical ? pLead!.address : jLead!.location,
         city: isPhysical ? pLead!.city : "Remote",
-        state: isPhysical ? pLead!.state : "",
+        state: isPhysical ? (pLead!.country || pLead!.state) : (jLead!.country || ""),
         postalCode: isPhysical ? pLead!.postalCode : "",
         category: isPhysical ? pLead!.category : jLead!.category,
         rating: isPhysical ? pLead!.rating : null,
@@ -54,9 +175,10 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
         latitude: isPhysical ? pLead!.latitude : null,
         longitude: isPhysical ? pLead!.longitude : null,
         lastVerifiedAt: new Date(),
-        status: lead.status || "NEW",
+        status: lead.status || (isPhysical ? "NEW" : "SAVED"),
         estimatedValue: lead.estimatedValue || (isPhysical ? 1500 : 3500),
         notes: lead.notes || null,
+        tags: Array.isArray(lead.tags) ? lead.tags.join(",") : (lead.tags || null),
 
         // Enriched contact channels
         email: lead.email || null,
@@ -71,6 +193,7 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
         enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : (lead.contacts ? JSON.stringify(lead.contacts) : null),
       },
       update: {
+        userId: userId !== undefined ? userId : undefined,
         status: lead.status || undefined,
         notes: lead.notes !== undefined ? lead.notes : undefined,
         estimatedValue: lead.estimatedValue || undefined,
@@ -97,7 +220,10 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
   }
 }
 
-export async function bulkSaveLeadsAction(leads: LeadItem[]): Promise<{
+export async function bulkSaveLeadsAction(
+  leads: LeadItem[],
+  userId?: string
+): Promise<{
   success: boolean;
   count: number;
   error?: string;
@@ -106,7 +232,7 @@ export async function bulkSaveLeadsAction(leads: LeadItem[]): Promise<{
     let savedCount = 0;
     for (const lead of leads) {
       try {
-        await saveLeadToPipelineAction(lead);
+        await saveLeadToPipelineAction(lead, userId);
         savedCount++;
       } catch (itemErr) {
         console.warn("[LeadsAction] Bulk item save skipped duplicate/invalid:", itemErr);
@@ -128,7 +254,7 @@ export async function updateLeadStatusAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const updateData: any = { status };
-    if (status === "CONTACTED" || status === "INTERESTED" || status === "CLOSED") {
+    if (status === "CONTACTED" || status === "INTERESTED" || status === "CLOSED" || status === "APPLIED" || status === "INTERVIEW") {
       updateData.contactedAt = new Date();
     }
 
@@ -181,3 +307,4 @@ export async function deleteLeadAction(leadId: string): Promise<{ success: boole
     return { success: false, error: error.message };
   }
 }
+
