@@ -1,14 +1,40 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import PwaRegister from "@/components/pwa/PwaRegister";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "WebHunt | Worldwide Local Businesses & Remote Job Radar",
   description: "Find local businesses without websites across Kenya & worldwide + discover remote tech opportunities via public APIs.",
+  manifest: "/manifest.json",
+  applicationName: "WebHunt",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "WebHunt",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: "/icon.svg",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
     shortcut: "/favicon.ico",
-    apple: "/icon.svg",
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -22,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-[#000000] text-[#F6F4F1] min-h-screen flex flex-col antialiased selection:bg-[#F95C4B] selection:text-white">
+        <PwaRegister />
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}

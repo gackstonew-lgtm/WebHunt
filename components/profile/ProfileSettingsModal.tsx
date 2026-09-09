@@ -16,9 +16,11 @@ import {
   Mail, 
   Sparkles,
   Layers,
-  Coins
+  Coins,
+  LogOut
 } from "lucide-react";
 import { getUserProfileAction, saveUserProfileAction, UserProfileData } from "@/app/actions/profile";
+import { logoutAction } from "@/app/actions/auth";
 
 interface ProfileSettingsModalProps {
   onClose: () => void;
@@ -73,6 +75,11 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
       if (onProfileUpdated) onProfileUpdated(res.data);
       setTimeout(() => setSavedSuccess(false), 2500);
     }
+  };
+
+  const handleLogout = async () => {
+    await logoutAction();
+    window.location.href = "/auth?mode=signin";
   };
 
   if (isLoading || !profile) {
@@ -344,11 +351,21 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[rgba(228,222,210,0.12)] bg-[#080808] flex items-center justify-between">
-          <div className="text-xs text-[#A8A196]">
+          <div className="flex items-center space-x-3 text-xs text-[#A8A196]">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#161616] hover:bg-[#202020] text-[#A8A196] hover:text-[#F95C4B] border border-[rgba(228,222,210,0.12)] transition"
+              title="Sign out of WebHunt workspace"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+
             {savedSuccess && (
               <span className="text-[#5EBA8C] flex items-center space-x-1 font-semibold">
                 <Check className="w-4 h-4" />
-                <span>Profile updated & synchronized!</span>
+                <span>Profile updated &amp; synchronized!</span>
               </span>
             )}
           </div>

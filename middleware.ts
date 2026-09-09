@@ -8,12 +8,16 @@ const PUBLIC_FILE_PATTERN = /\.(.*)$/;
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow public static assets and API helpers
+  // 1. Allow public static assets, PWA manifest/worker, icons, and API helpers
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/health") ||
+    pathname.startsWith("/api/webhooks") ||
     pathname === "/favicon.ico" ||
     pathname === "/icon.svg" ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json" ||
+    pathname.startsWith("/icons/") ||
     PUBLIC_FILE_PATTERN.test(pathname)
   ) {
     return NextResponse.next();

@@ -133,25 +133,14 @@ export default function Navbar() {
             {/* Right Action buttons */}
             <div className="flex items-center space-x-2">
               {userSession ? (
-                <>
-                  <button
-                    onClick={() => setShowProfile(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition shadow-sm"
-                    title="Manage Candidate & Agency Truthful Profile"
-                  >
-                    <User className="w-3.5 h-3.5 text-[#F95C4B]" />
-                    <span className="hidden sm:inline">Profile</span>
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-[#A8A196] hover:text-[#F6F4F1] bg-[#161616]/50 hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] rounded-xl transition"
-                    title="Sign out of WebHunt workspace"
-                  >
-                    <LogOut className="w-3.5 h-3.5 text-[#A8A196]" />
-                    <span className="hidden sm:inline">Sign Out</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition shadow-sm"
+                  title="Manage Candidate & Agency Truthful Profile"
+                >
+                  <User className="w-3.5 h-3.5 text-[#F95C4B]" />
+                  <span className="hidden sm:inline">Profile</span>
+                </button>
               ) : (
                 <Link
                   href="/auth?mode=signin"

@@ -534,36 +534,6 @@ export default function IndustrySelector({
 
   return (
     <div className="relative w-full">
-      {/* Selected Tags Ribbon on the Search Form */}
-      {selectedIndustries.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-2">
-          {selectedIndustries.map((ind) => (
-            <span
-              key={ind.id}
-              className="inline-flex items-center space-x-1.5 bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] text-xs font-semibold px-2.5 py-1 rounded-lg transition"
-            >
-              <span>{ind.name}</span>
-              <button
-                type="button"
-                onClick={(e) => handleRemoveIndustry(ind.id, e)}
-                className="hover:text-[#F95C4B] transition p-0.5 rounded"
-                title="Remove"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="text-[11px] text-[#A8A196] hover:text-[#F95C4B] underline ml-1 transition"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
-
       {/* Main Searchable Input Trigger (Opens Modal) */}
       <div 
         className="relative cursor-pointer group"

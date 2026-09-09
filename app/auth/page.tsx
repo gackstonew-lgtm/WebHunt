@@ -353,7 +353,7 @@ export default function AuthPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Gackstone Baraka"
+                  placeholder="Full Name / Agency Name"
                   className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
                 />
               </div>
@@ -562,10 +562,10 @@ export default function AuthPage() {
         )}
       </div>
 
-      {/* Security & Compliance Footer Note */}
+      {/* Security & Support Guidance Footer Note */}
       <div className="mt-8 text-center text-xs text-[#A8A196]/80 flex items-center space-x-2">
-        <ShieldCheck className="w-4 h-4 text-[#5EBA8C]" />
-        <span>Resend Transactional OTP • Scrypt Password Hashing • HttpOnly AES Sessions</span>
+        <Mail className="w-4 h-4 text-[#F95C4B]" />
+        <span>Can&apos;t find your OTP? Check your spam or junk folder, then try again.</span>
       </div>
     </div>
   );
