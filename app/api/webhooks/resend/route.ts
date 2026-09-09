@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import prisma from '@/lib/db';
 
-const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || 'whsec_Nq5j98BjcAjn/fDHzHstf2Wb2Bk1eNOP';
+const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || '';
 
 /**
  * Verifies Svix webhook signature for Resend events

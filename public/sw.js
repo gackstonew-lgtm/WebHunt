@@ -53,9 +53,15 @@ self.addEventListener('activate', (event) => {
 // 3. Fetch Event: Conservative routing
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
+  // 1. Only handle standard http and https requests (ignore chrome-extension:, moz-extension:, data:, blob:, etc.)
+  if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) {
+    return;
+  }
+
   const url = new URL(request.url);
 
-  // Only handle GET requests
+  // 2. Only handle GET requests
   if (request.method !== 'GET') {
     return;
   }

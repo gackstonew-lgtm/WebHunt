@@ -285,6 +285,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -309,6 +310,7 @@ export default function AuthPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -351,6 +353,7 @@ export default function AuthPage() {
                 <input
                   type="text"
                   required
+                  autoComplete="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name / Agency Name"
@@ -366,6 +369,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -381,6 +385,7 @@ export default function AuthPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -403,6 +408,7 @@ export default function AuthPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
@@ -457,6 +463,7 @@ export default function AuthPage() {
                 maxLength={6}
                 required
                 autoFocus
+                autoComplete="one-time-code"
                 value={otp}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, "");
@@ -526,6 +533,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"

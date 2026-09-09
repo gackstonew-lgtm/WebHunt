@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "WebHunt",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   formatDetection: {
     telephone: false,
   },
