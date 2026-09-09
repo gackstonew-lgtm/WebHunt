@@ -5,6 +5,10 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
+
 export const prisma =
   global.prisma ||
   new PrismaClient({
@@ -13,6 +17,18 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma;
+}
+
+/**
+ * Safe database connection verification helper
+ */
+export async function checkDatabaseConnection(): Promise<{ connected: boolean; error?: string }> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { connected: true };
+  } catch (err: any) {
+    return { connected: false, error: err?.message || "Unknown database error" };
+  }
 }
 
 export default prisma;

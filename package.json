@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "node scripts/prepare-prisma.js && next dev",
+    "build": "node scripts/prepare-prisma.js && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:push": "node scripts/prepare-prisma.js && prisma db push",
+    "db:generate": "node scripts/prepare-prisma.js && prisma generate",
+    "db:studio": "node scripts/prepare-prisma.js && prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
