@@ -1,131 +1,164 @@
-# 🎯 WebHunt — Worldwide B2B & Remote Tech Lead Radar
+🎯 WebHunt — Worldwide B2B & Remote Opportunity Radar
 
-> A production-ready lead-generation web application designed to help agencies, software engineers, and growth hackers find high-value sales leads across two modes:
-> 1. **Physical Mode**: Local businesses anywhere in the world (including Kenya, US, UK, Canada, Europe, Africa, Asia) that have active phone numbers but **no website on record**, queried via **OpenStreetMap Overpass API** and **Google Places API**.
-> 2. **Online Mode**: Remote web-development and custom software opportunities queried via official public APIs (**Remotive API** and **Arbeitnow API**).
+WebHunt is a lead discovery platform designed for agencies, freelancers, software developers, consultants, and businesses looking for new opportunities around the world.
 
----
+It helps users discover:
 
-## ⚖️ Legal & Non-Scraping Guarantee
+- 🏢 Local businesses that may need a website or digital services
+- 💻 Remote technology and software opportunities
+- 📍 Business opportunities by country, city, region, or ZIP/postal area
+- 📞 Useful business contact information where publicly available
+- 🤝 Potential prospects that can be added to a personal sales pipeline
 
-- 🚫 **No LinkedIn, Upwork, or Fiverr Scraping**: Scraping these platforms violates their Terms of Service and is actively blocked. WebHunt queries official public JSON endpoints and open geographic databases.
-- 🔌 **Partner API Extensible**: The online provider architecture is designed so a licensed LinkedIn or Upwork Partner API can be plugged in when enterprise API credentials are provided.
-- 📞 **Worldwide Telemarketing Compliance**: Always comply with local commercial communications regulations (e.g., Kenya Data Protection Act 2019, US TCPA/DNC, UK PECR, GDPR).
+WebHunt brings business discovery and remote opportunity discovery together in one simple interface.
 
----
+🌍 How WebHunt Works
 
-## 🚀 Key Features
+WebHunt provides two primary discovery modes:
 
-### 🏢 1. Physical Mode (Local Businesses Without Websites)
-- **OpenStreetMap Overpass API (Free Worldwide)**: Primary engine. Queries global OSM nodes/ways by country and city, filtering for records with active `phone` tags and **no website** (`!website`, `!contact:website`).
-- **Google Places API (New)**: Optional integration. Automatically enabled if `GOOGLE_PLACES_API_KEY` is provided in `.env`.
-- **240+ Countries Supported**: Dedicated country selector with special formatting for Kenya (`+254`), United States (`+1`), United Kingdom (`+44`), Nigeria (`+234`), etc.
-- **Dynamic Cold Call Pitch Generator**: Generates 3-step personalized cold calling scripts tailored to the business's niche, local area, and lack of web presence, complete with objection handling.
+🏢 Physical Mode
 
-### 💻 2. Online Mode (Remote Tech & Web Gigs)
-- **Remotive API (Free Public JSON)**: Fetches remote software, frontend, backend, and full-stack opportunities worldwide.
-- **Arbeitnow API (Free Public JSON)**: Fetches developer and engineering contracts.
-- **Dynamic Freelance Proposal & Cover Letter Generator**: Generates client pitches with tailored tech stack highlights for every job listing.
+Physical Mode helps you discover **local businesses around the world** that may have opportunities for web development, software, digital marketing, automation, and other technology services.
 
-### 📊 3. In-Session & LocalStorage Pipeline CRM
-- Full CRM workflow without database dependencies for v1:
-  - **New (Inbox)** ➔ **Contacted** ➔ **Pitch / Proposal Sent** ➔ **Closed / Won** ➔ **Archived**.
-- Track total pipeline volume, outreach activity, and estimated deal value in real-time.
-- One-click formatted **CSV Export** for dialers, spreadsheets, and cold email tools.
+You can specify:
 
----
+- Target industry or business type
+- Country
+- City, region, or ZIP/postal area
+- Available business data sources
 
-## 🛠️ Quick Start (Zero Config)
+WebHunt searches available business and geographic data and presents relevant businesses that match your criteria.
 
-The app runs immediately out of the box with zero paid API keys needed (using OpenStreetMap Overpass, Remotive API, and Arbeitnow API):
+Where available, results may include:
 
-```bash
-# 1. Install dependencies
-npm install
+- Business name
+- Industry/business category
+- Location
+- Address
+- Phone number
+- Website status
+- Email address
+- WhatsApp contact
+- Contact page
+- Booking page
+- Social media profiles
+- Other publicly available business contact information
 
-# 2. Run the development server
-npm run dev
-```
+This makes it easier to identify businesses that may benefit from your services and determine the best available way to contact them.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+💻 Online Mode
 
----
+Online Mode is designed for users looking for **remote technology and software opportunities**.
 
-## 🔑 Environment Configuration (`.env.example`)
+You can discover opportunities related to areas such as:
 
-```env
-# ==============================================================================
-# WEBHUNT - CONFIGURATION
-# ==============================================================================
+- Web development
+- Frontend development
+- Backend development
+- Full-stack development
+- Software engineering
+- Mobile development
+- DevOps
+- Cloud engineering
+- Data and technology
+- Other remote technology roles
 
-# 1. GOOGLE PLACES API KEY (Optional - OpenStreetMap is used for free by default)
-# https://console.cloud.google.com/apis/credentials
-GOOGLE_PLACES_API_KEY=""
+Results can provide information such as:
 
-# 2. API CACHE (1 hour in-memory / response cache)
-CACHE_TTL_SECONDS=3600
-ENABLE_API_CACHE=true
-```
+- Job or opportunity title
+- Company
+- Description
+- Location requirements
+- Remote status
+- Technology requirements
+- Application information
+- Source of the opportunity
 
----
+This allows freelancers and software professionals to identify relevant opportunities without manually searching multiple platforms.
 
-## 🗄️ Future Neon PostgreSQL Persistence (Optional)
+🔎 Targeted Discovery
 
-Gacks Leads stores pipeline leads in-session and browser `localStorage` by default for instant responsiveness. If you wish to enable cloud database persistence:
+WebHunt allows you to narrow your search according to what you are looking for.
 
-1. Create a PostgreSQL database at [neon.tech](https://neon.tech).
-2. Set `DATABASE_URL` in `.env`.
-3. In `prisma/schema.prisma`, change `provider = "sqlite"` to `provider = "postgresql"`.
-4. Run `npx prisma db push`.
+Target Industry / Business Type
 
----
+Select the type of business or industry you want to target.
 
-## 📁 Architecture Overview
+Examples include:
 
-```
-gacks-leads/
-├── app/
-│   ├── actions/
-│   │   └── search.ts          # Server action routing Physical & Online searches
-│   ├── pipeline/
-│   │   └── page.tsx           # In-session Lead Pipeline CRM
-│   ├── searches/
-│   │   └── page.tsx           # Search history & analytics
-│   ├── globals.css            # Dark mode & glassmorphism styling
-│   ├── layout.tsx             # Root layout with navigation & footer
-│   └── page.tsx               # Main dual-mode Lead Radar dashboard
-├── components/
-│   ├── Navbar.tsx             # Header with live pipeline counters
-│   ├── SearchForm.tsx         # Dual-mode selector + 240+ countries dropdown
-│   ├── ResultsTable.tsx       # Physical leads table & Online jobs cards
-│   ├── JobCard.tsx            # Rich remote job opportunity card
-│   ├── JobProposalModal.tsx   # Dynamic freelance proposal generator
-│   ├── PitchScriptModal.tsx   # Cold calling script generator
-│   ├── LeadNotesModal.tsx     # Notes & deal value editor
-│   ├── LeadPipeline.tsx       # CRM stage manager & revenue tracker
-│   ├── LegalModal.tsx         # Legal compliance & non-scraping notice
-│   └── SavedSearches.tsx      # Query logs & re-scan triggers
-├── lib/
-│   ├── countries.ts           # 240+ worldwide countries dataset
-│   ├── export.ts              # Universal CSV exporter
-│   ├── pipeline-store.ts      # In-session & LocalStorage pipeline store
-│   ├── providers/
-│   │   ├── osm-overpass.ts    # Worldwide OpenStreetMap Overpass engine
-│   │   ├── google-places.ts   # Google Places API integration
-│   │   ├── demo-provider.ts   # Offline physical leads sandbox
-│   │   ├── online/
-│   │   │   ├── remotive.ts    # Remotive public JSON API client
-│   │   │   ├── arbeitnow.ts   # Arbeitnow public JSON API client
-│   │   │   ├── demo-jobs.ts   # Offline tech jobs sandbox
-│   │   │   └── types.ts       # Online provider interface
-│   │   ├── types.ts           # Physical provider interface
-│   │   └── index.ts           # Central aggregator & server-side cache
-│   ├── types.ts               # Shared TypeScript schemas
-│   └── utils.ts               # Phone normalizer & script generators
-└── package.json
-```
+- Construction
+- Plumbing
+- Electrical services
+- Automotive
+- Real estate
+- Restaurants
+- Hospitality
+- Healthcare
+- Legal services
+- Financial services
+- Education
+- Retail
+- Professional services
+- Technology
+- Manufacturing
+- Logistics
+- Beauty and wellness
+- And many more
 
----
+The industry selector is designed to support a broad range of business niches and professional fields worldwide.
 
-## 📜 License
-MIT License. Built for agency owners, freelancers, and software vendors.
+🌎 Worldwide Search
+
+WebHunt is designed for global opportunity discovery.
+
+Search across:
+
+- Africa
+- North America
+- South America
+- Europe
+- Asia
+- Oceania
+- Middle East
+- And other worldwide markets
+
+You can combine a target industry with a specific country or local area to make your search more focused.
+
+For example:
+
+> **Industry:** Auto Repair  
+> **Country:** Kenya  
+> **City:** Nairobi
+
+Or:
+
+> **Industry:** Dental Services  
+> **Country:** United Kingdom  
+> **City:** London
+
+📞 Business Contact Discovery
+
+WebHunt goes beyond simply identifying businesses.
+
+When contact information is publicly available, the platform can help identify useful business contact channels such as:
+
+- ☎️ Phone numbers
+- ✉️ Business email addresses
+- 🌐 Websites
+- 💬 WhatsApp
+- 📅 Booking links
+- 📩 Contact pages
+- 💼 LinkedIn
+- 📘 Facebook
+- 📸 Instagram
+- ▶️ YouTube
+- 🎵 TikTok
+- Other relevant business contact channels
+
+Only information that can be legitimately associated with the business should be presented.
+
+Unavailable information is not invented or guessed.
+
+ 📊 Lead Pipeline
+
+WebHunt includes an in-session lead management workflow that allows you to organize opportunities discovered during your searches.
