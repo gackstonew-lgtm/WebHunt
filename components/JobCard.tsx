@@ -9,7 +9,7 @@ import {
   Sparkles, 
   Plus, 
   Check, 
-  FileText
+  Globe
 } from "lucide-react";
 import { OnlineJobLead } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -35,23 +35,37 @@ export default function JobCard({
         {/* Top Header: Company + Source Badge */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] flex items-center justify-center text-[#F6F4F1] font-bold text-xs shrink-0">
-              {job.company.slice(0, 2).toUpperCase()}
-            </div>
+            {job.companyLogo ? (
+              <img
+                src={job.companyLogo}
+                alt={job.company}
+                className="w-9 h-9 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] object-contain p-1 shrink-0"
+                onError={(e) => {
+                  // Fallback on error
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] flex items-center justify-center text-[#F6F4F1] font-bold text-xs shrink-0">
+                {job.company.slice(0, 2).toUpperCase()}
+              </div>
+            )}
             <div>
               <span className="text-xs font-semibold text-[#F6F4F1]">
                 {job.company}
               </span>
               <div className="text-[10px] text-[#A8A196] flex items-center space-x-1">
-                <MapPin className="w-3 h-3" />
+                <MapPin className="w-3 h-3 text-[#F95C4B]" />
                 <span>{job.location}</span>
               </div>
             </div>
           </div>
 
-          <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
-            {job.source}
-          </span>
+          <div className="flex items-center space-x-1">
+            <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
+              {job.source}
+            </span>
+          </div>
         </div>
 
         {/* Job Title */}
@@ -106,7 +120,7 @@ export default function JobCard({
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 rounded-xl bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-medium transition"
-              title="Apply on Job Board"
+              title="Apply on official platform"
             >
               <ExternalLink className="w-4 h-4" />
             </a>

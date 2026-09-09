@@ -20,7 +20,11 @@ import {
   Archive,
   Store,
   Terminal,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  MessageCircle,
+  Globe,
+  Calendar
 } from "lucide-react";
 import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -62,6 +66,7 @@ export default function LeadPipeline({
   const [proposalJob, setProposalJob] = useState<OnlineJobLead | null>(null);
   const [notesLead, setNotesLead] = useState<LeadItem | null>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   const filteredLeads = leads.filter((l) => {
     if (currentTab !== "ALL" && l.status !== currentTab) return false;
@@ -74,6 +79,13 @@ export default function LeadPipeline({
     navigator.clipboard.writeText(phone);
     setCopiedPhone(phone);
     setTimeout(() => setCopiedPhone(null), 2000);
+  };
+
+  const handleCopyEmail = (email: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+    setTimeout(() => setCopiedEmail(null), 2000);
   };
 
   const handleExport = () => {
@@ -279,7 +291,7 @@ export default function LeadPipeline({
 
                   {/* Physical Phone or Job Details */}
                   {isPhysical && physLead && (
-                    <div className="mt-3 space-y-1 text-xs">
+                    <div className="mt-3 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between bg-[#080808] p-2.5 rounded-xl border border-[rgba(228,222,210,0.12)]">
                         <a
                           href={`tel:${physLead.phone}`}
@@ -300,6 +312,104 @@ export default function LeadPipeline({
                           )}
                         </button>
                       </div>
+
+                      {/* Enriched Contact Badges on Card */}
+                      {(physLead.email || physLead.whatsapp || physLead.bookingUrl || physLead.contactPageUrl || (physLead.socialProfiles && Object.keys(physLead.socialProfiles).length > 0)) && (
+                        <div className="flex flex-wrap items-center gap-1 pt-1">
+                          {physLead.email && (
+                            <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.3)] text-[10px]">
+                              <a
+                                href={`mailto:${physLead.email}`}
+                                className="hover:text-[#F95C4B] flex items-center space-x-1"
+                                title={`Email: ${physLead.email}`}
+                              >
+                                <Mail className="w-3 h-3 text-[#F95C4B]" />
+                                <span className="max-w-[110px] truncate">{physLead.email}</span>
+                              </a>
+                              <button
+                                onClick={(e) => handleCopyEmail(physLead.email!, e)}
+                                className="text-[#A8A196] hover:text-[#F6F4F1] p-0.5 ml-0.5"
+                                title="Copy email"
+                              >
+                                {copiedEmail === physLead.email ? <Check className="w-2.5 h-2.5 text-[#5EBA8C]" /> : <Copy className="w-2.5 h-2.5" />}
+                              </button>
+                            </div>
+                          )}
+
+                          {physLead.whatsapp && (
+                            <a
+                              href={physLead.whatsapp.startsWith("http") ? physLead.whatsapp : `https://wa.me/${physLead.whatsapp.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#101914] text-[#5EBA8C] hover:bg-[#5EBA8C]/20 border border-[rgba(94,186,140,0.3)] text-[10px] font-medium"
+                              title="Chat on WhatsApp"
+                            >
+                              <MessageCircle className="w-3 h-3 text-[#5EBA8C]" />
+                              <span>WhatsApp</span>
+                            </a>
+                          )}
+
+                          {physLead.bookingUrl && (
+                            <a
+                              href={physLead.bookingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#F6F4F1] hover:text-[#F95C4B] border border-[rgba(228,222,210,0.12)] text-[10px]"
+                              title="Book / Schedule"
+                            >
+                              <Calendar className="w-3 h-3 text-[#F95C4B]" />
+                              <span>Book</span>
+                            </a>
+                          )}
+
+                          {physLead.contactPageUrl && (
+                            <a
+                              href={physLead.contactPageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px]"
+                              title="Contact Page"
+                            >
+                              <Globe className="w-3 h-3" />
+                              <span>Contact Page</span>
+                            </a>
+                          )}
+
+                          {physLead.socialProfiles?.facebook && (
+                            <a
+                              href={physLead.socialProfiles.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
+                              title="Facebook"
+                            >
+                              fb
+                            </a>
+                          )}
+                          {physLead.socialProfiles?.instagram && (
+                            <a
+                              href={physLead.socialProfiles.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
+                              title="Instagram"
+                            >
+                              ig
+                            </a>
+                          )}
+                          {physLead.socialProfiles?.linkedin && (
+                            <a
+                              href={physLead.socialProfiles.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold"
+                              title="LinkedIn"
+                            >
+                              in
+                            </a>
+                          )}
+                        </div>
+                      )}
 
                       {physLead.address && (
                         <div className="flex items-center space-x-1.5 text-[#A8A196] pt-1">

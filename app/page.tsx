@@ -6,7 +6,8 @@ import ResultsTable from "@/components/ResultsTable";
 import { LeadItem, SearchParams, SearchResult } from "@/lib/types";
 import { executeSearchAction, getProviderStatusesAction } from "./actions/search";
 import { useLeadPipeline } from "@/lib/pipeline-store";
-import { Sparkles, PhoneCall, Globe, Layers, AlertCircle, Store, Terminal, CheckCircle2 } from "lucide-react";
+import { logSearchHistory } from "@/lib/search-history-store";
+import { AlertCircle, Store, Terminal, Layers } from "lucide-react";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +44,15 @@ export default function HomePage() {
       const res = await executeSearchAction(params);
       if (res.success && res.data) {
         setSearchResult(res.data);
+        // Log to client search history
+        logSearchHistory({
+          mode: res.data.mode,
+          query: res.data.query,
+          location: res.data.location,
+          provider: res.data.provider,
+          totalFetched: res.data.totalFetched,
+          qualifiedCount: res.data.qualifiedCount,
+        });
       } else {
         setErrorMessage(res.error || "No leads found matching your search parameters.");
       }
@@ -95,9 +105,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F95C4B] flex items-center justify-center">
               <Terminal className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F6F4F1] text-base">Remote Software Gigs</h3>
+            <h3 className="font-bold text-[#F6F4F1] text-base">Remote Opportunities Radar</h3>
             <p className="text-xs text-[#A8A196] leading-relaxed">
-              Query official public developer endpoints (Remotive & Arbeitnow) for remote web development and contract software jobs—without fragile or illegal scraping.
+              Query official public developer endpoints (Remotive, Arbeitnow, Himalayas, RemoteOK, WWR) for genuine remote software, writing, design, and AI gigs.
             </p>
           </div>
 

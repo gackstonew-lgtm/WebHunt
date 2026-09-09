@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { OnlineJobLead, PhysicalLead } from "./types";
+import { validateAndFormatPhone } from "./validation/phone";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -11,47 +12,17 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function normalizePhoneNumber(phone?: string | null): string {
   if (!phone) return "";
-  let cleaned = phone.replace(/[^\d+]/g, "");
-  // If starts with +1 (US) with 12 chars (+1XXXXXXXXXX), strip +1
-  if (cleaned.startsWith("+1") && cleaned.length === 12) {
-    cleaned = cleaned.substring(2);
-  } else if (cleaned.startsWith("1") && cleaned.length === 11 && !cleaned.startsWith("10")) {
-    cleaned = cleaned.substring(1);
-  }
-  return cleaned;
+  const validated = validateAndFormatPhone(phone);
+  return validated.normalized || phone.replace(/[^\d+]/g, "");
 }
 
 /**
  * Worldwide phone formatting supporting Kenya (+254), US (+1), UK (+44), etc.
  */
 export function formatPhoneNumber(phone?: string | null, countryCode?: string): string {
-  if (!phone) return "No Phone Available";
-  const cleaned = phone.trim();
-
-  // Kenyan number format (+254 7XX XXX XXX or 07XX XXX XXX)
-  if (cleaned.startsWith("+254") || cleaned.startsWith("254") || (countryCode === "KE" && (cleaned.startsWith("07") || cleaned.startsWith("01")))) {
-    let digits = cleaned.replace(/\D/g, "");
-    if (digits.startsWith("254")) digits = "0" + digits.substring(3);
-    if (digits.length === 10) {
-      return `+254 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-    }
-  }
-
-  const digits = cleaned.replace(/\D/g, "");
-
-  // US/Canada format
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  } else if (digits.length === 11 && digits.startsWith("1")) {
-    return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-  }
-
-  // International format with plus
-  if (cleaned.startsWith("+")) {
-    return cleaned;
-  }
-
-  return cleaned;
+  if (!phone || phone.trim() === "") return "Phone unavailable";
+  const validated = validateAndFormatPhone(phone, countryCode);
+  return validated.formatted;
 }
 
 /**
@@ -61,7 +32,7 @@ export function normalizeBusinessName(name: string): string {
   return name
     .toLowerCase()
     .replace(/,/g, "")
-    .replace(/\b(llc|inc|incorporated|corp|corporation|co|ltd|limited|services|group|enterprises|ventures|holdings)\b/gi, "")
+    .replace(/\b(llc|inc|incorporated|corp|corporation|co|ltd|limited|services|group|enterprises|ventures|holdings|company)\b/gi, "")
     .replace(/[^\w\s]/gi, "")
     .replace(/\s+/g, " ")
     .trim();

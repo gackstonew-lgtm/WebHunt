@@ -1,8 +1,9 @@
-import { PhysicalLead, PhysicalSearchParams } from "../types";
+import { PhysicalLead, PhysicalSearchParams, PhysicalProviderType } from "../types";
 
 export interface IPhysicalLeadProvider {
   name: string;
-  providerKey: 'osm' | 'google' | 'demo';
+  providerKey: PhysicalProviderType;
   isConfigured(): boolean;
   search(params: PhysicalSearchParams): Promise<PhysicalLead[]>;
 }
+

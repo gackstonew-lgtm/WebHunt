@@ -9,13 +9,14 @@ import {
   Sparkles, 
   RefreshCw, 
   ShieldCheck, 
-  Sliders, 
   ArrowRight,
   Store,
-  Terminal
+  Terminal,
+  Briefcase
 } from "lucide-react";
 import { LeadMode, PhysicalProviderType, OnlineProviderType, SearchParams } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
+import IndustrySelector from "./IndustrySelector";
 
 interface SearchFormProps {
   onSearch: (params: SearchParams) => Promise<any>;
@@ -26,31 +27,6 @@ interface SearchFormProps {
   };
 }
 
-const PHYSICAL_PRESETS = [
-  "Plumbers",
-  "Electricians",
-  "Auto Repair",
-  "Barbershops",
-  "Bakeries",
-  "Roofing Contractors",
-  "Dentists",
-  "Landscaping",
-  "Restaurants & Cafes",
-  "HVAC Services",
-];
-
-const ONLINE_PRESETS = [
-  "Next.js",
-  "React Developer",
-  "WordPress",
-  "Full Stack",
-  "Python Backend",
-  "Shopify / E-Commerce",
-  "POS Integration",
-  "Tailwind CSS",
-  "Mobile App (Flutter/React Native)",
-];
-
 const POPULAR_CITIES: Record<string, string[]> = {
   "Kenya": ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"],
   "United States": ["Austin, TX", "Miami, FL", "Chicago, IL", "Atlanta, GA", "Phoenix, AZ"],
@@ -58,20 +34,25 @@ const POPULAR_CITIES: Record<string, string[]> = {
   "Canada": ["Toronto", "Vancouver", "Montreal", "Calgary"],
   "Nigeria": ["Lagos", "Abuja", "Port Harcourt", "Ibadan"],
   "South Africa": ["Johannesburg", "Cape Town", "Durban", "Pretoria"],
+  "Germany": ["Berlin", "Munich", "Frankfurt", "Hamburg"],
+  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah"],
 };
 
 export default function SearchForm({ onSearch, isLoading, providersStatus }: SearchFormProps) {
   const [mode, setMode] = useState<LeadMode>("physical");
 
   // Physical mode state
-  const [niche, setNiche] = useState("Plumbers");
+  const [niche, setNiche] = useState("Plumbers & Plumbing Services");
+  const [physicalIndustryIds, setPhysicalIndustryIds] = useState<string[]>(["plumbing"]);
   const [country, setCountry] = useState("Kenya");
   const [city, setCity] = useState("Nairobi");
   const [radius, setRadius] = useState<number>(25);
   const [physicalProvider, setPhysicalProvider] = useState<PhysicalProviderType>("all");
 
   // Online mode state
-  const [query, setQuery] = useState("Next.js");
+  const [query, setQuery] = useState("React / Next.js Developer");
+  const [onlineIndustryIds, setOnlineIndustryIds] = useState<string[]>(["software_development"]);
+  const [category, setCategory] = useState<string>("all");
   const [onlineProvider, setOnlineProvider] = useState<OnlineProviderType>("all");
 
   const [forceRefresh, setForceRefresh] = useState(false);
@@ -84,6 +65,7 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
       onSearch({
         mode: "physical",
         niche: niche.trim(),
+        industryIds: physicalIndustryIds,
         country,
         city: city.trim(),
         radius,
@@ -95,6 +77,8 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
       onSearch({
         mode: "online",
         query: query.trim(),
+        industryIds: onlineIndustryIds,
+        category: category !== "all" ? category : undefined,
         provider: onlineProvider,
         forceRefresh,
       });
@@ -156,19 +140,21 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
           /* ================= PHYSICAL MODE INPUTS ================= */
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Niche Input */}
+              {/* Niche Input with Interactive Taxonomy Selector */}
               <div className="md:col-span-4 space-y-1.5">
                 <label className="text-xs font-semibold text-[#A8A196] flex items-center space-x-1.5">
                   <Search className="w-3.5 h-3.5 text-[#F95C4B]" />
                   <span>Target Industry / Business Type</span>
                 </label>
-                <input
-                  type="text"
+                <IndustrySelector
+                  mode="physical"
                   value={niche}
-                  onChange={(e) => setNiche(e.target.value)}
-                  placeholder="e.g. Plumbers, Auto Repair, Bakeries..."
-                  required
-                  className="w-full bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl px-4 py-3 text-sm text-[#F6F4F1] placeholder-[#A8A196]/50 focus:outline-none focus:ring-2 focus:ring-[#F95C4B]/40 focus:border-[#F95C4B] transition"
+                  selectedIndustryIds={physicalIndustryIds}
+                  onChange={(newNiche, newIds) => {
+                    setNiche(newNiche);
+                    setPhysicalIndustryIds(newIds);
+                  }}
+                  placeholder="Search industries (e.g. Plumbers, Auto Repair)..."
                 />
               </div>
 
@@ -216,67 +202,69 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
               </div>
             </div>
 
-            {/* Quick Industry Presets */}
-            <div className="space-y-1.5">
-              <span className="text-xs text-[#A8A196] font-medium">Quick industry presets:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {PHYSICAL_PRESETS.map((tag) => (
-                  <button
-                    type="button"
-                    key={tag}
-                    onClick={() => setNiche(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-lg border transition ${
-                      niche.toLowerCase() === tag.toLowerCase()
-                        ? "bg-[#F95C4B] text-white border-[#F95C4B] font-semibold shadow-sm"
-                        : "bg-[#080808] text-[#A8A196] border-[rgba(228,222,210,0.12)] hover:border-[rgba(228,222,210,0.25)] hover:text-[#F6F4F1] hover:bg-[#161616]"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
+            {/* Provider and Location Options */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              {/* Quick City Presets */}
+              {citiesForCountry.length > 0 ? (
+                <div className="flex items-center space-x-2 text-xs text-[#A8A196] flex-1 min-w-[240px]">
+                  <span className="font-medium shrink-0">Popular in {country}:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {citiesForCountry.map((c) => (
+                      <button
+                        type="button"
+                        key={c}
+                        onClick={() => setCity(c)}
+                        className={`text-xs px-2 py-0.5 rounded-lg border transition ${
+                          city.toLowerCase() === c.toLowerCase()
+                            ? "bg-[#161616] text-[#F6F4F1] border-[rgba(249,92,75,0.4)] font-semibold"
+                            : "bg-[#080808] border-[rgba(228,222,210,0.12)] text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1" />
+              )}
+
+              {/* Physical Provider Dropdown */}
+              <div className="space-y-1.5 shrink-0 w-full sm:w-auto">
+                <span className="text-xs text-[#A8A196] font-medium mr-2">Business Provider:</span>
+                <select
+                  value={physicalProvider}
+                  onChange={(e) => setPhysicalProvider(e.target.value as PhysicalProviderType)}
+                  className="bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl px-3 py-1.5 text-xs text-[#F6F4F1] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] cursor-pointer"
+                >
+                  <option value="all" className="bg-[#0D0D0D]">⚡ All Configured Business Providers</option>
+                  <option value="osm" className="bg-[#0D0D0D]">🌐 OpenStreetMap Overpass (Free Worldwide)</option>
+                  <option value="google" className="bg-[#0D0D0D]">🏢 Google Places API</option>
+                  <option value="yelp" className="bg-[#0D0D0D]">⭐ Yelp Fusion API</option>
+                  <option value="foursquare" className="bg-[#0D0D0D]">📍 Foursquare Places API</option>
+                </select>
               </div>
             </div>
-
-            {/* Quick City Presets */}
-            {citiesForCountry.length > 0 && (
-              <div className="flex items-center space-x-2 text-xs text-[#A8A196]">
-                <span className="font-medium shrink-0">Popular in {country}:</span>
-                <div className="flex flex-wrap gap-1">
-                  {citiesForCountry.map((c) => (
-                    <button
-                      type="button"
-                      key={c}
-                      onClick={() => setCity(c)}
-                      className={`text-xs px-2 py-0.5 rounded-lg border transition ${
-                        city.toLowerCase() === c.toLowerCase()
-                          ? "bg-[#161616] text-[#F6F4F1] border-[rgba(249,92,75,0.4)] font-semibold"
-                          : "bg-[#080808] border-[rgba(228,222,210,0.12)] text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           /* ================= ONLINE MODE INPUTS ================= */
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Job Keyword / Tech Stack Input */}
+              {/* Job Keyword / Industry Selector */}
               <div className="md:col-span-8 space-y-1.5">
                 <label className="text-xs font-semibold text-[#A8A196] flex items-center space-x-1.5">
                   <Terminal className="w-3.5 h-3.5 text-[#F95C4B]" />
-                  <span>Job Role, Framework or Service Keyword</span>
+                  <span>Job Role, Field or Service Keyword</span>
                 </label>
-                <input
-                  type="text"
+                <IndustrySelector
+                  mode="online"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="e.g. Next.js, React Developer, WordPress, POS integration, Python..."
-                  required
-                  className="w-full bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl px-4 py-3 text-sm text-[#F6F4F1] placeholder-[#A8A196]/50 focus:outline-none focus:ring-2 focus:ring-[#F95C4B]/40 focus:border-[#F95C4B] transition"
+                  selectedIndustryIds={onlineIndustryIds}
+                  onChange={(newQuery, newIds) => {
+                    setQuery(newQuery);
+                    setOnlineIndustryIds(newIds);
+                  }}
+                  placeholder="Search job fields (e.g. Software Development, AI Data, Writing)..."
                 />
               </div>
 
@@ -284,7 +272,7 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
               <div className="md:col-span-4 space-y-1.5">
                 <label className="text-xs font-semibold text-[#A8A196] flex items-center space-x-1.5">
                   <Layers className="w-3.5 h-3.5 text-[#F95C4B]" />
-                  <span>Job Source API</span>
+                  <span>Job Source Feed</span>
                 </label>
                 <div className="relative">
                   <select
@@ -292,36 +280,19 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
                     onChange={(e) => setOnlineProvider(e.target.value as OnlineProviderType)}
                     className="w-full bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl px-4 py-3 text-sm text-[#F6F4F1] focus:outline-none focus:ring-2 focus:ring-[#F95C4B]/40 focus:border-[#F95C4B] appearance-none cursor-pointer transition"
                   >
-                    <option value="all" className="bg-[#0D0D0D]">⚡ All Public Job APIs (Remotive + Arbeitnow)</option>
-                    <option value="remotive" className="bg-[#0D0D0D]">🌐 Remotive API (Worldwide Remote)</option>
-                    <option value="arbeitnow" className="bg-[#0D0D0D]">💼 Arbeitnow API (Tech Jobs)</option>
-                    <option value="demo" className="bg-[#0D0D0D]">🧪 Demo Sandbox (Offline Tech Gigs)</option>
+                    <option value="all" className="bg-[#0D0D0D]">⚡ All Public Job Feeds & APIs</option>
+                    <option value="remotive" className="bg-[#0D0D0D]">🌐 Remotive Public API (Worldwide)</option>
+                    <option value="arbeitnow" className="bg-[#0D0D0D]">💼 Arbeitnow Job API (Tech)</option>
+                    <option value="himalayas" className="bg-[#0D0D0D]">🏔️ Himalayas Remote Jobs API</option>
+                    <option value="weworkremotely" className="bg-[#0D0D0D]">📰 We Work Remotely Feeds</option>
+                    <option value="jobspresso" className="bg-[#0D0D0D]">☕ Jobspresso Remote Feed</option>
+                    <option value="remoteok" className="bg-[#0D0D0D]">⚡ Remote OK Public API</option>
+                    <option value="africa" className="bg-[#0D0D0D]">🇰🇪 Africa & Kenya Remote Discovery</option>
                   </select>
                   <div className="absolute right-3.5 top-3.5 pointer-events-none text-[#A8A196] text-xs">
                     ▼
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Quick Tech Chips */}
-            <div className="space-y-1.5">
-              <span className="text-xs text-[#A8A196] font-medium">Popular tech stack queries:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {ONLINE_PRESETS.map((tag) => (
-                  <button
-                    type="button"
-                    key={tag}
-                    onClick={() => setQuery(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-lg border transition ${
-                      query.toLowerCase() === tag.toLowerCase()
-                        ? "bg-[#F95C4B] text-white border-[#F95C4B] font-semibold shadow-sm"
-                        : "bg-[#080808] text-[#A8A196] border-[rgba(228,222,210,0.12)] hover:border-[rgba(228,222,210,0.25)] hover:text-[#F6F4F1] hover:bg-[#161616]"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
@@ -334,8 +305,8 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
               <ShieldCheck className="w-4 h-4 shrink-0 text-[#5EBA8C]" />
               <span>
                 {mode === "physical"
-                  ? "Auto-filters for businesses with phone but NO website"
-                  : "Uses official public JSON endpoints (No scraping)"}
+                  ? "Real verified businesses with phone number & no website"
+                  : "Genuine public feeds & official developer APIs (100% Real Data)"}
               </span>
             </div>
 
@@ -361,14 +332,14 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span>
                   {mode === "physical"
-                    ? `Scanning ${country} Overpass for Leads...`
-                    : "Scanning Public Job Feeds..."}
+                    ? `Scanning ${country} for Real Businesses...`
+                    : "Scanning Live Remote Opportunities..."}
                 </span>
               </>
             ) : (
               <>
                 <span>
-                  {mode === "physical" ? "Launch Local Lead Radar" : "Scan Remote Job Feeds"}
+                  {mode === "physical" ? "Launch Local Lead Radar" : "Scan Remote Opportunities"}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </>

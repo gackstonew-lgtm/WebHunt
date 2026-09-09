@@ -38,9 +38,29 @@ model Lead {
   reviewCount          Int?      @default(0)
   hasWebsite           Boolean   @default(false)
   noWebsiteConfidence  String    @default("High") // "High" | "Medium" | "Verified"
-  sourceProvider       String    @default("demo") // "google" | "yelp" | "osm" | "demo"
+  sourceProvider       String    @default("osm") // "osm" | "google" | "yelp" | "foursquare" | "remotive" | "arbeitnow" | "himalayas" | "weworkremotely" | "jobspresso" | "remoteok" | "africa"
   providerPlaceId      String?
+  sourceUrl            String?
+  sourceType           String?   // "business_directory" | "job_board" | "official_api" | "public_feed"
+  remoteType           String?   // "worldwide" | "regional" | "country_specific" | "hybrid" | "onsite"
+  verificationStatus   String    @default("SOURCE_LISTED") // "SOURCE_LISTED" | "VERIFIED" | "UNAVAILABLE"
+  dataQualityScore     Float?    // 0.0 - 1.0 quality score
+  latitude             Float?
+  longitude            Float?
+  lastVerifiedAt       DateTime?
   
+  // Enriched Contact Channels
+  email                String?
+  whatsapp             String?
+  contactPageUrl       String?
+  bookingUrl           String?
+  hasContactForm       Boolean?  @default(false)
+  facebook             String?
+  instagram            String?
+  linkedin             String?
+  twitter              String?
+  enrichmentJson       String?   // JSON representation of all DiscoveredContact items and metadata
+
   // Pipeline CRM fields
   status               String    @default("NEW") // "NEW" | "CONTACTED" | "INTERESTED" | "CLOSED" | "NOT_INTERESTED"
   estimatedValue       Float     @default(1500.0) // Estimated website/POS deal value

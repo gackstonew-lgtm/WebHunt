@@ -19,7 +19,7 @@ export default function LegalModal({ onClose }: LegalModalProps) {
             </div>
             <div>
               <h3 className="font-semibold text-[#F6F4F1] text-base">Worldwide Legal & Compliance Guidelines</h3>
-              <p className="text-xs text-[#A8A196]">Outreach Laws & API Terms of Service</p>
+              <p className="text-xs text-[#A8A196]">Outreach Laws & Data Provenance Terms</p>
             </div>
           </div>
           <button
@@ -35,7 +35,7 @@ export default function LegalModal({ onClose }: LegalModalProps) {
           <div className="p-4 rounded-2xl bg-[#080808] border border-[rgba(228,222,210,0.10)] text-xs flex items-start space-x-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-[#F6F4F1]">100% Zero-Scraping Guarantee:</span> WebHunt does NOT scrape LinkedIn, Upwork, or Fiverr. We query official, public APIs (Remotive, Arbeitnow) for remote jobs, and public geodata sources (OpenStreetMap Overpass, Google Places) for local business listings with missing websites.
+              <span className="font-semibold text-[#F6F4F1]">100% Genuine, Verifiable Data Guarantee:</span> WebHunt only displays real, traceable businesses and job opportunities. We query official, public developer APIs (Remotive, Arbeitnow, Himalayas, RemoteOK), public feeds (WeWorkRemotely, Jobspresso), and global open geodata (OpenStreetMap Overpass, Google Places, Yelp, Foursquare). No fake data or synthetic fallbacks are ever generated.
             </div>
           </div>
 
@@ -64,8 +64,9 @@ export default function LegalModal({ onClose }: LegalModalProps) {
             </h4>
             <ul className="space-y-2 text-xs text-[#A8A196] list-disc list-inside">
               <li><strong className="text-[#F6F4F1]">OpenStreetMap Overpass:</strong> Used under the Open Database License (ODbL). Queries are cached server-side to prevent server load.</li>
-              <li><strong className="text-[#F6F4F1]">Remotive & Arbeitnow:</strong> Queried via official public JSON developer endpoints with user-agent attribution.</li>
-              <li><strong className="text-[#F6F4F1]">Google Places API:</strong> Optional; queries are rate-limited and cached according to Google Cloud terms.</li>
+              <li><strong className="text-[#F6F4F1]">Remotive, Arbeitnow, Himalayas & RemoteOK:</strong> Queried via official public JSON developer endpoints with user-agent attribution.</li>
+              <li><strong className="text-[#F6F4F1]">We Work Remotely & Jobspresso:</strong> Syndicated via official public RSS feeds.</li>
+              <li><strong className="text-[#F6F4F1]">Google Places, Yelp & Foursquare:</strong> Optional commercial APIs; requests are rate-limited and cached according to developer terms.</li>
             </ul>
           </div>
         </div>

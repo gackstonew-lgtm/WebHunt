@@ -11,9 +11,14 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
 }> {
   try {
     const isPhysical = lead.type === "physical";
-    const businessName = isPhysical ? (lead as PhysicalLead).businessName : `${(lead as OnlineJobLead).title} @ ${(lead as OnlineJobLead).company}`;
-    const phone = isPhysical ? (lead as PhysicalLead).phone : (lead as OnlineJobLead).url;
-    const phoneFormatted = isPhysical ? (lead as PhysicalLead).phoneFormatted : (lead as OnlineJobLead).url;
+    const pLead = isPhysical ? (lead as PhysicalLead) : null;
+    const jLead = !isPhysical ? (lead as OnlineJobLead) : null;
+
+    const businessName = isPhysical
+      ? pLead!.businessName
+      : `${jLead!.title} @ ${jLead!.company}`;
+    const phone = isPhysical ? pLead!.phone : jLead!.url;
+    const phoneFormatted = isPhysical ? pLead!.phoneFormatted : jLead!.url;
 
     if (!businessName || !phone) {
       return { success: false, error: "Identifier and title are required." };
@@ -30,24 +35,56 @@ export async function saveLeadToPipelineAction(lead: LeadItem): Promise<{
         businessName,
         phone,
         phoneFormatted,
-        address: isPhysical ? (lead as PhysicalLead).address : (lead as OnlineJobLead).location,
-        city: isPhysical ? (lead as PhysicalLead).city : "Remote",
-        state: isPhysical ? (lead as PhysicalLead).state : "",
-        postalCode: isPhysical ? (lead as PhysicalLead).postalCode : "",
-        category: isPhysical ? (lead as PhysicalLead).category : (lead as OnlineJobLead).category,
-        rating: isPhysical ? (lead as PhysicalLead).rating : null,
-        reviewCount: isPhysical ? (lead as PhysicalLead).reviewCount : 0,
+        address: isPhysical ? pLead!.address : jLead!.location,
+        city: isPhysical ? pLead!.city : "Remote",
+        state: isPhysical ? pLead!.state : "",
+        postalCode: isPhysical ? pLead!.postalCode : "",
+        category: isPhysical ? pLead!.category : jLead!.category,
+        rating: isPhysical ? pLead!.rating : null,
+        reviewCount: isPhysical ? pLead!.reviewCount : 0,
         hasWebsite: false,
-        noWebsiteConfidence: isPhysical ? (lead as PhysicalLead).noWebsiteConfidence : "Online Job",
-        sourceProvider: isPhysical ? (lead as PhysicalLead).sourceProvider : (lead as OnlineJobLead).source,
+        noWebsiteConfidence: isPhysical ? pLead!.noWebsiteConfidence : "Verified",
+        sourceProvider: isPhysical ? pLead!.sourceProvider : jLead!.source,
+        providerPlaceId: isPhysical ? pLead!.providerPlaceId : jLead!.sourceId,
+        sourceUrl: isPhysical ? pLead!.sourceUrl : jLead!.sourceUrl,
+        sourceType: isPhysical ? pLead!.sourceType : jLead!.sourceType,
+        remoteType: !isPhysical ? jLead!.remoteType : "onsite",
+        verificationStatus: lead.verificationStatus || "SOURCE_LISTED",
+        dataQualityScore: lead.dataQualityScore || 0.90,
+        latitude: isPhysical ? pLead!.latitude : null,
+        longitude: isPhysical ? pLead!.longitude : null,
+        lastVerifiedAt: new Date(),
         status: lead.status || "NEW",
-        estimatedValue: lead.estimatedValue || 1500,
+        estimatedValue: lead.estimatedValue || (isPhysical ? 1500 : 3500),
         notes: lead.notes || null,
+
+        // Enriched contact channels
+        email: lead.email || null,
+        whatsapp: lead.whatsapp || null,
+        contactPageUrl: lead.contactPageUrl || null,
+        bookingUrl: lead.bookingUrl || null,
+        hasContactForm: lead.hasContactForm || false,
+        facebook: lead.socialProfiles?.facebook || null,
+        instagram: lead.socialProfiles?.instagram || null,
+        linkedin: lead.socialProfiles?.linkedin || null,
+        twitter: lead.socialProfiles?.twitter || null,
+        enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : (lead.contacts ? JSON.stringify(lead.contacts) : null),
       },
       update: {
         status: lead.status || undefined,
         notes: lead.notes !== undefined ? lead.notes : undefined,
         estimatedValue: lead.estimatedValue || undefined,
+        email: lead.email || undefined,
+        whatsapp: lead.whatsapp || undefined,
+        contactPageUrl: lead.contactPageUrl || undefined,
+        bookingUrl: lead.bookingUrl || undefined,
+        hasContactForm: lead.hasContactForm !== undefined ? lead.hasContactForm : undefined,
+        facebook: lead.socialProfiles?.facebook || undefined,
+        instagram: lead.socialProfiles?.instagram || undefined,
+        linkedin: lead.socialProfiles?.linkedin || undefined,
+        twitter: lead.socialProfiles?.twitter || undefined,
+        enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : undefined,
+        lastVerifiedAt: new Date(),
       },
     });
 

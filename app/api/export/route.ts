@@ -23,6 +23,14 @@ export async function GET(req: NextRequest) {
       "Business Name",
       "Phone Number",
       "Formatted Phone",
+      "Email",
+      "WhatsApp",
+      "Contact Page URL",
+      "Booking URL",
+      "Facebook",
+      "Instagram",
+      "LinkedIn",
+      "Twitter / X",
       "Category",
       "Address",
       "City",
@@ -44,10 +52,18 @@ export async function GET(req: NextRequest) {
       return `"${clean}"`;
     };
 
-    const rows = leads.map((lead) => [
+    const rows = leads.map((lead: any) => [
       escapeCsv(lead.businessName),
       escapeCsv(lead.phone),
       escapeCsv(lead.phoneFormatted),
+      escapeCsv(lead.email || ""),
+      escapeCsv(lead.whatsapp || ""),
+      escapeCsv(lead.contactPageUrl || ""),
+      escapeCsv(lead.bookingUrl || ""),
+      escapeCsv(lead.facebook || ""),
+      escapeCsv(lead.instagram || ""),
+      escapeCsv(lead.linkedin || ""),
+      escapeCsv(lead.twitter || ""),
       escapeCsv(lead.category || "N/A"),
       escapeCsv(lead.address || "N/A"),
       escapeCsv(lead.city || "N/A"),

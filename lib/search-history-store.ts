@@ -16,47 +16,14 @@ export interface SearchHistoryItem {
   createdAt: string;
 }
 
-const DEFAULT_HISTORY: SearchHistoryItem[] = [
-  {
-    id: "hist-1",
-    mode: "physical",
-    query: "Plumbers",
-    location: "Nairobi, Kenya",
-    provider: "OpenStreetMap",
-    totalFetched: 32,
-    qualifiedCount: 14,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "hist-2",
-    mode: "online",
-    query: "Next.js Developer",
-    location: "Worldwide Remote",
-    provider: "Remotive Public API",
-    totalFetched: 24,
-    qualifiedCount: 19,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "hist-3",
-    mode: "physical",
-    query: "Auto Repair",
-    location: "Austin, TX, United States",
-    provider: "OpenStreetMap",
-    totalFetched: 45,
-    qualifiedCount: 22,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export function getStoredSearchHistory(): SearchHistoryItem[] {
-  if (typeof window === "undefined") return DEFAULT_HISTORY;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(SEARCH_HISTORY_KEY) || localStorage.getItem(LEGACY_HISTORY_KEY);
-    if (!raw) return DEFAULT_HISTORY;
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch (err) {
-    return DEFAULT_HISTORY;
+    return [];
   }
 }
 
@@ -69,9 +36,19 @@ export function logSearchHistory(item: Omit<SearchHistoryItem, "id" | "createdAt
       id: `hist_${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
-    const updated = [newItem, ...prev.filter((p) => p.id !== item.query)].slice(0, 30);
+    const updated = [newItem, ...prev.filter((p) => p.query !== item.query)].slice(0, 30);
     localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updated));
   } catch (err) {
-    console.error(err);
+    console.error("Failed to log search history:", err);
+  }
+}
+
+export function clearStoredSearchHistory(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+    localStorage.removeItem(LEGACY_HISTORY_KEY);
+  } catch (err) {
+    console.error("Failed to clear search history:", err);
   }
 }

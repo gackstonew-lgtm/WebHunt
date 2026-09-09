@@ -19,7 +19,12 @@ import {
   ArrowUpDown,
   Filter,
   Terminal,
-  Store
+  Store,
+  ExternalLink,
+  Mail,
+  MessageCircle,
+  Globe,
+  Calendar
 } from "lucide-react";
 import { LeadItem, OnlineJobLead, PhysicalLead, SearchResult } from "@/lib/types";
 import PitchScriptModal from "./PitchScriptModal";
@@ -43,6 +48,7 @@ export default function ResultsTable({
 }: ResultsTableProps) {
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [pitchLead, setPitchLead] = useState<PhysicalLead | null>(null);
   const [proposalJob, setProposalJob] = useState<OnlineJobLead | null>(null);
   const [notesLead, setNotesLead] = useState<LeadItem | null>(null);
@@ -82,6 +88,13 @@ export default function ResultsTable({
     navigator.clipboard.writeText(phone);
     setCopiedPhone(phone);
     setTimeout(() => setCopiedPhone(null), 2000);
+  };
+
+  const handleCopyEmail = (email: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+    setTimeout(() => setCopiedEmail(null), 2000);
   };
 
   const toggleSelectAll = () => {
@@ -127,8 +140,8 @@ export default function ResultsTable({
             <div className="flex items-center space-x-2">
               <h3 className="font-bold text-[#F6F4F1] text-base">
                 {searchResult.mode === "physical"
-                  ? `Found ${leads.length} Qualified Local Businesses Without Websites`
-                  : `Found ${leads.length} Remote Software & Web Dev Opportunities`}
+                  ? `Found ${leads.length} Verified Local Businesses Without Websites`
+                  : `Found ${leads.length} Live Remote Opportunities (100% Real Data)`}
               </h3>
               {searchResult.fromCache && (
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
@@ -138,8 +151,8 @@ export default function ResultsTable({
             </div>
             <p className="text-xs text-[#A8A196]">
               {searchResult.mode === "physical"
-                ? `Scanned ${searchResult.totalFetched} listings in ${searchResult.location} for "${searchResult.query}"`
-                : `Scanned public job APIs for "${searchResult.query}"`}
+                ? `Scanned ${searchResult.totalFetched} live records in ${searchResult.location} for "${searchResult.query}"`
+                : `Queried official public developer endpoints for "${searchResult.query}"`}
             </p>
           </div>
         </div>
@@ -221,11 +234,11 @@ export default function ResultsTable({
                     </button>
                   </th>
                   <th className="p-4">Business & Niche</th>
-                  <th className="p-4">Phone Number</th>
+                  <th className="p-4">Contact Channels</th>
                   <th className="p-4">Location & Country</th>
                   <th className="p-4">Reputation</th>
                   <th className="p-4">Website Status</th>
-                  <th className="p-4">Source</th>
+                  <th className="p-4">Source & Provenance</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -234,6 +247,7 @@ export default function ResultsTable({
                   const lead = item as PhysicalLead;
                   const isSelected = selectedLeadIds.has(lead.id);
                   const isSaved = savedLeadIds.has(lead.id);
+                  const hasValidPhone = lead.phone && lead.phoneFormatted !== "Phone unavailable";
 
                   return (
                     <tr
@@ -268,28 +282,155 @@ export default function ResultsTable({
                         </div>
                       </td>
 
-                      {/* Phone Number */}
-                      <td className="p-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          <a
-                            href={`tel:${lead.phone}`}
-                            className="font-mono text-[#5EBA8C] hover:underline flex items-center space-x-1"
-                            title="Click to call"
-                          >
-                            <Phone className="w-3.5 h-3.5 shrink-0" />
-                            <span>{lead.phoneFormatted || lead.phone}</span>
-                          </a>
-                          <button
-                            onClick={(e) => handleCopyPhone(lead.phone, e)}
-                            className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616] transition"
-                            title="Copy phone number"
-                          >
-                            {copiedPhone === lead.phone ? (
-                              <Check className="w-3 h-3 text-[#5EBA8C]" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
+                      {/* Contact Channels (Phone, Email, WhatsApp, Socials, Booking) */}
+                      <td className="p-4">
+                        <div className="space-y-1.5 min-w-[200px]">
+                          {/* Phone */}
+                          {hasValidPhone ? (
+                            <div className="flex items-center justify-between bg-[#080808] px-2 py-1 rounded-lg border border-[rgba(228,222,210,0.08)]">
+                              <a
+                                href={`tel:${lead.phone}`}
+                                className="font-mono text-[#5EBA8C] hover:underline flex items-center space-x-1 text-xs"
+                                title="Click to call"
+                              >
+                                <Phone className="w-3.5 h-3.5 shrink-0" />
+                                <span>{lead.phoneFormatted || lead.phone}</span>
+                              </a>
+                              <button
+                                onClick={(e) => handleCopyPhone(lead.phone, e)}
+                                className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616] transition"
+                                title="Copy phone number"
+                              >
+                                {copiedPhone === lead.phone ? (
+                                  <Check className="w-3 h-3 text-[#5EBA8C]" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[#A8A196]/60 italic font-mono text-[11px]">
+                              Phone unavailable
+                            </span>
+                          )}
+
+                          {/* Enriched Channels Strip */}
+                          {(lead.email || lead.whatsapp || lead.bookingUrl || lead.contactPageUrl || (lead.socialProfiles && Object.keys(lead.socialProfiles).length > 0)) && (
+                            <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                              {/* Email */}
+                              {lead.email && (
+                                <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#141414] text-[#F6F4F1] border border-[rgba(249,92,75,0.3)] text-[10px] font-medium">
+                                  <a
+                                    href={`mailto:${lead.email}`}
+                                    className="hover:text-[#F95C4B] flex items-center space-x-1"
+                                    title={`Email: ${lead.email}`}
+                                  >
+                                    <Mail className="w-3 h-3 text-[#F95C4B] shrink-0" />
+                                    <span className="max-w-[120px] truncate">{lead.email}</span>
+                                  </a>
+                                  <button
+                                    onClick={(e) => handleCopyEmail(lead.email!, e)}
+                                    className="text-[#A8A196] hover:text-[#F6F4F1] p-0.5 ml-0.5"
+                                    title="Copy email"
+                                  >
+                                    {copiedEmail === lead.email ? (
+                                      <Check className="w-2.5 h-2.5 text-[#5EBA8C]" />
+                                    ) : (
+                                      <Copy className="w-2.5 h-2.5" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* WhatsApp */}
+                              {lead.whatsapp && (
+                                <a
+                                  href={lead.whatsapp.startsWith("http") ? lead.whatsapp : `https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#101914] text-[#5EBA8C] hover:bg-[#5EBA8C]/20 border border-[rgba(94,186,140,0.3)] text-[10px] font-medium transition"
+                                  title="Open WhatsApp Chat"
+                                >
+                                  <MessageCircle className="w-3 h-3 text-[#5EBA8C] shrink-0" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              )}
+
+                              {/* Booking URL */}
+                              {lead.bookingUrl && (
+                                <a
+                                  href={lead.bookingUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#F6F4F1] hover:text-[#F95C4B] border border-[rgba(228,222,210,0.12)] text-[10px] font-medium transition"
+                                  title="Book Appointment"
+                                >
+                                  <Calendar className="w-3 h-3 text-[#F95C4B] shrink-0" />
+                                  <span>Book</span>
+                                </a>
+                              )}
+
+                              {/* Contact Page */}
+                              {lead.contactPageUrl && (
+                                <a
+                                  href={lead.contactPageUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-medium transition"
+                                  title="Contact Page"
+                                >
+                                  <Globe className="w-3 h-3 text-[#A8A196] shrink-0" />
+                                  <span>Contact Page</span>
+                                </a>
+                              )}
+
+                              {/* Social Profiles */}
+                              {lead.socialProfiles?.facebook && (
+                                <a
+                                  href={lead.socialProfiles.facebook}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold transition"
+                                  title="Facebook Page"
+                                >
+                                  fb
+                                </a>
+                              )}
+                              {lead.socialProfiles?.instagram && (
+                                <a
+                                  href={lead.socialProfiles.instagram}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold transition"
+                                  title="Instagram Profile"
+                                >
+                                  ig
+                                </a>
+                              )}
+                              {lead.socialProfiles?.linkedin && (
+                                <a
+                                  href={lead.socialProfiles.linkedin}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold transition"
+                                  title="LinkedIn Profile"
+                                >
+                                  in
+                                </a>
+                              )}
+                              {lead.socialProfiles?.twitter && (
+                                <a
+                                  href={lead.socialProfiles.twitter}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.08)] text-[10px] font-bold transition"
+                                  title="X / Twitter"
+                                >
+                                  𝕏
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
 
@@ -326,11 +467,24 @@ export default function ResultsTable({
                         </span>
                       </td>
 
-                      {/* Provider Source */}
+                      {/* Provider Source & Provenance */}
                       <td className="p-4 whitespace-nowrap">
-                        <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#080808] text-[#A8A196] border border-[rgba(228,222,210,0.08)]">
-                          {lead.sourceProvider}
-                        </span>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#080808] text-[#A8A196] border border-[rgba(228,222,210,0.08)]">
+                            {lead.sourceProvider}
+                          </span>
+                          {lead.sourceUrl && (
+                            <a
+                              href={lead.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#A8A196] hover:text-[#F6F4F1] p-0.5"
+                              title="View original source record"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
                       </td>
 
                       {/* Actions */}
