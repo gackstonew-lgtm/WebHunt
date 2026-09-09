@@ -16,15 +16,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+      <body className="bg-[#0B1512] text-[#EAF2EE] min-h-screen flex flex-col antialiased selection:bg-[#0251B8] selection:text-white">
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}
         </main>
-        <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <footer className="border-t border-[rgba(120,200,170,0.14)] bg-[#0B1512] py-6 text-center text-xs text-[#8AA79A]">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>© {new Date().getFullYear()} Gacks Leads • Worldwide B2B & Remote Tech Discovery</span>
-            <div className="flex items-center space-x-3 text-slate-400">
+            <div className="flex items-center space-x-3 text-[#8AA79A]">
               <span>OpenStreetMap Overpass</span>
               <span>•</span>
               <span>Remotive API</span>

@@ -3,8 +3,41 @@
 @tailwind utilities;
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  /* Yardly Automotives Dark Brand Theme Tokens */
+  --background: #0B1512;          /* Deep green-black background */
+  --foreground: #EAF2EE;          /* Near-white with faint green tint */
+
+  --card: #111F1A;                /* Raised green-charcoal surface */
+  --card-foreground: #EAF2EE;     /* Card text */
+
+  --popover: #111F1A;             /* Popovers / Modals */
+  --popover-foreground: #EAF2EE;
+
+  --surface-subtle: #0F1A16;      /* Subtle inner surfaces and inputs */
+  --surface-elevated: #16302A;    /* Hover and elevated surface */
+
+  --primary: #0251B8;             /* Exact Brand Blue Accent */
+  --primary-foreground: #FFFFFF;  /* White on blue text */
+  --primary-hover: #013F92;       /* Deeper brand blue for hover */
+
+  --muted: #16302A;               /* Muted surface */
+  --muted-foreground: #8AA79A;    /* Desaturated brand green (#355347) lightened for WCAG contrast */
+
+  --accent: #16302A;              /* Hover & active chip surface */
+  --accent-foreground: #EAF2EE;
+
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  --border: rgba(120, 200, 170, 0.14);        /* Green-tinted hairline border */
+  --border-subtle: rgba(120, 200, 170, 0.08); /* Faint separator */
+  --border-strong: rgba(120, 200, 170, 0.28); /* Focused border */
+
+  --input: #0F1A16;               /* Input background */
+  --ring: rgba(2, 81, 184, 0.45); /* Brand blue focus ring */
+
+  --success: #3FA372;             /* Brand green family success */
+  --success-foreground: #EAF2EE;
 }
 
 body {
@@ -15,18 +48,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars matching Yardly Dark Theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: #0B1512;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #16302A;
   border-radius: 9999px;
+  border: 1px solid rgba(120, 200, 170, 0.08);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #20443B;
+}
+
+/* Focus outline helpers */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
