@@ -5,6 +5,11 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "Gacks Leads | Worldwide Local Businesses & Remote Job Radar",
   description: "Find local businesses without websites across Kenya & worldwide + discover remote tech opportunities via public APIs.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/favicon.ico",
+    apple: "/icon.svg",
+  },
 };
 
 export const dynamic = "force-dynamic";
