@@ -3,6 +3,7 @@
 import prisma from "@/lib/db";
 import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export async function fetchPipelineLeadsAction(userId?: string): Promise<{
   success: boolean;
@@ -10,8 +11,11 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
   error?: string;
 }> {
   try {
+    const session = await getCurrentSession();
+    const targetUserId = userId || session?.userId;
+
     const records = await prisma.lead.findMany({
-      where: userId ? { userId } : undefined,
+      where: targetUserId ? { userId: targetUserId } : undefined,
       orderBy: { createdAt: "desc" },
     });
 

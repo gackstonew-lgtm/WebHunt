@@ -10,23 +10,36 @@ import {
   ShieldAlert, 
   Download, 
   Globe,
-  User
+  User,
+  LogOut,
+  LogIn
 } from "lucide-react";
 import LegalModal from "./LegalModal";
 import ProfileSettingsModal from "./profile/ProfileSettingsModal";
 import { getStoredPipelineLeads } from "@/lib/pipeline-store";
 import { exportLeadsToCsv } from "@/lib/export";
 import { syncLocalStorageWithDatabase } from "@/lib/sync-bridge";
+import { getAuthStatusAction, logoutAction } from "@/app/actions/auth";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [showLegal, setShowLegal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [leadCount, setLeadCount] = useState(0);
+  const [userSession, setUserSession] = useState<{ id: string; email: string; name?: string | null } | null>(null);
 
   useEffect(() => {
     const stored = getStoredPipelineLeads();
     setLeadCount(stored.length);
+
+    // Fetch auth status
+    getAuthStatusAction().then((res) => {
+      if (res.isAuthenticated && res.user) {
+        setUserSession(res.user);
+      } else {
+        setUserSession(null);
+      }
+    });
 
     // Trigger seamless background sync with the database on load
     syncLocalStorageWithDatabase().catch((e) => console.warn("Background sync info:", e));
@@ -42,7 +55,13 @@ export default function Navbar() {
       window.removeEventListener("storage", handleStorage);
       clearInterval(interval);
     };
-  }, []);
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    await logoutAction();
+    setUserSession(null);
+    window.location.href = "/auth?mode=signin";
+  };
 
   const handleExportAll = () => {
     const leads = getStoredPipelineLeads();
@@ -112,15 +131,37 @@ export default function Navbar() {
             </nav>
 
             {/* Right Action buttons */}
-            <div className="flex items-center space-x-2.5">
-              <button
-                onClick={() => setShowProfile(true)}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition shadow-sm"
-                title="Manage Candidate & Agency Truthful Profile"
-              >
-                <User className="w-3.5 h-3.5 text-[#F95C4B]" />
-                <span className="hidden sm:inline">Profile</span>
-              </button>
+            <div className="flex items-center space-x-2">
+              {userSession ? (
+                <>
+                  <button
+                    onClick={() => setShowProfile(true)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F6F4F1] hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] transition shadow-sm"
+                    title="Manage Candidate & Agency Truthful Profile"
+                  >
+                    <User className="w-3.5 h-3.5 text-[#F95C4B]" />
+                    <span className="hidden sm:inline">Profile</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-[#A8A196] hover:text-[#F6F4F1] bg-[#161616]/50 hover:bg-[#161616] border border-[rgba(228,222,210,0.12)] rounded-xl transition"
+                    title="Sign out of WebHunt workspace"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-[#A8A196]" />
+                    <span className="hidden sm:inline">Sign Out</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth?mode=signin"
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white shadow-sm transition"
+                  title="Sign In to WebHunt"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </Link>
+              )}
 
               <button
                 onClick={handleExportAll}

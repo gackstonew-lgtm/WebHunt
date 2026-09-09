@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export interface TaskItem {
   id: string;
@@ -27,10 +28,13 @@ export async function createFollowUpTaskAction(params: {
   priority?: "LOW" | "MEDIUM" | "HIGH";
 }): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    const targetUserId = params.userId || session?.userId;
+
     const task = await prisma.followUpTask.create({
       data: {
         leadId: params.leadId || null,
-        userId: params.userId || null,
+        userId: targetUserId || null,
         taskType: params.taskType,
         title: params.title,
         notes: params.notes || null,
@@ -54,9 +58,12 @@ export async function fetchUpcomingTasksAction(userId?: string): Promise<{
   error?: string;
 }> {
   try {
+    const session = await getCurrentSession();
+    const targetUserId = userId || session?.userId;
+
     const records = await prisma.followUpTask.findMany({
       where: {
-        ...(userId ? { userId } : {}),
+        ...(targetUserId ? { userId: targetUserId } : {}),
         isCompleted: false,
       },
       include: {

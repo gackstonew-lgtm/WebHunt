@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export interface UserProfileData {
   id?: string;
@@ -48,14 +49,14 @@ const DEFAULT_PROFILE: UserProfileData = {
     "Python",
     "E-commerce",
     "M-Pesa Integrations",
-    "SEO Optimization",
+    "Tailored Portals",
   ],
-  portfolioUrl: "https://github.com",
+  portfolioUrl: "https://portfolio.quantumcode.co.ke",
   githubUrl: "https://github.com",
   linkedinUrl: "https://linkedin.com",
   resumeUrl: "",
-  hourlyRateUsd: 45,
-  hourlyRateKes: 5500,
+  hourlyRateUsd: 50,
+  hourlyRateKes: 6500,
   projectRateUsd: 1500,
   projectRateKes: 180000,
   currency: "USD",
@@ -76,21 +77,23 @@ export async function getUserProfileAction(userId?: string): Promise<{
   error?: string;
 }> {
   try {
-    // If no specific userId, fetch the first existing profile or create a default one
-    let profile = userId
-      ? await prisma.userProfile.findUnique({ where: { userId } })
+    const session = await getCurrentSession();
+    const targetUserId = userId || session?.userId;
+
+    let profile = targetUserId
+      ? await prisma.userProfile.findUnique({ where: { userId: targetUserId } })
       : await prisma.userProfile.findFirst();
 
     if (!profile) {
       // Find or create default user
-      let user = userId
-        ? await prisma.user.findUnique({ where: { id: userId } })
+      let user = targetUserId
+        ? await prisma.user.findUnique({ where: { id: targetUserId } })
         : await prisma.user.findFirst();
 
       if (!user) {
         user = await prisma.user.create({
           data: {
-            email: "default_workspace@webhunt.io",
+            email: session?.email || "default_workspace@webhunt.io",
             name: DEFAULT_PROFILE.fullName,
           },
         });

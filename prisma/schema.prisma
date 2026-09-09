@@ -8,22 +8,40 @@ generator client {
 }
 
 model User {
-  id               String            @id @default(uuid())
-  email            String            @unique
-  name             String?
-  passwordHash     String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                      String            @id @default(uuid())
+  email                   String            @unique
+  name                    String?
+  passwordHash            String?
+  role                    String            @default("user") // "user" | "admin"
+  status                  String            @default("active") // "active" | "suspended"
+  emailVerified           DateTime?
+  verificationToken       String?           @unique
+  verificationTokenExpiry DateTime?
+  verificationOtpHash     String?
+  verificationOtpExpiry   DateTime?
+  verificationOtpAttempts Int               @default(0)
+  verificationOtpSentAt   DateTime?
+  resetToken              String?           @unique
+  resetTokenExpiry        DateTime?
+  failedLoginAttempts     Int               @default(0)
+  lockoutUntil            DateTime?
+  lastLoginAt             DateTime?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
   
-  profile          UserProfile?
-  workspaces       WorkspaceMember[]
-  leads            Lead[]
-  searches         Search[]
-  proposals        ProposalDraft[]
-  applications     Application[]
-  outreachMessages OutreachMessage[]
-  followUpTasks    FollowUpTask[]
-  accounts         Account[]
+  profile                 UserProfile?
+  workspaces              WorkspaceMember[]
+  leads                   Lead[]
+  searches                Search[]
+  proposals               ProposalDraft[]
+  applications            Application[]
+  outreachMessages        OutreachMessage[]
+  followUpTasks           FollowUpTask[]
+  accounts                Account[]
+
+  @@index([email])
+  @@index([verificationToken])
+  @@index([resetToken])
 }
 
 model Account {
@@ -303,3 +321,28 @@ model ApiCache {
   @@index([cacheKey])
   @@index([expiresAt])
 }
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique
+  eventType   String
+  payload     String?
+  processedAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model EmailDeliveryLog {
+  id          String   @id @default(uuid())
+  email       String
+  emailType   String   // "verification_otp" | "password_reset" | "system"
+  messageId   String?  @unique
+  status      String   @default("queued") // "queued" | "sent" | "delivered" | "bounced" | "failed"
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([email])
+  @@index([messageId])
+}
+
