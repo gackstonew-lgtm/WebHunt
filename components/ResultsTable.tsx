@@ -112,31 +112,31 @@ export default function ResultsTable({
       selectedLeadIds.size > 0
         ? filteredLeads.filter((l) => selectedLeadIds.has(l.id))
         : filteredLeads;
-    exportLeadsToCsv(targets, `gacks-leads-${searchResult.mode}`);
+    exportLeadsToCsv(targets, `webhunt-leads-${searchResult.mode}`);
   };
 
   return (
     <div className="space-y-4">
       {/* Metrics Banner */}
-      <div className="bg-[#111F1A] border border-[rgba(120,200,170,0.14)] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-xl">
+      <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xl">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#16302A] border border-[rgba(120,200,170,0.14)] text-[#EAF2EE]">
-            {searchResult.mode === "physical" ? <Store className="w-5 h-5 text-[#0251B8]" /> : <Terminal className="w-5 h-5 text-[#0251B8]" />}
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F6F4F1]">
+            {searchResult.mode === "physical" ? <Store className="w-5 h-5 text-[#F95C4B]" /> : <Terminal className="w-5 h-5 text-[#F95C4B]" />}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-bold text-[#EAF2EE] text-base">
+              <h3 className="font-bold text-[#F6F4F1] text-base">
                 {searchResult.mode === "physical"
                   ? `Found ${leads.length} Qualified Local Businesses Without Websites`
                   : `Found ${leads.length} Remote Software & Web Dev Opportunities`}
               </h3>
               {searchResult.fromCache && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#16302A] text-[#8AA79A] border border-[rgba(120,200,170,0.14)]">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
                   Cached
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#8AA79A]">
+            <p className="text-xs text-[#A8A196]">
               {searchResult.mode === "physical"
                 ? `Scanned ${searchResult.totalFetched} listings in ${searchResult.location} for "${searchResult.query}"`
                 : `Scanned public job APIs for "${searchResult.query}"`}
@@ -148,42 +148,42 @@ export default function ResultsTable({
         <div className="flex flex-wrap items-center gap-2">
           {/* Physical Rating Filter */}
           {searchResult.mode === "physical" && (
-            <div className="flex items-center space-x-1.5 bg-[#0F1A16] border border-[rgba(120,200,170,0.14)] px-3 py-1.5 rounded-xl text-xs text-[#8AA79A]">
-              <Filter className="w-3.5 h-3.5 text-[#8AA79A]" />
+            <div className="flex items-center space-x-1.5 bg-[#080808] border border-[rgba(228,222,210,0.12)] px-3 py-1.5 rounded-xl text-xs text-[#A8A196]">
+              <Filter className="w-3.5 h-3.5 text-[#A8A196]" />
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(parseFloat(e.target.value))}
-                className="bg-transparent text-[#EAF2EE] focus:outline-none cursor-pointer"
+                className="bg-transparent text-[#F6F4F1] focus:outline-none cursor-pointer"
               >
-                <option value="0" className="bg-[#111F1A]">All Ratings</option>
-                <option value="4.0" className="bg-[#111F1A]">★ 4.0+ Rating</option>
-                <option value="4.5" className="bg-[#111F1A]">★ 4.5+ Rating</option>
+                <option value="0" className="bg-[#0D0D0D]">All Ratings</option>
+                <option value="4.0" className="bg-[#0D0D0D]">★ 4.0+ Rating</option>
+                <option value="4.5" className="bg-[#0D0D0D]">★ 4.5+ Rating</option>
               </select>
             </div>
           )}
 
           {/* Sort Selector */}
-          <div className="flex items-center space-x-1.5 bg-[#0F1A16] border border-[rgba(120,200,170,0.14)] px-3 py-1.5 rounded-xl text-xs text-[#8AA79A]">
-            <ArrowUpDown className="w-3.5 h-3.5 text-[#8AA79A]" />
+          <div className="flex items-center space-x-1.5 bg-[#080808] border border-[rgba(228,222,210,0.12)] px-3 py-1.5 rounded-xl text-xs text-[#A8A196]">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#A8A196]" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-[#EAF2EE] focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#F6F4F1] focus:outline-none cursor-pointer"
             >
-              <option value="default" className="bg-[#111F1A]">Default Order</option>
+              <option value="default" className="bg-[#0D0D0D]">Default Order</option>
               {searchResult.mode === "physical" && (
-                <option value="rating" className="bg-[#111F1A]">Highest Rating</option>
+                <option value="rating" className="bg-[#0D0D0D]">Highest Rating</option>
               )}
-              <option value="name" className="bg-[#111F1A]">Alphabetical</option>
+              <option value="name" className="bg-[#0D0D0D]">Alphabetical</option>
             </select>
           </div>
 
           {/* Export CSV */}
           <button
             onClick={handleExport}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#0F1A16] hover:bg-[#16302A] text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#080808] hover:bg-[#161616] text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-semibold transition"
           >
-            <Download className="w-3.5 h-3.5 text-[#8AA79A]" />
+            <Download className="w-3.5 h-3.5 text-[#A8A196]" />
             <span>Export CSV</span>
           </button>
 
@@ -191,7 +191,7 @@ export default function ResultsTable({
           <button
             onClick={handleSaveAll}
             disabled={filteredLeads.length === 0}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#0251B8] hover:bg-[#013F92] text-white font-semibold text-xs shadow-md shadow-[#0251B8]/20 disabled:opacity-50 transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white font-semibold text-xs shadow-md shadow-[#F95C4B]/20 disabled:opacity-50 transition"
           >
             <BookmarkCheck className="w-3.5 h-3.5" />
             <span>
@@ -206,15 +206,15 @@ export default function ResultsTable({
       {/* Results Content */}
       {searchResult.mode === "physical" ? (
         /* ================= PHYSICAL TABLE ================= */
-        <div className="bg-[#111F1A] border border-[rgba(120,200,170,0.14)] rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-2xl shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[rgba(120,200,170,0.14)] bg-[#0F1A16]/90 text-[#8AA79A] font-semibold uppercase tracking-wider">
+                <tr className="border-b border-[rgba(228,222,210,0.12)] bg-[#080808]/90 text-[#A8A196] font-semibold uppercase tracking-wider">
                   <th className="p-4 w-10 text-center">
-                    <button onClick={toggleSelectAll} className="text-[#8AA79A] hover:text-[#EAF2EE]">
+                    <button onClick={toggleSelectAll} className="text-[#A8A196] hover:text-[#F6F4F1]">
                       {selectedLeadIds.size === filteredLeads.length && filteredLeads.length > 0 ? (
-                        <CheckSquare className="w-4 h-4 text-[#0251B8]" />
+                        <CheckSquare className="w-4 h-4 text-[#F95C4B]" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -229,7 +229,7 @@ export default function ResultsTable({
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[rgba(120,200,170,0.08)] text-[#EAF2EE]">
+              <tbody className="divide-y divide-[rgba(228,222,210,0.06)] text-[#F6F4F1]">
                 {filteredLeads.map((item) => {
                   const lead = item as PhysicalLead;
                   const isSelected = selectedLeadIds.has(lead.id);
@@ -238,18 +238,18 @@ export default function ResultsTable({
                   return (
                     <tr
                       key={lead.id}
-                      className={`hover:bg-[#16302A]/50 transition group ${
-                        isSelected ? "bg-[#16302A]/70" : ""
+                      className={`hover:bg-[#161616]/50 transition group ${
+                        isSelected ? "bg-[#161616]/70" : ""
                       }`}
                     >
                       {/* Checkbox */}
                       <td className="p-4 text-center">
                         <button
                           onClick={() => toggleSelect(lead.id)}
-                          className="text-[#8AA79A] hover:text-[#EAF2EE] transition"
+                          className="text-[#A8A196] hover:text-[#F6F4F1] transition"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-[#0251B8]" />
+                            <CheckSquare className="w-4 h-4 text-[#F95C4B]" />
                           ) : (
                             <Square className="w-4 h-4" />
                           )}
@@ -258,11 +258,11 @@ export default function ResultsTable({
 
                       {/* Business Name & Niche */}
                       <td className="p-4">
-                        <div className="font-bold text-[#EAF2EE] text-sm group-hover:text-[#0251B8] transition">
+                        <div className="font-bold text-[#F6F4F1] text-sm group-hover:text-[#F95C4B] transition">
                           {lead.businessName}
                         </div>
-                        <div className="text-[#8AA79A] mt-0.5 inline-flex items-center space-x-1">
-                          <span className="px-2 py-0.5 rounded-md bg-[#0F1A16] text-[10px] text-[#8AA79A] border border-[rgba(120,200,170,0.08)]">
+                        <div className="text-[#A8A196] mt-0.5 inline-flex items-center space-x-1">
+                          <span className="px-2 py-0.5 rounded-md bg-[#080808] text-[10px] text-[#A8A196] border border-[rgba(228,222,210,0.08)]">
                             {lead.category || "Local Business"}
                           </span>
                         </div>
@@ -281,7 +281,7 @@ export default function ResultsTable({
                           </a>
                           <button
                             onClick={(e) => handleCopyPhone(lead.phone, e)}
-                            className="p-1 rounded text-[#8AA79A] hover:text-[#EAF2EE] hover:bg-[#16302A] transition"
+                            className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616] transition"
                             title="Copy phone number"
                           >
                             {copiedPhone === lead.phone ? (
@@ -295,8 +295,8 @@ export default function ResultsTable({
 
                       {/* Location & Country */}
                       <td className="p-4 max-w-[200px] truncate">
-                        <div className="flex items-center space-x-1 text-[#8AA79A] truncate">
-                          <MapPin className="w-3.5 h-3.5 text-[#8AA79A] shrink-0" />
+                        <div className="flex items-center space-x-1 text-[#A8A196] truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#A8A196] shrink-0" />
                           <span className="truncate">{lead.address || `${lead.city}, ${lead.country}`}</span>
                         </div>
                       </td>
@@ -309,18 +309,18 @@ export default function ResultsTable({
                               <Star className="w-3.5 h-3.5 fill-[#5EBA8C] text-[#5EBA8C]" />
                               <span>{lead.rating.toFixed(1)}</span>
                             </div>
-                            <span className="text-[#8AA79A] text-[11px]">
+                            <span className="text-[#A8A196] text-[11px]">
                               ({lead.reviewCount || 0})
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[#8AA79A]/60 italic">No reviews</span>
+                          <span className="text-[#A8A196]/60 italic">No reviews</span>
                         )}
                       </td>
 
                       {/* Website Status Flag */}
                       <td className="p-4 whitespace-nowrap">
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#16302A] text-[#5EBA8C] border border-[rgba(120,200,170,0.14)]">
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#161616] text-[#5EBA8C] border border-[rgba(228,222,210,0.12)]">
                           <ShieldCheck className="w-3 h-3 text-[#5EBA8C]" />
                           <span>No Website</span>
                         </span>
@@ -328,7 +328,7 @@ export default function ResultsTable({
 
                       {/* Provider Source */}
                       <td className="p-4 whitespace-nowrap">
-                        <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#0F1A16] text-[#8AA79A] border border-[rgba(120,200,170,0.08)]">
+                        <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#080808] text-[#A8A196] border border-[rgba(228,222,210,0.08)]">
                           {lead.sourceProvider}
                         </span>
                       </td>
@@ -339,17 +339,17 @@ export default function ResultsTable({
                           {/* Pitch script button */}
                           <button
                             onClick={() => setPitchLead(lead)}
-                            className="px-2.5 py-1 rounded-lg bg-[#16302A] hover:bg-[#16302A]/80 text-[#EAF2EE] border border-[rgba(120,200,170,0.2)] font-medium transition flex items-center space-x-1"
+                            className="px-2.5 py-1 rounded-lg bg-[#161616] hover:bg-[#161616]/80 text-[#F6F4F1] border border-[rgba(228,222,210,0.2)] font-medium transition flex items-center space-x-1"
                             title="Generate cold call pitch script"
                           >
-                            <MessageSquareQuote className="w-3.5 h-3.5 text-[#0251B8]" />
+                            <MessageSquareQuote className="w-3.5 h-3.5 text-[#F95C4B]" />
                             <span>Pitch</span>
                           </button>
 
                           {/* Notes */}
                           <button
                             onClick={() => setNotesLead(lead)}
-                            className="p-1.5 rounded-lg bg-[#0F1A16] hover:bg-[#16302A] text-[#8AA79A] hover:text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] transition"
+                            className="p-1.5 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] transition"
                             title="Add notes"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -361,8 +361,8 @@ export default function ResultsTable({
                             disabled={isSaved}
                             className={`px-3 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
                               isSaved
-                                ? "bg-[#16302A] text-[#5EBA8C] border border-[rgba(120,200,170,0.14)] cursor-default"
-                                : "bg-[#0251B8] hover:bg-[#013F92] text-white shadow-sm"
+                                ? "bg-[#161616] text-[#5EBA8C] border border-[rgba(228,222,210,0.12)] cursor-default"
+                                : "bg-[#F95C4B] hover:bg-[#E04838] text-white shadow-sm"
                             }`}
                           >
                             {isSaved ? (

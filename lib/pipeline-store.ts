@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { LeadItem, PipelineStatus } from "./types";
 
-const PIPELINE_STORAGE_KEY = "gacks_leads_pipeline_v2";
+const PIPELINE_STORAGE_KEY = "webhunt_leads_pipeline_v1";
+const LEGACY_STORAGE_KEY = "gacks_leads_pipeline_v2";
 
 export interface PipelineStats {
   totalLeads: number;
@@ -21,7 +22,7 @@ export interface PipelineStats {
 export function getStoredPipelineLeads(): LeadItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(PIPELINE_STORAGE_KEY);
+    const raw = localStorage.getItem(PIPELINE_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return [];
     return JSON.parse(raw);
   } catch (err) {

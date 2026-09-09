@@ -18,8 +18,8 @@ export default function PipelinePage() {
 
   if (!isLoaded) {
     return (
-      <div className="py-20 text-center text-[#8AA79A]">
-        <div className="w-8 h-8 border-2 border-[#0251B8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+      <div className="py-20 text-center text-[#A8A196]">
+        <div className="w-8 h-8 border-2 border-[#F95C4B] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <span className="text-xs">Loading in-session pipeline...</span>
       </div>
     );
@@ -29,12 +29,12 @@ export default function PipelinePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-md bg-[#16302A] text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] text-xs font-semibold mb-1">
-            <KanbanSquare className="w-3.5 h-3.5 text-[#0251B8]" />
+          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#161616] text-[#E4DED2] border border-[rgba(228,222,210,0.12)] text-xs font-semibold mb-2">
+            <KanbanSquare className="w-3.5 h-3.5 text-[#F95C4B]" />
             <span>In-Session Local CRM</span>
           </div>
-          <h1 className="text-2xl font-bold text-[#EAF2EE] tracking-tight">Lead Pipeline CRM</h1>
-          <p className="text-xs sm:text-sm text-[#8AA79A] mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#F6F4F1] tracking-tight">Lead Pipeline CRM</h1>
+          <p className="text-xs sm:text-sm text-[#A8A196] mt-1">
             Manage your physical prospects & remote job applications across stages, log notes, and export CSVs.
           </p>
         </div>

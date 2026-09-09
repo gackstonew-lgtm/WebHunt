@@ -1,4 +1,4 @@
-# ⚡ Gacks Leads — Worldwide B2B & Remote Tech Lead Radar
+# 🎯 WebHunt — Worldwide B2B & Remote Tech Lead Radar
 
 > A production-ready lead-generation web application designed to help agencies, software engineers, and growth hackers find high-value sales leads across two modes:
 > 1. **Physical Mode**: Local businesses anywhere in the world (including Kenya, US, UK, Canada, Europe, Africa, Asia) that have active phone numbers but **no website on record**, queried via **OpenStreetMap Overpass API** and **Google Places API**.
@@ -8,7 +8,7 @@
 
 ## ⚖️ Legal & Non-Scraping Guarantee
 
-- 🚫 **No LinkedIn, Upwork, or Fiverr Scraping**: Scraping these platforms violates their Terms of Service and is actively blocked. Gacks Leads queries official public JSON endpoints and open geographic databases.
+- 🚫 **No LinkedIn, Upwork, or Fiverr Scraping**: Scraping these platforms violates their Terms of Service and is actively blocked. WebHunt queries official public JSON endpoints and open geographic databases.
 - 🔌 **Partner API Extensible**: The online provider architecture is designed so a licensed LinkedIn or Upwork Partner API can be plugged in when enterprise API credentials are provided.
 - 📞 **Worldwide Telemarketing Compliance**: Always comply with local commercial communications regulations (e.g., Kenya Data Protection Act 2019, US TCPA/DNC, UK PECR, GDPR).
 
@@ -55,7 +55,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```env
 # ==============================================================================
-# GACKS LEADS - CONFIGURATION
+# WEBHUNT - CONFIGURATION
 # ==============================================================================
 
 # 1. GOOGLE PLACES API KEY (Optional - OpenStreetMap is used for free by default)

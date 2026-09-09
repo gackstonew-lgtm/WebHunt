@@ -15,19 +15,19 @@ export default function SavedSearches() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#111F1A] border border-[rgba(120,200,170,0.14)] rounded-2xl p-5 flex items-center justify-between shadow-xl">
+      <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-2xl p-5 flex items-center justify-between shadow-2xl">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-[#16302A] text-[#0251B8] border border-[rgba(120,200,170,0.14)] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[#161616] text-[#F95C4B] border border-[rgba(228,222,210,0.12)] flex items-center justify-center">
             <History className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-[#EAF2EE] text-base">Historical Radar Scans</h3>
-            <p className="text-xs text-[#8AA79A]">
+            <h3 className="font-bold text-[#F6F4F1] text-base">Historical Radar Scans</h3>
+            <p className="text-xs text-[#A8A196]">
               Audit past queries, geographical yields, and provider metrics.
             </p>
           </div>
         </div>
-        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#0F1A16] text-[#8AA79A] border border-[rgba(120,200,170,0.14)]">
+        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#080808] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
           {history.length} Scans Logged
         </span>
       </div>
@@ -36,32 +36,32 @@ export default function SavedSearches() {
         {history.map((s) => (
           <div
             key={s.id}
-            className="bg-[#111F1A] border border-[rgba(120,200,170,0.14)] hover:border-[rgba(120,200,170,0.28)] rounded-2xl p-5 shadow-lg flex flex-col justify-between space-y-4 group transition"
+            className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] hover:border-[rgba(228,222,210,0.25)] rounded-2xl p-5 shadow-xl flex flex-col justify-between space-y-4 group transition"
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center space-x-1 bg-[#16302A] text-[#8AA79A] border border-[rgba(120,200,170,0.14)]">
-                  {s.mode === "physical" ? <Store className="w-3 h-3 text-[#0251B8]" /> : <Terminal className="w-3 h-3 text-[#0251B8]" />}
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center space-x-1 bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
+                  {s.mode === "physical" ? <Store className="w-3 h-3 text-[#F95C4B]" /> : <Terminal className="w-3 h-3 text-[#F95C4B]" />}
                   <span>{s.mode === "physical" ? "Local Physical" : "Remote Job"}</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#0F1A16] text-[#8AA79A] border border-[rgba(120,200,170,0.08)]">
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#080808] text-[#A8A196] border border-[rgba(228,222,210,0.08)]">
                   {s.provider}
                 </span>
               </div>
 
-              <h4 className="font-bold text-[#EAF2EE] text-base mt-2">
+              <h4 className="font-bold text-[#F6F4F1] text-base mt-2">
                 {s.query}
               </h4>
 
-              <div className="text-xs text-[#8AA79A] mt-1 flex items-center space-x-1">
-                <Compass className="w-3.5 h-3.5 text-[#0251B8] shrink-0" />
+              <div className="text-xs text-[#A8A196] mt-1 flex items-center space-x-1">
+                <Compass className="w-3.5 h-3.5 text-[#F95C4B] shrink-0" />
                 <span>{s.location}</span>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 bg-[#0F1A16] p-3 rounded-xl border border-[rgba(120,200,170,0.14)] text-xs">
+              <div className="mt-3 grid grid-cols-2 gap-2 bg-[#080808] p-3 rounded-xl border border-[rgba(228,222,210,0.12)] text-xs">
                 <div>
-                  <span className="text-[10px] text-[#8AA79A] uppercase font-semibold">Total Scanned</span>
-                  <div className="font-bold text-[#EAF2EE]">{s.totalFetched}</div>
+                  <span className="text-[10px] text-[#A8A196] uppercase font-semibold">Total Scanned</span>
+                  <div className="font-bold text-[#F6F4F1]">{s.totalFetched}</div>
                 </div>
                 <div>
                   <span className="text-[10px] text-[#5EBA8C] uppercase font-semibold">Qualified Leads</span>
@@ -70,15 +70,15 @@ export default function SavedSearches() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[rgba(120,200,170,0.14)] flex items-center justify-between text-xs text-[#8AA79A]">
+            <div className="pt-3 border-t border-[rgba(228,222,210,0.12)] flex items-center justify-between text-xs text-[#A8A196]">
               <div className="flex items-center space-x-1 text-[11px]">
-                <Calendar className="w-3.5 h-3.5 text-[#8AA79A]" />
+                <Calendar className="w-3.5 h-3.5 text-[#A8A196]" />
                 <span>{formatDate(s.createdAt)}</span>
               </div>
 
               <Link
                 href="/"
-                className="text-xs text-[#0251B8] hover:text-[#EAF2EE] font-semibold inline-flex items-center space-x-1"
+                className="text-xs text-[#F95C4B] hover:text-[#F6F4F1] font-semibold inline-flex items-center space-x-1"
               >
                 <span>Re-scan</span>
                 <ArrowRight className="w-3 h-3" />

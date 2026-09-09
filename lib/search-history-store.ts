@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 
-const SEARCH_HISTORY_KEY = "gacks_leads_search_history_v2";
+const SEARCH_HISTORY_KEY = "webhunt_leads_search_history_v1";
+const LEGACY_HISTORY_KEY = "gacks_leads_search_history_v2";
 
 export interface SearchHistoryItem {
   id: string;
@@ -51,7 +52,7 @@ const DEFAULT_HISTORY: SearchHistoryItem[] = [
 export function getStoredSearchHistory(): SearchHistoryItem[] {
   if (typeof window === "undefined") return DEFAULT_HISTORY;
   try {
-    const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+    const raw = localStorage.getItem(SEARCH_HISTORY_KEY) || localStorage.getItem(LEGACY_HISTORY_KEY);
     if (!raw) return DEFAULT_HISTORY;
     return JSON.parse(raw);
   } catch (err) {

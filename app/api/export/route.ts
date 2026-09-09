@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
-    const filename = `gacks-leads-${status ? status.toLowerCase() : "all"}-${new Date().toISOString().split("T")[0]}.csv`;
+    const filename = `webhunt-leads-${status ? status.toLowerCase() : "all"}-${new Date().toISOString().split("T")[0]}.csv`;
 
     return new NextResponse(csvContent, {
       status: 200,

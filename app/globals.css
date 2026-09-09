@@ -3,41 +3,45 @@
 @tailwind utilities;
 
 :root {
-  /* Yardly Automotives Dark Brand Theme Tokens */
-  --background: #0B1512;          /* Deep green-black background */
-  --foreground: #EAF2EE;          /* Near-white with faint green tint */
+  /* WebHunt Dark Theme Tokens */
+  --background: #000000;          /* Deep Black background */
+  --foreground: #F6F4F1;          /* Paper #F6F4F1 primary text */
 
-  --card: #111F1A;                /* Raised green-charcoal surface */
-  --card-foreground: #EAF2EE;     /* Card text */
+  --card: #0D0D0D;                /* Raised pure dark surface */
+  --card-foreground: #F6F4F1;     /* Card text */
 
-  --popover: #111F1A;             /* Popovers / Modals */
-  --popover-foreground: #EAF2EE;
+  --popover: #0D0D0D;             /* Popovers / Modals */
+  --popover-foreground: #F6F4F1;
 
-  --surface-subtle: #0F1A16;      /* Subtle inner surfaces and inputs */
-  --surface-elevated: #16302A;    /* Hover and elevated surface */
+  --surface-subtle: #080808;      /* Subtle inner surfaces and inputs */
+  --surface-elevated: #161616;    /* Hover and elevated surface */
 
-  --primary: #0251B8;             /* Exact Brand Blue Accent */
-  --primary-foreground: #FFFFFF;  /* White on blue text */
-  --primary-hover: #013F92;       /* Deeper brand blue for hover */
+  --primary: #F95C4B;             /* Exact WebHunt Coral Accent */
+  --primary-foreground: #FFFFFF;  /* White text on coral */
+  --primary-hover: #E04838;       /* Deeper coral for hover */
 
-  --muted: #16302A;               /* Muted surface */
-  --muted-foreground: #8AA79A;    /* Desaturated brand green (#355347) lightened for WCAG contrast */
+  --paper: #F6F4F1;               /* Primary light content */
+  --stone: #E4DED2;               /* Secondary light content / labels */
+  --coral: #F95C4B;               /* Primary visual accent */
 
-  --accent: #16302A;              /* Hover & active chip surface */
-  --accent-foreground: #EAF2EE;
+  --muted: #161616;               /* Muted surface */
+  --muted-foreground: #A8A196;    /* Stone desaturated for optimal contrast */
+
+  --accent: #161616;              /* Hover & active chip surface */
+  --accent-foreground: #F6F4F1;
 
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
 
-  --border: rgba(120, 200, 170, 0.14);        /* Green-tinted hairline border */
-  --border-subtle: rgba(120, 200, 170, 0.08); /* Faint separator */
-  --border-strong: rgba(120, 200, 170, 0.28); /* Focused border */
+  --border: rgba(228, 222, 210, 0.12);        /* Hairline stone border */
+  --border-subtle: rgba(228, 222, 210, 0.06); /* Faint stone separator */
+  --border-strong: rgba(228, 222, 210, 0.25); /* Focused border */
 
-  --input: #0F1A16;               /* Input background */
-  --ring: rgba(2, 81, 184, 0.45); /* Brand blue focus ring */
+  --input: #080808;               /* Input background */
+  --ring: rgba(249, 92, 75, 0.45);/* Coral focus ring */
 
-  --success: #3FA372;             /* Brand green family success */
-  --success-foreground: #EAF2EE;
+  --success: #3FA372;             /* Success status */
+  --success-foreground: #F6F4F1;
 }
 
 body {
@@ -48,21 +52,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbars matching Yardly Dark Theme */
+/* Custom Scrollbars matching WebHunt Dark Theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B1512;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #16302A;
+  background: #161616;
   border-radius: 9999px;
-  border: 1px solid rgba(120, 200, 170, 0.08);
+  border: 1px solid rgba(228, 222, 210, 0.08);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #20443B;
+  background: #242424;
 }
 
 /* Focus outline helpers */

@@ -77,7 +77,7 @@ export default function LeadPipeline({
   };
 
   const handleExport = () => {
-    exportLeadsToCsv(filteredLeads, `gacks-pipeline-${currentTab.toLowerCase()}`);
+    exportLeadsToCsv(filteredLeads, `webhunt-pipeline-${currentTab.toLowerCase()}`);
   };
 
   return (
@@ -85,26 +85,26 @@ export default function LeadPipeline({
       {/* Top Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Pipeline Volume */}
-        <div className="p-4 rounded-2xl bg-[#111F1A] border border-[rgba(120,200,170,0.14)] shadow-md">
+        <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#8AA79A] font-medium">Pipeline Volume</span>
-            <div className="p-1.5 rounded-lg bg-[#16302A] text-[#0251B8]">
+            <span className="text-xs text-[#A8A196] font-medium">Pipeline Volume</span>
+            <div className="p-1.5 rounded-lg bg-[#161616] text-[#F95C4B]">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#EAF2EE]">{leads.length}</span>
-            <span className="text-xs text-[#8AA79A]">
+            <span className="text-2xl font-bold text-[#F6F4F1]">{leads.length}</span>
+            <span className="text-xs text-[#A8A196]">
               ({stats.physicalCount} local, {stats.onlineCount} remote)
             </span>
           </div>
         </div>
 
         {/* Outreach Activity */}
-        <div className="p-4 rounded-2xl bg-[#111F1A] border border-[rgba(120,200,170,0.14)] shadow-md">
+        <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#8AA79A] font-medium">Outreach Activity</span>
-            <div className="p-1.5 rounded-lg bg-[#16302A] text-[#5EBA8C]">
+            <span className="text-xs text-[#A8A196] font-medium">Outreach Activity</span>
+            <div className="p-1.5 rounded-lg bg-[#161616] text-[#5EBA8C]">
               <PhoneOutgoing className="w-4 h-4" />
             </div>
           </div>
@@ -112,29 +112,29 @@ export default function LeadPipeline({
             <span className="text-2xl font-bold text-[#5EBA8C]">
               {stats.contactedLeads + stats.interestedLeads + stats.closedLeads}
             </span>
-            <span className="text-xs text-[#8AA79A]">contacted</span>
+            <span className="text-xs text-[#A8A196]">contacted</span>
           </div>
         </div>
 
         {/* Active Pitches */}
-        <div className="p-4 rounded-2xl bg-[#111F1A] border border-[rgba(120,200,170,0.14)] shadow-md">
+        <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#8AA79A] font-medium">Active Pitches</span>
-            <div className="p-1.5 rounded-lg bg-[#16302A] text-[#0251B8]">
+            <span className="text-xs text-[#A8A196] font-medium">Active Pitches</span>
+            <div className="p-1.5 rounded-lg bg-[#161616] text-[#F95C4B]">
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-[#EAF2EE]">{stats.interestedLeads}</span>
-            <span className="text-xs text-[#8AA79A]">in progress</span>
+            <span className="text-2xl font-bold text-[#F6F4F1]">{stats.interestedLeads}</span>
+            <span className="text-xs text-[#A8A196]">in progress</span>
           </div>
         </div>
 
         {/* Pipeline Value */}
-        <div className="p-4 rounded-2xl bg-[#111F1A] border border-[rgba(120,200,170,0.14)] shadow-md">
+        <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#8AA79A] font-medium">Est. Pipeline Value</span>
-            <div className="p-1.5 rounded-lg bg-[#16302A] text-[#5EBA8C]">
+            <span className="text-xs text-[#A8A196] font-medium">Est. Pipeline Value</span>
+            <div className="p-1.5 rounded-lg bg-[#161616] text-[#5EBA8C]">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function LeadPipeline({
       </div>
 
       {/* Filter Tabs & Export Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(120,200,170,0.14)] pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(228,222,210,0.12)] pb-4">
         {/* Stage Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
           {STAGES.map((stage) => {
@@ -164,14 +164,14 @@ export default function LeadPipeline({
                 onClick={() => setCurrentTab(stage.key)}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                   isActive
-                    ? "bg-[#16302A] text-[#EAF2EE] border border-[rgba(120,200,170,0.28)] shadow-sm"
-                    : "text-[#8AA79A] hover:text-[#EAF2EE] hover:bg-[#16302A]/60"
+                    ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-sm"
+                    : "text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616]/60"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#0251B8]" : "text-[#8AA79A]"}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#F95C4B]" : "text-[#A8A196]"}`} />
                 <span>{stage.label}</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  isActive ? "bg-[#0251B8] text-white" : "bg-[#0F1A16] text-[#8AA79A]"
+                  isActive ? "bg-[#F95C4B] text-white" : "bg-[#080808] text-[#A8A196]"
                 }`}>
                   {count}
                 </span>
@@ -183,11 +183,11 @@ export default function LeadPipeline({
         {/* Mode Filter & Export Actions */}
         <div className="flex items-center space-x-2 shrink-0">
           {/* Channel Selector */}
-          <div className="bg-[#0F1A16] border border-[rgba(120,200,170,0.14)] rounded-xl p-1 flex items-center text-xs">
+          <div className="bg-[#080808] border border-[rgba(228,222,210,0.12)] rounded-xl p-1 flex items-center text-xs">
             <button
               onClick={() => setModeFilter("ALL")}
               className={`px-2.5 py-1 rounded-lg font-medium transition ${
-                modeFilter === "ALL" ? "bg-[#16302A] text-[#EAF2EE]" : "text-[#8AA79A]"
+                modeFilter === "ALL" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
               }`}
             >
               All Types
@@ -195,28 +195,28 @@ export default function LeadPipeline({
             <button
               onClick={() => setModeFilter("physical")}
               className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
-                modeFilter === "physical" ? "bg-[#16302A] text-[#EAF2EE]" : "text-[#8AA79A]"
+                modeFilter === "physical" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
               }`}
             >
-              <Store className="w-3 h-3 text-[#0251B8]" />
+              <Store className="w-3 h-3 text-[#F95C4B]" />
               <span>Local</span>
             </button>
             <button
               onClick={() => setModeFilter("online")}
               className={`px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
-                modeFilter === "online" ? "bg-[#16302A] text-[#EAF2EE]" : "text-[#8AA79A]"
+                modeFilter === "online" ? "bg-[#161616] text-[#F6F4F1]" : "text-[#A8A196]"
               }`}
             >
-              <Terminal className="w-3 h-3 text-[#0251B8]" />
+              <Terminal className="w-3 h-3 text-[#F95C4B]" />
               <span>Remote</span>
             </button>
           </div>
 
           <button
             onClick={handleExport}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#111F1A] hover:bg-[#16302A] text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#0D0D0D] hover:bg-[#161616] text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-semibold transition"
           >
-            <Download className="w-3.5 h-3.5 text-[#8AA79A]" />
+            <Download className="w-3.5 h-3.5 text-[#A8A196]" />
             <span>Export CSV</span>
           </button>
         </div>
@@ -224,12 +224,12 @@ export default function LeadPipeline({
 
       {/* Cards Grid */}
       {filteredLeads.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-[#111F1A] border border-[rgba(120,200,170,0.14)] space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0F1A16] flex items-center justify-center text-[#8AA79A] mx-auto border border-[rgba(120,200,170,0.08)]">
+        <div className="p-12 text-center rounded-3xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#080808] flex items-center justify-center text-[#A8A196] mx-auto border border-[rgba(228,222,210,0.08)]">
             <Clock className="w-6 h-6" />
           </div>
-          <h4 className="text-base font-bold text-[#EAF2EE]">No leads in this stage</h4>
-          <p className="text-xs text-[#8AA79A] max-w-sm mx-auto">
+          <h4 className="text-base font-bold text-[#F6F4F1]">No leads in this stage</h4>
+          <p className="text-xs text-[#A8A196] max-w-sm mx-auto">
             Use the Lead Finder Radar on the home page to discover local businesses without websites or remote software gigs.
           </p>
         </div>
@@ -243,14 +243,14 @@ export default function LeadPipeline({
             return (
               <div
                 key={lead.id}
-                className="bg-[#111F1A] border border-[rgba(120,200,170,0.14)] hover:border-[rgba(120,200,170,0.28)] rounded-2xl p-5 shadow-xl transition flex flex-col justify-between space-y-4 relative group"
+                className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] hover:border-[rgba(228,222,210,0.25)] rounded-2xl p-5 shadow-xl transition flex flex-col justify-between space-y-4 relative group"
               >
                 <div>
                   {/* Top Channel Badge & Stage Selector */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center space-x-2">
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center space-x-1 bg-[#16302A] text-[#8AA79A] border border-[rgba(120,200,170,0.14)]">
-                        {isPhysical ? <Store className="w-3 h-3 text-[#0251B8]" /> : <Terminal className="w-3 h-3 text-[#0251B8]" />}
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center space-x-1 bg-[#161616] text-[#A8A196] border border-[rgba(228,222,210,0.12)]">
+                        {isPhysical ? <Store className="w-3 h-3 text-[#F95C4B]" /> : <Terminal className="w-3 h-3 text-[#F95C4B]" />}
                         <span>{isPhysical ? physLead?.country : "Remote Job"}</span>
                       </span>
                     </div>
@@ -259,28 +259,28 @@ export default function LeadPipeline({
                     <select
                       value={lead.status}
                       onChange={(e) => onUpdateStatus(lead.id, e.target.value as PipelineStatus)}
-                      className="bg-[#0F1A16] border border-[rgba(120,200,170,0.14)] text-xs text-[#EAF2EE] px-2 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0251B8] cursor-pointer"
+                      className="bg-[#080808] border border-[rgba(228,222,210,0.12)] text-xs text-[#F6F4F1] px-2 py-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#F95C4B] cursor-pointer"
                     >
-                      <option value="NEW" className="bg-[#111F1A]">📥 New Lead</option>
-                      <option value="CONTACTED" className="bg-[#111F1A]">📞 Contacted</option>
-                      <option value="INTERESTED" className="bg-[#111F1A]">✨ Pitch / Proposal</option>
-                      <option value="CLOSED" className="bg-[#111F1A]">🏆 Closed / Won</option>
-                      <option value="NOT_INTERESTED" className="bg-[#111F1A]">⛔ Archived</option>
+                      <option value="NEW" className="bg-[#0D0D0D]">📥 New Lead</option>
+                      <option value="CONTACTED" className="bg-[#0D0D0D]">📞 Contacted</option>
+                      <option value="INTERESTED" className="bg-[#0D0D0D]">✨ Pitch / Proposal</option>
+                      <option value="CLOSED" className="bg-[#0D0D0D]">🏆 Closed / Won</option>
+                      <option value="NOT_INTERESTED" className="bg-[#0D0D0D]">⛔ Archived</option>
                     </select>
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h4 className="font-bold text-[#EAF2EE] text-base leading-snug mt-2">
+                  <h4 className="font-bold text-[#F6F4F1] text-base leading-snug mt-2">
                     {isPhysical ? physLead?.businessName : jobLead?.title}
                   </h4>
-                  <div className="text-[11px] text-[#8AA79A] mt-0.5">
+                  <div className="text-[11px] text-[#A8A196] mt-0.5">
                     {isPhysical ? physLead?.category : `${jobLead?.company} • ${jobLead?.location}`}
                   </div>
 
                   {/* Physical Phone or Job Details */}
                   {isPhysical && physLead && (
                     <div className="mt-3 space-y-1 text-xs">
-                      <div className="flex items-center justify-between bg-[#0F1A16] p-2.5 rounded-xl border border-[rgba(120,200,170,0.14)]">
+                      <div className="flex items-center justify-between bg-[#080808] p-2.5 rounded-xl border border-[rgba(228,222,210,0.12)]">
                         <a
                           href={`tel:${physLead.phone}`}
                           className="font-mono text-[#5EBA8C] hover:underline flex items-center space-x-1.5"
@@ -290,7 +290,7 @@ export default function LeadPipeline({
                         </a>
                         <button
                           onClick={(e) => handleCopyPhone(physLead.phone, e)}
-                          className="p-1 rounded text-[#8AA79A] hover:text-[#EAF2EE]"
+                          className="p-1 rounded text-[#A8A196] hover:text-[#F6F4F1]"
                           title="Copy phone"
                         >
                           {copiedPhone === physLead.phone ? (
@@ -302,8 +302,8 @@ export default function LeadPipeline({
                       </div>
 
                       {physLead.address && (
-                        <div className="flex items-center space-x-1.5 text-[#8AA79A] pt-1">
-                          <MapPin className="w-3.5 h-3.5 text-[#8AA79A] shrink-0" />
+                        <div className="flex items-center space-x-1.5 text-[#A8A196] pt-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#A8A196] shrink-0" />
                           <span className="truncate">{physLead.address}</span>
                         </div>
                       )}
@@ -317,7 +317,7 @@ export default function LeadPipeline({
                           {jobLead.tags.slice(0, 4).map((tag) => (
                             <span
                               key={tag}
-                              className="px-2 py-0.5 rounded bg-[#0F1A16] text-[10px] text-[#8AA79A] border border-[rgba(120,200,170,0.08)]"
+                              className="px-2 py-0.5 rounded bg-[#080808] text-[10px] text-[#A8A196] border border-[rgba(228,222,210,0.08)]"
                             >
                               {tag}
                             </span>
@@ -328,32 +328,32 @@ export default function LeadPipeline({
                   )}
 
                   {/* Deal Value */}
-                  <div className="mt-3 flex items-center justify-between text-xs text-[#8AA79A]">
+                  <div className="mt-3 flex items-center justify-between text-xs text-[#A8A196]">
                     <span className="font-semibold text-[#5EBA8C]">
                       Est. Value: {formatCurrency(lead.estimatedValue || (isPhysical ? 1500 : 3500))}
                     </span>
-                    <span className="text-[11px] text-[#8AA79A]">
+                    <span className="text-[11px] text-[#A8A196]">
                       {formatDate(lead.createdAt)}
                     </span>
                   </div>
 
                   {/* Notes Preview */}
                   {lead.notes && (
-                    <div className="mt-3 p-2.5 rounded-xl bg-[#0F1A16] border border-[rgba(120,200,170,0.14)] text-[11px] text-[#8AA79A] italic">
+                    <div className="mt-3 p-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] text-[11px] text-[#A8A196] italic">
                       "{lead.notes}"
                     </div>
                   )}
                 </div>
 
                 {/* Footer Action Strip */}
-                <div className="pt-3 border-t border-[rgba(120,200,170,0.14)] flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-[rgba(228,222,210,0.12)] flex items-center justify-between gap-2">
                   <div className="flex items-center space-x-1.5">
                     {isPhysical && physLead && (
                       <button
                         onClick={() => setPitchLead(physLead)}
-                        className="px-2.5 py-1 rounded-lg bg-[#16302A] hover:bg-[#16302A]/80 text-[#EAF2EE] border border-[rgba(120,200,170,0.2)] text-xs font-medium flex items-center space-x-1 transition"
+                        className="px-2.5 py-1 rounded-lg bg-[#161616] hover:bg-[#161616]/80 text-[#F6F4F1] border border-[rgba(228,222,210,0.2)] text-xs font-medium flex items-center space-x-1 transition"
                       >
-                        <MessageSquareQuote className="w-3 h-3 text-[#0251B8]" />
+                        <MessageSquareQuote className="w-3 h-3 text-[#F95C4B]" />
                         <span>Pitch</span>
                       </button>
                     )}
@@ -362,16 +362,16 @@ export default function LeadPipeline({
                       <>
                         <button
                           onClick={() => setProposalJob(jobLead)}
-                          className="px-2.5 py-1 rounded-lg bg-[#16302A] hover:bg-[#16302A]/80 text-[#EAF2EE] border border-[rgba(120,200,170,0.2)] text-xs font-medium flex items-center space-x-1 transition"
+                          className="px-2.5 py-1 rounded-lg bg-[#161616] hover:bg-[#161616]/80 text-[#F6F4F1] border border-[rgba(228,222,210,0.2)] text-xs font-medium flex items-center space-x-1 transition"
                         >
-                          <Sparkles className="w-3 h-3 text-[#0251B8]" />
+                          <Sparkles className="w-3 h-3 text-[#F95C4B]" />
                           <span>Proposal</span>
                         </button>
                         <a
                           href={jobLead.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg bg-[#0F1A16] hover:bg-[#16302A] text-[#8AA79A] hover:text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] text-xs font-medium transition"
+                          className="p-1.5 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-medium transition"
                           title="Apply on site"
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -381,7 +381,7 @@ export default function LeadPipeline({
 
                     <button
                       onClick={() => setNotesLead(lead)}
-                      className="px-2.5 py-1 rounded-lg bg-[#0F1A16] hover:bg-[#16302A] text-[#8AA79A] hover:text-[#EAF2EE] border border-[rgba(120,200,170,0.14)] text-xs font-medium flex items-center space-x-1 transition"
+                      className="px-2.5 py-1 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F6F4F1] border border-[rgba(228,222,210,0.12)] text-xs font-medium flex items-center space-x-1 transition"
                     >
                       <FileText className="w-3 h-3" />
                       <span>Notes</span>
@@ -390,7 +390,7 @@ export default function LeadPipeline({
 
                   <button
                     onClick={() => onDeleteLead(lead.id)}
-                    className="p-1.5 rounded-lg text-[#8AA79A] hover:text-red-400 hover:bg-red-500/10 transition"
+                    className="p-1.5 rounded-lg text-[#A8A196] hover:text-red-400 hover:bg-red-500/10 transition"
                     title="Delete lead"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

@@ -1,6 +1,6 @@
 import { LeadItem } from "./types";
 
-export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "gacks-leads"): void {
+export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "webhunt-leads"): void {
   if (!leads || leads.length === 0) return;
 
   const headers = [

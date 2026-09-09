@@ -19,21 +19,49 @@ const config: Config = {
           DEFAULT: "var(--popover)",
           foreground: "var(--popover-foreground)",
         },
+        paper: "#F6F4F1",
+        stone: {
+          DEFAULT: "#E4DED2",
+          50: "#FAF8F5",
+          100: "#F6F4F1",
+          200: "#E4DED2",
+          300: "#D2C9B9",
+          400: "#A8A196",
+          500: "#7E786E",
+          600: "#57524A",
+          700: "#36332E",
+          800: "#1E1C19",
+          900: "#0D0D0D",
+        },
+        coral: {
+          DEFAULT: "#F95C4B",
+          50: "#FFF1F0",
+          100: "#FFE1DE",
+          200: "#FFC4BE",
+          300: "#FFA095",
+          400: "#FF7565",
+          500: "#F95C4B",
+          600: "#E04838",
+          700: "#B83224",
+          800: "#912317",
+          900: "#6B170E",
+          950: "#3B0803",
+        },
         primary: {
-          DEFAULT: "#0251B8", // Exact Yardly Brand Blue
+          DEFAULT: "#F95C4B", // Exact WebHunt Coral
           foreground: "#FFFFFF",
-          hover: "#013F92",
-          50: "#e6f0fa",
-          100: "#cce0f5",
-          200: "#99c2eb",
-          300: "#66a3e0",
-          400: "#3385d6",
-          500: "#0251B8",
-          600: "#0251B8",
-          700: "#013F92",
-          800: "#012f6e",
-          900: "#01204d",
-          950: "#001029",
+          hover: "#E04838",
+          50: "#FFF1F0",
+          100: "#FFE1DE",
+          200: "#FFC4BE",
+          300: "#FFA095",
+          400: "#FF7565",
+          500: "#F95C4B",
+          600: "#E04838",
+          700: "#B83224",
+          800: "#912317",
+          900: "#6B170E",
+          950: "#3B0803",
         },
         muted: {
           DEFAULT: "var(--muted)",
@@ -50,38 +78,39 @@ const config: Config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
-        // Map slate/neutral classes to Yardly green-black and green-charcoal neutrals
+        // Map slate/neutral classes to WebHunt monochromatic pure dark surfaces
         slate: {
-          50: "#EAF2EE",
-          100: "#D3E3DA",
-          200: "#B8D2C4",
-          300: "#9FBEAE",
-          400: "#8AA79A", // Muted text token (#8AA79A)
-          500: "#638475",
-          600: "#456254",
-          700: "#2B4439",
-          800: "rgba(120, 200, 170, 0.14)", // Green-tinted hairline border
-          850: "#16302A",                   // Accent / hover surface
-          900: "#111F1A",                   // Raised green-charcoal card
-          950: "#0B1512",                   // Deep green-black background
+          50: "#F6F4F1",
+          100: "#E4DED2",
+          200: "#D2C9B9",
+          300: "#A8A196",
+          400: "#A8A196", // Muted text token (#A8A196)
+          500: "#7E786E",
+          600: "#57524A",
+          700: "#36332E",
+          800: "rgba(228, 222, 210, 0.12)", // Hairline stone border
+          850: "#161616",                   // Elevated hover surface
+          900: "#0D0D0D",                   // Raised dark card
+          950: "#000000",                   // Deep black background
         },
-        // Brand Green family for positive indicators
+        // Semantic green for phone / verified status
         emerald: {
           400: "#5EBA8C",
           500: "#3FA372",
           600: "#2B7E55",
         },
-        // Yardly specific semantic tokens
-        yardly: {
-          bg: "#0B1512",
-          card: "#111F1A",
-          surface: "#0F1A16",
-          hover: "#16302A",
-          text: "#EAF2EE",
-          muted: "#8AA79A",
-          blue: "#0251B8",
-          green: "#3FA372",
-          border: "rgba(120, 200, 170, 0.14)",
+        // WebHunt specific tokens
+        webhunt: {
+          bg: "#000000",
+          card: "#0D0D0D",
+          surface: "#080808",
+          hover: "#161616",
+          paper: "#F6F4F1",
+          stone: "#E4DED2",
+          muted: "#A8A196",
+          coral: "#F95C4B",
+          coralHover: "#E04838",
+          border: "rgba(228, 222, 210, 0.12)",
         },
       },
       borderColor: {
