@@ -84,11 +84,10 @@ function AuthContent() {
       const res = await loginAction({ email, password });
       if (res.success) {
         setSuccessMessage("Authentication successful. Redirecting to workspace...");
+        const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/";
         setTimeout(() => {
-          const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/";
-          router.push(target);
-          router.refresh();
-        }, 600);
+          window.location.href = target;
+        }, 400);
       } else if (res.isUnverified) {
         setUnverifiedEmail(res.email || email);
         setTab("verify_sent");
@@ -147,11 +146,10 @@ function AuthContent() {
       const res = await verifyOtpAction({ email: targetEmail, otp: otp.trim() });
       if (res.success) {
         setSuccessMessage(res.message || "Account verified! Redirecting to workspace...");
+        const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/";
         setTimeout(() => {
-          const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/";
-          router.push(target);
-          router.refresh();
-        }, 800);
+          window.location.href = target;
+        }, 400);
       } else {
         setErrorMessage(res.error || "Invalid verification code.");
       }

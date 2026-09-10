@@ -490,6 +490,19 @@ export async function migrateSqliteToPostgres(targetDatabaseUrl?: string) {
       console.warn('   -> Email log migration note:', e.message);
     }
 
+    // 10. POST-MIGRATION VERIFICATION
+    console.log('[9/10] Verifying Target Administrator Account in PostgreSQL...');
+    const adminCheck = await prisma.user.findUnique({
+      where: { email: 'gackstoneb@gmail.com' },
+      select: { id: true, email: true, role: true, status: true, emailVerified: true },
+    });
+    if (adminCheck) {
+      console.log(`   -> ✅ Verified: User account (${adminCheck.email}) is present in PostgreSQL.`);
+      console.log(`   -> Role: ${adminCheck.role} | Status: ${adminCheck.status} | Email Verified: ${adminCheck.emailVerified ? 'YES' : 'NO'}`);
+    } else {
+      console.warn('   -> ⚠️ Warning: Administrator account was not found in PostgreSQL.');
+    }
+
     console.log('\n================================================================');
     console.log(' ✅ MIGRATION COMPLETED SUCCESSFULLY');
     console.log('================================================================');

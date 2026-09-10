@@ -36,9 +36,8 @@ function VerifyEmailContent() {
           setSuccessMessage(res.message || "Your email address has been verified successfully!");
           // Auto redirect after 2 seconds
           setTimeout(() => {
-            router.push("/");
-            router.refresh();
-          }, 2000);
+            window.location.href = "/";
+          }, 1000);
         } else {
           setStatus("error");
           setErrorMessage(res.error || "Failed to verify email. The link may have expired or already been used.");
