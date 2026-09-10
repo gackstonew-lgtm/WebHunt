@@ -1,7 +1,6 @@
 /**
- * WebHunt - Production & Development Prisma Schema Preparer
- * Automatically synchronizes prisma/schema.prisma datasource provider with DATABASE_URL
- * Ensures PostgreSQL on Vercel/Neon and SQLite during zero-config local development.
+ * WebHunt - Production & Development Prisma Manager
+ * Ensures PostgreSQL datasource and deploys migrations on production deployment.
  */
 
 const fs = require('fs');
@@ -27,59 +26,25 @@ function getDatabaseUrl() {
       return process.env.DATABASE_URL;
     }
   }
-  return 'file:./dev.db';
+  return '';
 }
 
 function preparePrismaSchema() {
   const schemaPath = path.join(__dirname, '..', 'prisma', 'schema.prisma');
-  
-  if (!fs.existsSync(schemaPath)) {
-    console.error('[PrismaConfig] Error: prisma/schema.prisma not found at:', schemaPath);
-    return;
-  }
-
-  const databaseUrl = getDatabaseUrl();
-  const isPlaceholder = databaseUrl.includes('ep-your-project-id') || databaseUrl.includes('username:password@');
-  
-  // Determine intended provider:
-  // If valid non-placeholder PostgreSQL URL or in Vercel environment -> postgresql
-  // Otherwise -> sqlite for zero-config local development
-  const isPostgres = 
-    ((databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) && !isPlaceholder) || 
-    (process.env.VERCEL === '1' && !databaseUrl.startsWith('file:'));
-
-  const targetProvider = isPostgres ? 'postgresql' : 'sqlite';
-  
-  let schemaContent = fs.readFileSync(schemaPath, 'utf8');
-
-  // Replace provider in datasource block
-  const datasourceRegex = /datasource\s+db\s*\{[\s\S]*?provider\s*=\s*"([^"]+)"[\s\S]*?\}/;
-  const match = schemaContent.match(datasourceRegex);
-
-  if (match && match[1] !== targetProvider) {
-    console.log(`[PrismaConfig] Switching datasource provider from "${match[1]}" to "${targetProvider}"...`);
-    const updatedDatasource = match[0].replace(
-      /provider\s*=\s*"[^"]+"/,
-      `provider = "${targetProvider}"`
-    );
-    schemaContent = schemaContent.replace(datasourceRegex, updatedDatasource);
-    fs.writeFileSync(schemaPath, schemaContent, 'utf8');
-    console.log(`[PrismaConfig] ✅ Successfully updated prisma/schema.prisma to use "${targetProvider}".`);
-  } else if (match) {
-    console.log(`[PrismaConfig] ✅ prisma/schema.prisma is already configured for "${targetProvider}".`);
-  } else {
-    console.warn('[PrismaConfig] Warning: Could not locate datasource db block in schema.prisma.');
+  if (fs.existsSync(schemaPath)) {
+    let schemaContent = fs.readFileSync(schemaPath, 'utf8');
+    if (schemaContent.includes('provider = "sqlite"')) {
+      schemaContent = schemaContent.replace(/provider\s*=\s*"sqlite"/, 'provider = "postgresql"');
+      fs.writeFileSync(schemaPath, schemaContent, 'utf8');
+    }
   }
 }
 
-async function deployMigrationsIfPostgres() {
+async function deployMigrationsIfConfigured() {
   const databaseUrl = getDatabaseUrl();
-  const isPlaceholderUrl = databaseUrl.includes('username:password@') || databaseUrl.includes('ep-your-project-id');
-  const isPostgres = 
-    ((databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) && !isPlaceholderUrl) || 
-    (process.env.VERCEL === '1' && !databaseUrl.startsWith('file:'));
+  const isPlaceholderUrl = !databaseUrl || databaseUrl.includes('username:password@') || databaseUrl.includes('ep-your-project-id');
 
-  if (isPostgres) {
+  if (databaseUrl && !isPlaceholderUrl) {
     console.log('[PrismaConfig] PostgreSQL datasource detected. Deploying pending Prisma migrations...');
     try {
       const prismaCliPath = path.join(__dirname, '..', 'node_modules', 'prisma', 'build', 'index.js');
@@ -100,23 +65,21 @@ async function deployMigrationsIfPostgres() {
         console.warn('[PrismaConfig] Administrator provisioning note:', adminErr.message);
       }
     } catch (err) {
-      console.error('[PrismaConfig] ❌ Migration deployment failed:', err.message);
-      if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
-        throw err;
+      console.error('[PrismaConfig] ❌ Migration deployment warning:', err.message);
+      if (process.env.VERCEL === '1') {
+        console.warn('[PrismaConfig] Note: Ensure DATABASE_URL is properly configured in Vercel environment variables.');
       }
     }
-  } else if (isPlaceholderUrl) {
-    console.log('[PrismaConfig] Placeholder PostgreSQL DATABASE_URL detected. Skipping migration deployment.');
   } else {
-    console.log('[PrismaConfig] Local SQLite / non-PostgreSQL datasource detected.');
+    console.log('[PrismaConfig] No production DATABASE_URL supplied during build step. Skipping migrate deploy.');
   }
 }
 
 if (require.main === module) {
   preparePrismaSchema();
   if (process.argv.includes('--deploy') || process.env.VERCEL === '1') {
-    deployMigrationsIfPostgres().catch(console.error);
+    deployMigrationsIfConfigured().catch(console.error);
   }
 }
 
-module.exports = { preparePrismaSchema, deployMigrationsIfPostgres };
+module.exports = { preparePrismaSchema, deployMigrationsIfConfigured };

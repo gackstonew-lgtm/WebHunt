@@ -47,31 +47,11 @@ async function runSuite() {
   console.log(' WEBHUNT PRODUCTION DATABASE & AUTHENTICATION SUITE');
   console.log('=======================================================\n');
 
-  // --- 1. Schema Provider Dynamic Preparation ---
+  // --- 1. Schema Provider & Datasource Compatibility ---
   console.log('--- 1. Prisma Schema & Datasource Compatibility ---');
-  
-  // Test SQLite mode detection
-  process.env.DATABASE_URL = 'file:./dev.db';
-  delete process.env.VERCEL;
-  preparePrismaSchema();
-  const schemaContentSqlite = fs.readFileSync(path.join(__dirname, '../prisma/schema.prisma'), 'utf8');
-  assert(schemaContentSqlite.includes('provider = "sqlite"'), 'Prisma schema dynamically configures sqlite for local dev');
-
-  // Test PostgreSQL mode detection
-  process.env.DATABASE_URL = 'postgresql://user:secret@ep-neon-prod.us-east-2.aws.neon.tech/neondb?sslmode=require';
   preparePrismaSchema();
   const schemaContentPg = fs.readFileSync(path.join(__dirname, '../prisma/schema.prisma'), 'utf8');
-  assert(schemaContentPg.includes('provider = "postgresql"'), 'Prisma schema dynamically configures postgresql for production DATABASE_URL');
-
-  // Reset to local SQLite for the test runner
-  process.env.DATABASE_URL = 'file:./dev.db';
-  preparePrismaSchema();
-  const { execSync } = require('child_process');
-  try {
-    execSync('node ./node_modules/prisma/build/index.js generate', { stdio: 'ignore' });
-  } catch (genErr) {
-    // Tolerated on Windows when dev server has DLL locked
-  }
+  assert(schemaContentPg.includes('provider = "postgresql"'), 'Prisma schema is configured for PostgreSQL datasource');
 
   // --- 2. Database Connectivity & Health Check ---
   console.log('\n--- 2. Database Connectivity & Health Check ---');

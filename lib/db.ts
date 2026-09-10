@@ -5,12 +5,15 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
+// Fallback to standard Vercel Postgres aliases if DATABASE_URL is not directly set
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.PRISMA_DATABASE_URL ||
-    "file:./dev.db";
+  const pgUrl = 
+    process.env.POSTGRES_PRISMA_URL || 
+    process.env.POSTGRES_URL || 
+    process.env.PRISMA_DATABASE_URL;
+  if (pgUrl) {
+    process.env.DATABASE_URL = pgUrl;
+  }
 }
 
 export const prisma =
@@ -31,7 +34,7 @@ export async function checkDatabaseConnection(): Promise<{ connected: boolean; e
     await prisma.$queryRaw`SELECT 1`;
     return { connected: true };
   } catch (err: any) {
-    return { connected: false, error: err?.message || "Unknown database error" };
+    return { connected: false, error: err?.message || "Unknown database connection error" };
   }
 }
 

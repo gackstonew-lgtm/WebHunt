@@ -9,9 +9,9 @@ import { ThemeProvider } from "@/lib/theme-context";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
+  adjustFontFallback: true,
 });
 
 export const viewport: Viewport = {

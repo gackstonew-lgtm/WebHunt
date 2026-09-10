@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -50,8 +50,8 @@ model Account {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider          String    // "google" | "meta_whatsapp"
   providerAccountId String
-  accessToken       String?   // encrypted
-  refreshToken      String?   // encrypted
+  accessToken       String?   @db.Text
+  refreshToken      String?   @db.Text
   tokenExpiry       DateTime?
   scope             String?
   email             String?
@@ -88,9 +88,9 @@ model UserProfile {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName           String
   professionalTitle  String
-  bio                String?
+  bio                String?  @db.Text
   yearsExperience    Int?     @default(3)
-  skillsJson         String   // JSON array e.g. ["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js"]
+  skillsJson         String   @db.Text // JSON array e.g. ["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js"]
   portfolioUrl       String?
   githubUrl          String?
   linkedinUrl        String?
@@ -101,7 +101,7 @@ model UserProfile {
   projectRateKes     Float?   @default(150000.0)
   currency           String   @default("USD") // "USD" | "KES"
   timezone           String   @default("Africa/Nairobi")
-  languagesJson      String?  // JSON array e.g. ["English", "Swahili"]
+  languagesJson      String?  @db.Text // JSON array e.g. ["English", "Swahili"]
   phone              String?
   whatsapp           String?
   email              String?
@@ -170,13 +170,13 @@ model Lead {
   instagram           String?
   linkedin            String?
   twitter             String?
-  enrichmentJson      String?           // JSON representation of all DiscoveredContact items and metadata
+  enrichmentJson      String?           @db.Text // JSON representation of all DiscoveredContact items and metadata
 
   // Pipeline CRM fields
   pipelineType        String            @default("sales") // "sales" | "job_application"
   status              String            @default("NEW") // Sales: "NEW"|"QUALIFIED"|"CONTACTED"|"INTERESTED"|"NEGOTIATION"|"CLOSED"|"NOT_INTERESTED". Job: "SAVED"|"PREPARING"|"APPLIED"|"INTERVIEW"|"OFFER"|"REJECTED"|"WITHDRAWN"
   estimatedValue      Float             @default(1500.0) // Estimated website/POS deal value
-  notes               String?
+  notes               String?           @db.Text
   tags                String?           // Comma separated tags
   contactedAt         DateTime?
   createdAt           DateTime          @default(now())
@@ -208,10 +208,10 @@ model ProposalDraft {
   templateType  String   // "technical_pitch" | "comprehensive_cover" | "local_website_pitch" | "agency_modernization"
   subject       String
   greeting      String
-  body          String
-  callToAction  String
-  fullText      String
-  variablesJson String?
+  body          String   @db.Text
+  callToAction  String   @db.Text
+  fullText      String   @db.Text
+  variablesJson String?  @db.Text
   version       Int      @default(1)
   status        String   @default("DRAFT") // "DRAFT" | "READY" | "SENT" | "ARCHIVED"
   createdAt     DateTime @default(now())
@@ -233,14 +233,14 @@ model Application {
   applicationMethod String    @default("external_form") // "email" | "external_form" | "direct_api"
   status            String    @default("SAVED") // "SAVED" | "PREPARING" | "APPLIED" | "INTERVIEW" | "OFFER" | "REJECTED" | "WITHDRAWN"
   resumeVersion     String?
-  coverLetterText   String?
+  coverLetterText   String?   @db.Text
   appliedAt         DateTime?
   followUpDate      DateTime?
   recruiterEmail    String?
   recruiterName     String?
   salaryOffer       String?
-  checklistJson     String?   // JSON checklist of documents prepared
-  notes             String?
+  checklistJson     String?   @db.Text // JSON checklist of documents prepared
+  notes             String?   @db.Text
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -260,10 +260,10 @@ model OutreachMessage {
   status             String   @default("SENT") // "DRAFT" | "QUEUED" | "SENT" | "DELIVERED" | "READ" | "FAILED" | "BOUNCED"
   recipient          String   // email address or phone number
   subject            String?
-  messageBody        String
+  messageBody        String   @db.Text
   externalMessageId  String?  // Gmail messageId or WhatsApp messageId
-  deliveryStatusJson String?
-  auditMetadataJson  String?
+  deliveryStatusJson String?  @db.Text
+  auditMetadataJson  String?  @db.Text
   sentAt             DateTime @default(now())
   createdAt          DateTime @default(now())
 
@@ -280,7 +280,7 @@ model FollowUpTask {
   lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   taskType    String    @default("follow_up_email") // "follow_up_email" | "follow_up_whatsapp" | "follow_up_call" | "interview_prep"
   title       String
-  notes       String?
+  notes       String?   @db.Text
   dueAt       DateTime
   completedAt DateTime?
   isCompleted Boolean   @default(false)
@@ -316,7 +316,7 @@ model ApiCache {
   provider  String
   query     String
   location  String
-  payload   String   // JSON stringified response
+  payload   String   @db.Text
   expiresAt DateTime
   createdAt DateTime @default(now())
 
@@ -328,7 +328,7 @@ model WebhookEvent {
   id          String   @id @default(uuid())
   eventId     String   @unique
   eventType   String
-  payload     String?
+  payload     String?  @db.Text
   processedAt DateTime @default(now())
 
   @@index([eventId])
@@ -340,11 +340,10 @@ model EmailDeliveryLog {
   emailType   String   // "verification_otp" | "password_reset" | "system"
   messageId   String?  @unique
   status      String   @default("queued") // "queued" | "sent" | "delivered" | "bounced" | "failed"
-  error       String?
+  error       String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([email])
   @@index([messageId])
 }
-
