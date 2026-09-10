@@ -67,7 +67,11 @@ async function runSuite() {
   process.env.DATABASE_URL = 'file:./dev.db';
   preparePrismaSchema();
   const { execSync } = require('child_process');
-  execSync('node ./node_modules/prisma/build/index.js generate', { stdio: 'ignore' });
+  try {
+    execSync('node ./node_modules/prisma/build/index.js generate', { stdio: 'ignore' });
+  } catch (genErr) {
+    // Tolerated on Windows when dev server has DLL locked
+  }
 
   // --- 2. Database Connectivity & Health Check ---
   console.log('\n--- 2. Database Connectivity & Health Check ---');

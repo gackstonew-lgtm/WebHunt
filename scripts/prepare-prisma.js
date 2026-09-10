@@ -72,16 +72,14 @@ function preparePrismaSchema() {
   }
 }
 
-function deployMigrationsIfPostgres() {
-  const databaseUrl = (process.env.DATABASE_URL || '').trim();
+async function deployMigrationsIfPostgres() {
+  const databaseUrl = getDatabaseUrl();
+  const isPlaceholderUrl = databaseUrl.includes('username:password@') || databaseUrl.includes('ep-your-project-id');
   const isPostgres = 
-    databaseUrl.startsWith('postgresql://') || 
-    databaseUrl.startsWith('postgres://') || 
+    ((databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://')) && !isPlaceholderUrl) || 
     (process.env.VERCEL === '1' && !databaseUrl.startsWith('file:'));
 
-  const isPlaceholderUrl = databaseUrl.includes('username:password@ep-your-project-id');
-
-  if (isPostgres && !isPlaceholderUrl) {
+  if (isPostgres) {
     console.log('[PrismaConfig] PostgreSQL datasource detected. Deploying pending Prisma migrations...');
     try {
       const prismaCliPath = path.join(__dirname, '..', 'node_modules', 'prisma', 'build', 'index.js');
@@ -91,6 +89,16 @@ function deployMigrationsIfPostgres() {
         cwd: path.join(__dirname, '..')
       });
       console.log('[PrismaConfig] ✅ Migrations deployed successfully.');
+
+      // Automatically reconcile permanent administrator account
+      try {
+        console.log('[PrismaConfig] Provisioning / reconciling administrator account...');
+        const jiti = require('jiti')(path.join(__dirname, '..'), { alias: { '@': path.join(__dirname, '..') } });
+        const { bootstrapAdmin } = jiti('./scripts/bootstrap-admin.ts');
+        await bootstrapAdmin();
+      } catch (adminErr) {
+        console.warn('[PrismaConfig] Administrator provisioning note:', adminErr.message);
+      }
     } catch (err) {
       console.error('[PrismaConfig] ❌ Migration deployment failed:', err.message);
       if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
@@ -107,7 +115,7 @@ function deployMigrationsIfPostgres() {
 if (require.main === module) {
   preparePrismaSchema();
   if (process.argv.includes('--deploy') || process.env.VERCEL === '1') {
-    deployMigrationsIfPostgres();
+    deployMigrationsIfPostgres().catch(console.error);
   }
 }
 
