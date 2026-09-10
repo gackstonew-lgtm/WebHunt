@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:data": "npx tsx scripts/migrate-sqlite-to-postgres.ts",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
