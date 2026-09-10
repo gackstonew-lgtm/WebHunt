@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'WebHunt',
-    short_name: 'WebHunt',
+    name: 'WebHunt Delta',
+    short_name: 'WebHunt Delta',
     description: 'Worldwide Local Business & Remote Tech Discovery Workspace',
     start_url: '/',
     id: '/',
@@ -49,22 +49,22 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: 'Lead Finder Radar',
+        name: 'Radar',
         short_name: 'Radar',
         description: 'Discover local businesses without websites & remote jobs',
         url: '/',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
       },
       {
-        name: 'Pipeline CRM',
-        short_name: 'Pipeline',
+        name: 'CRM',
+        short_name: 'CRM',
         description: 'Track outreach and job applications',
         url: '/pipeline',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
       },
       {
-        name: 'Search History',
-        short_name: 'Searches',
+        name: 'History',
+        short_name: 'History',
         description: 'View saved queries and historical scans',
         url: '/searches',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],

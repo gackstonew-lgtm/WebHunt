@@ -2,10 +2,9 @@ import prisma from '../lib/db';
 import { hashPassword } from '../lib/auth/password';
 
 export async function bootstrapAdmin(customPassword?: string) {
-  const adminEmail = 'gackstoneb@gmail.com';
-  const adminName = 'Gackstone Baraka';
-  const adminPassword = customPassword || process.env.WEBHUNT_ADMIN_BOOTSTRAP_PASSWORD || '@Gackstone02';
-
+  const adminEmail = (process.env.WEBHUNT_ADMIN_EMAIL || 'gackstoneb@gmail.com').toLowerCase().trim();
+  const adminName = process.env.WEBHUNT_ADMIN_NAME || 'Gackstone Baraka';
+  
   console.log('=======================================================');
   console.log(' WEBHUNT SECURE PERMANENT ADMINISTRATOR BOOTSTRAP ');
   console.log('=======================================================\n');
@@ -16,11 +15,24 @@ export async function bootstrapAdmin(customPassword?: string) {
     include: { profile: true },
   });
 
-  const passwordHash = await hashPassword(adminPassword);
-
   let user;
   if (!existingUser) {
     console.log('[AdminBootstrap] No existing account found. Creating permanent administrator...');
+    const adminPassword = customPassword || process.env.WEBHUNT_ADMIN_BOOTSTRAP_PASSWORD;
+    
+    if (!adminPassword) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(
+          '[AdminBootstrap] CRITICAL: WEBHUNT_ADMIN_BOOTSTRAP_PASSWORD environment variable is required in production to bootstrap the administrator account. Fail fast.'
+        );
+      } else {
+        console.warn('[AdminBootstrap] Warning: Using development bootstrap password for local setup.');
+      }
+    }
+
+    const effectivePassword = adminPassword || '@WebHuntDevAdmin2026!';
+    const passwordHash = await hashPassword(effectivePassword);
+
     user = await prisma.user.create({
       data: {
         email: adminEmail,
@@ -61,22 +73,15 @@ export async function bootstrapAdmin(customPassword?: string) {
     });
     console.log(`✅ [AdminBootstrap] Administrator account created successfully (ID: ${user.id})`);
   } else {
-    console.log('[AdminBootstrap] Existing account found. Safely reconciling administrator state...');
+    console.log('[AdminBootstrap] Existing account found. Safely reconciling administrator role without touching password...');
+    // IMPORTANT: NEVER overwrite existing user passwordHash during deployment reconciliation
     user = await prisma.user.update({
       where: { id: existingUser.id },
       data: {
-        name: adminName,
-        passwordHash,
+        name: existingUser.name || adminName,
         role: 'admin',
         status: 'active',
         emailVerified: existingUser.emailVerified || new Date(),
-        verificationToken: null,
-        verificationTokenExpiry: null,
-        verificationOtpHash: null,
-        verificationOtpExpiry: null,
-        verificationOtpAttempts: 0,
-        failedLoginAttempts: 0,
-        lockoutUntil: null,
       },
     });
 
@@ -84,7 +89,7 @@ export async function bootstrapAdmin(customPassword?: string) {
       await prisma.userProfile.create({
         data: {
           userId: user.id,
-          fullName: adminName,
+          fullName: user.name || adminName,
           professionalTitle: 'Lead Software Engineer & Platform Administrator',
           skillsJson: JSON.stringify([
             'Next.js',
@@ -103,7 +108,7 @@ export async function bootstrapAdmin(customPassword?: string) {
       });
     }
 
-    console.log(`✅ [AdminBootstrap] Administrator account reconciled successfully (ID: ${user.id})`);
+    console.log(`✅ [AdminBootstrap] Administrator role reconciled successfully (ID: ${user.id}, password preserved)`);
   }
 
   console.log('\n--- Administrator Verification ---');

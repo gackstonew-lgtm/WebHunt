@@ -2,6 +2,15 @@
 
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getCurrentSession } from "@/lib/auth/session";
+
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch {
+    // In CLI test runners outside request context, static generation store is not active
+  }
+}
 
 export async function saveProposalDraftAction(params: {
   leadId?: string;
@@ -16,10 +25,27 @@ export async function saveProposalDraftAction(params: {
   variablesJson?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, error: "Authentication required to save proposal draft" };
+    }
+
+    const effectiveUserId =
+      session.role === "admin" && params.userId ? params.userId : session.userId;
+
+    if (params.leadId) {
+      const lead = await prisma.lead.findUnique({
+        where: { id: params.leadId },
+      });
+      if (lead && lead.userId && lead.userId !== effectiveUserId && session.role !== "admin") {
+        return { success: false, error: "Forbidden: You cannot modify proposal drafts for another user's lead" };
+      }
+    }
+
     const draft = await prisma.proposalDraft.create({
       data: {
         leadId: params.leadId || null,
-        userId: params.userId || null,
+        userId: effectiveUserId,
         title: params.title,
         templateType: params.templateType,
         subject: params.subject,
@@ -32,7 +58,7 @@ export async function saveProposalDraftAction(params: {
       },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true, data: draft };
   } catch (error: any) {
     console.error("[OutreachAction] Save draft failed:", error);
@@ -46,8 +72,23 @@ export async function fetchProposalDraftsAction(leadId: string): Promise<{
   error?: string;
 }> {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, data: [], error: "Authentication required" };
+    }
+
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+    if (lead && lead.userId && lead.userId !== session.userId && session.role !== "admin") {
+      return { success: false, data: [], error: "Forbidden: Access denied" };
+    }
+
     const drafts = await prisma.proposalDraft.findMany({
-      where: { leadId },
+      where: {
+        leadId,
+        ...(session.role === "admin" ? {} : { userId: session.userId }),
+      },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: drafts };
@@ -74,6 +115,7 @@ export async function checkDuplicateOutreachAction(
   }
 
   try {
+    const session = await getCurrentSession();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - cooldownDays);
 
@@ -82,6 +124,7 @@ export async function checkDuplicateOutreachAction(
         recipient: recipient.trim(),
         channel,
         sentAt: { gte: cutoffDate },
+        ...(session ? (session.role === "admin" ? {} : { userId: session.userId }) : {}),
       },
       orderBy: { sentAt: "desc" },
     });
@@ -112,10 +155,27 @@ export async function recordOutreachMessageAction(params: {
   status?: string;
 }): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, error: "Authentication required to record outreach message" };
+    }
+
+    const effectiveUserId =
+      session.role === "admin" && params.userId ? params.userId : session.userId;
+
+    if (params.leadId) {
+      const lead = await prisma.lead.findUnique({
+        where: { id: params.leadId },
+      });
+      if (lead && lead.userId && lead.userId !== effectiveUserId && session.role !== "admin") {
+        return { success: false, error: "Forbidden: You cannot modify outreach for another user's lead" };
+      }
+    }
+
     const record = await prisma.outreachMessage.create({
       data: {
         leadId: params.leadId || null,
-        userId: params.userId || null,
+        userId: effectiveUserId,
         channel: params.channel,
         recipient: params.recipient,
         subject: params.subject || null,
@@ -128,8 +188,11 @@ export async function recordOutreachMessageAction(params: {
 
     // Also update lead's contacted timestamp & status if leadId is present
     if (params.leadId) {
-      await prisma.lead.update({
-        where: { id: params.leadId },
+      await prisma.lead.updateMany({
+        where: {
+          id: params.leadId,
+          ...(session.role === "admin" ? {} : { userId: effectiveUserId }),
+        },
         data: {
           status: "CONTACTED",
           contactedAt: new Date(),
@@ -137,7 +200,7 @@ export async function recordOutreachMessageAction(params: {
       });
     }
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true, data: record };
   } catch (error: any) {
     console.error("[OutreachAction] Record outreach failed:", error);
@@ -151,8 +214,23 @@ export async function fetchLeadOutreachHistoryAction(leadId: string): Promise<{
   error?: string;
 }> {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, data: [], error: "Authentication required" };
+    }
+
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+    if (lead && lead.userId && lead.userId !== session.userId && session.role !== "admin") {
+      return { success: false, data: [], error: "Forbidden: Access denied" };
+    }
+
     const records = await prisma.outreachMessage.findMany({
-      where: { leadId },
+      where: {
+        leadId,
+        ...(session.role === "admin" ? {} : { userId: session.userId }),
+      },
       orderBy: { sentAt: "desc" },
     });
     return { success: true, data: records };

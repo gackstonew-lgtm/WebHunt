@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { Prisma, Lead } from "@prisma/client";
+import { getCurrentSession } from "@/lib/auth/session";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Authentication required to export leads." },
+        { status: 401 }
+      );
+    }
+
+    const rl = checkRateLimit(`export:${session.userId}`, 10, 60);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Export rate limit reached. Please wait ${rl.retryAfterSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
-    const whereClause: Prisma.LeadWhereInput = {};
+    const whereClause: Prisma.LeadWhereInput = {
+      ...(session.role === "admin" ? {} : { userId: session.userId }),
+    };
+
     if (status && status !== "ALL") {
       whereClause.status = status;
     }

@@ -21,6 +21,7 @@ import {
   sendVerificationEmail, 
   sendPasswordResetEmail 
 } from "@/lib/email/service";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import { revalidatePath } from "next/cache";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -56,6 +57,14 @@ export async function registerAction(formData: {
 
     if (!email || !EMAIL_REGEX.test(email)) {
       return { success: false, error: "Please provide a valid email address." };
+    }
+
+    const regLimit = checkRateLimit(`register_${email}`, 5, 60);
+    if (!regLimit.allowed) {
+      return {
+        success: false,
+        error: `Too many registration attempts. Please wait ${regLimit.retryAfterSeconds} second(s).`,
+      };
     }
 
     const strengthCheck = validatePasswordStrength(password);
@@ -392,6 +401,10 @@ export async function loginAction(formData: {
       return { success: false, error: "Invalid email or password." };
     }
 
+    if (user.status !== "active") {
+      return { success: false, error: "Your account is suspended or inactive. Please contact support." };
+    }
+
     // Check account lockout
     if (user.lockoutUntil && user.lockoutUntil > new Date()) {
       const waitMinutes = Math.ceil((user.lockoutUntil.getTime() - Date.now()) / (1000 * 60));
@@ -557,6 +570,14 @@ export async function requestPasswordResetAction(email: string): Promise<{
     const cleanEmail = (email || "").toLowerCase().trim();
     if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
       return { success: false, error: "Please enter a valid email address." };
+    }
+
+    const resetLimit = checkRateLimit(`reset_${cleanEmail}`, 3, 900); // Max 3 per 15 minutes
+    if (!resetLimit.allowed) {
+      return {
+        success: false,
+        error: `Too many password reset requests. Please wait ${resetLimit.retryAfterSeconds} second(s) before trying again.`,
+      };
     }
 
     const user = await prisma.user.findUnique({

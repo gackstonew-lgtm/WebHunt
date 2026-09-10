@@ -91,31 +91,31 @@ export default function HomePage() {
       ) : (
         /* Feature Highlights Grid */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(228,222,210,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F95C4B] flex items-center justify-center">
+          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
+            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
               <Store className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F6F4F1] text-base">Worldwide Physical Radar</h3>
+            <h3 className="font-bold text-[#F8F3F0] text-base">Worldwide Physical Radar</h3>
             <p className="text-xs text-[#A8A196] leading-relaxed">
               Find local businesses across Kenya and 240+ countries that have an active phone number but zero website on record to pitch custom websites & POS systems.
             </p>
           </div>
 
-          <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(228,222,210,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F95C4B] flex items-center justify-center">
+          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
+            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
               <Terminal className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F6F4F1] text-base">Remote Opportunities Radar</h3>
+            <h3 className="font-bold text-[#F8F3F0] text-base">Remote Opportunities Radar</h3>
             <p className="text-xs text-[#A8A196] leading-relaxed">
               Query official public developer endpoints (Remotive, Arbeitnow, Himalayas, RemoteOK, WWR) for genuine remote software, writing, design, and AI gigs.
             </p>
           </div>
 
-          <div className="bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(228,222,210,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F95C4B] flex items-center justify-center">
+          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
+            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
               <Layers className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F6F4F1] text-base">In-Session Pipeline CRM</h3>
+            <h3 className="font-bold text-[#F8F3F0] text-base">In-Session Pipeline CRM</h3>
             <p className="text-xs text-[#A8A196] leading-relaxed">
               Track outreach stages (New ➔ Contacted ➔ Interested ➔ Closed), generate customized pitch scripts & job proposals, and export to CSV instantly.
             </p>

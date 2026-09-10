@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Radar, 
@@ -27,7 +27,7 @@ import {
 
 type AuthTab = "signin" | "register" | "verify_sent" | "forgot";
 
-export default function AuthPage() {
+function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/";
@@ -210,13 +210,13 @@ export default function AuthPage() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8">
       {/* Brand Header */}
       <div className="text-center mb-8 space-y-3">
-        <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#0D0D0D] border border-[rgba(228,222,210,0.12)] shadow-xl mb-1">
-          <div className="w-6 h-6 rounded-lg bg-[#F95C4B] flex items-center justify-center">
+        <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] shadow-xl mb-1">
+          <div className="w-6 h-6 rounded-lg bg-[#0048BB] flex items-center justify-center">
             <Radar className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-bold text-sm text-[#F6F4F1] tracking-tight">WebHunt Workspace</span>
+          <span className="font-bold text-sm text-[#F8F3F0] tracking-tight">WebHunt Workspace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#F6F4F1] tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#F8F3F0] tracking-tight">
           {tab === "signin" && "Sign In to Your Workspace"}
           {tab === "register" && "Create Your WebHunt Account"}
           {tab === "verify_sent" && "Enter Verification Code"}
@@ -231,17 +231,17 @@ export default function AuthPage() {
       </div>
 
       {/* Main Auth Card */}
-      <div className="w-full max-w-md bg-[#0D0D0D] border border-[rgba(228,222,210,0.15)] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
         {/* Tab Switcher */}
         {(tab === "signin" || tab === "register") && (
-          <div className="flex rounded-2xl bg-[#080808] p-1 border border-[rgba(228,222,210,0.1)]">
+          <div className="flex rounded-2xl bg-[#080808] p-1 border border-[rgba(248,243,240,0.1)]">
             <button
               type="button"
               onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
               className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
                 tab === "signin"
-                  ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-sm"
-                  : "text-[#A8A196] hover:text-[#F6F4F1]"
+                  ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
+                  : "text-[#A8A196] hover:text-[#F8F3F0]"
               }`}
             >
               Sign In
@@ -251,8 +251,8 @@ export default function AuthPage() {
               onClick={() => { setTab("register"); setErrorMessage(null); setSuccessMessage(null); }}
               className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
                 tab === "register"
-                  ? "bg-[#161616] text-[#F6F4F1] border border-[rgba(249,92,75,0.4)] shadow-sm"
-                  : "text-[#A8A196] hover:text-[#F6F4F1]"
+                  ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
+                  : "text-[#A8A196] hover:text-[#F8F3F0]"
               }`}
             >
               Create Account
@@ -289,7 +289,7 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => { setTab("forgot"); setErrorMessage(null); setSuccessMessage(null); }}
-                  className="text-[11px] text-[#F95C4B] hover:underline"
+                  className="text-[11px] text-[#0048BB] hover:underline"
                 >
                   Forgot password?
                 </button>
@@ -314,12 +314,12 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F6F4F1]"
+                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F8F3F0]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -329,7 +329,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white font-semibold text-xs shadow-md shadow-[#F95C4B]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full mt-2 py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -357,7 +357,7 @@ export default function AuthPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name / Agency Name"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
               </div>
             </div>
@@ -389,12 +389,12 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F6F4F1]"
+                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F8F3F0]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -412,7 +412,7 @@ export default function AuthPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
               </div>
             </div>
@@ -420,7 +420,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white font-semibold text-xs shadow-md shadow-[#F95C4B]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full mt-2 py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -441,11 +441,11 @@ export default function AuthPage() {
               <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[#5EBA8C]/30 text-[#5EBA8C] flex items-center justify-center mx-auto shadow-xl">
                 <Mail className="w-6 h-6 text-[#5EBA8C]" />
               </div>
-              <h3 className="font-bold text-base text-[#F6F4F1]">Enter Verification Code</h3>
+              <h3 className="font-bold text-base text-[#F8F3F0]">Enter Verification Code</h3>
               <p className="text-xs text-[#A8A196]">
                 We sent a 6-digit code via Resend to:
               </p>
-              <div className="inline-block font-mono text-xs font-semibold px-3 py-1 rounded-xl bg-[#161616] text-[#F6F4F1] border border-[rgba(228,222,210,0.12)]">
+              <div className="inline-block font-mono text-xs font-semibold px-3 py-1 rounded-xl bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.12)]">
                 {unverifiedEmail || email}
               </div>
             </div>
@@ -470,14 +470,14 @@ export default function AuthPage() {
                   setOtp(val);
                 }}
                 placeholder="123456"
-                className="w-full text-center tracking-[0.5em] font-mono text-2xl font-bold py-3.5 rounded-2xl bg-[#080808] border-2 border-[rgba(249,92,75,0.4)] focus:border-[#F95C4B] focus:outline-none focus:ring-2 focus:ring-[#F95C4B]/20 text-[#F6F4F1] transition"
+                className="w-full text-center tracking-[0.5em] font-mono text-2xl font-bold py-3.5 rounded-2xl bg-[#080808] border-2 border-[rgba(0,72,187,0.4)] focus:border-[#0048BB] focus:outline-none focus:ring-2 focus:ring-[#0048BB]/20 text-[#F8F3F0] transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading || otp.length !== 6}
-              className="w-full py-3 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white font-semibold text-xs shadow-md shadow-[#F95C4B]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -489,12 +489,12 @@ export default function AuthPage() {
               )}
             </button>
 
-            <div className="pt-3 border-t border-[rgba(228,222,210,0.08)] flex items-center justify-between">
+            <div className="pt-3 border-t border-[rgba(248,243,240,0.08)] flex items-center justify-between">
               <button
                 type="button"
                 onClick={handleResendOtp}
                 disabled={isLoading || resendCooldown > 0}
-                className="text-xs font-semibold text-[#F95C4B] hover:underline flex items-center space-x-1.5 disabled:opacity-50 disabled:no-underline"
+                className="text-xs font-semibold text-[#0048BB] hover:underline flex items-center space-x-1.5 disabled:opacity-50 disabled:no-underline"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
                 <span>
@@ -505,7 +505,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
-                className="text-xs text-[#A8A196] hover:text-[#F6F4F1] transition"
+                className="text-xs text-[#A8A196] hover:text-[#F8F3F0] transition"
               >
                 ← Back to Sign In
               </button>
@@ -517,10 +517,10 @@ export default function AuthPage() {
         {tab === "forgot" && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="text-center pb-2">
-              <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[rgba(228,222,210,0.12)] text-[#F95C4B] flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center mx-auto mb-2">
                 <KeyRound className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-[#F6F4F1]">Password Recovery</h3>
+              <h3 className="font-bold text-sm text-[#F8F3F0]">Password Recovery</h3>
               <p className="text-[11px] text-[#A8A196] mt-0.5">
                 We will email you a single-use recovery link valid for 1 hour.
               </p>
@@ -537,7 +537,7 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(228,222,210,0.12)] focus:outline-none focus:ring-1 focus:ring-[#F95C4B] text-xs text-[#F6F4F1] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
                 />
               </div>
             </div>
@@ -545,7 +545,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white font-semibold text-xs shadow-md shadow-[#F95C4B]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -561,7 +561,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
-                className="text-xs text-[#A8A196] hover:text-[#F6F4F1] transition"
+                className="text-xs text-[#A8A196] hover:text-[#F8F3F0] transition"
               >
                 ← Back to Sign In
               </button>
@@ -572,9 +572,24 @@ export default function AuthPage() {
 
       {/* Security & Support Guidance Footer Note */}
       <div className="mt-8 text-center text-xs text-[#A8A196]/80 flex items-center space-x-2">
-        <Mail className="w-4 h-4 text-[#F95C4B]" />
+        <Mail className="w-4 h-4 text-[#0048BB]" />
         <span>Can&apos;t find your OTP? Check your spam or junk folder, then try again.</span>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4 text-[#F8F3F0]">
+        <div className="flex items-center space-x-3">
+          <div className="w-5 h-5 border-2 border-[#0048BB] border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium">Loading authentication workspace...</span>
+        </div>
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
   );
 }

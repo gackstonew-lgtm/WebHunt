@@ -5,11 +5,19 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 
 /**
- * Returns a 32-byte encryption key derived from environment or secure deterministic fallback
+ * Returns a 32-byte encryption key derived from environment
  */
-function getEncryptionKey(): Buffer {
-  const secret = process.env.ENCRYPTION_SECRET || process.env.NEXTAUTH_SECRET || "webhunt_default_secure_lead_storage_key_2026_salt_99";
-  return crypto.createHash("sha256").update(secret).digest();
+export function getEncryptionKey(): Buffer {
+  const secret = process.env.ENCRYPTION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret || secret.trim() === "") {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[CryptoSecurity] CRITICAL: ENCRYPTION_SECRET environment variable is missing in production. Fail fast."
+      );
+    }
+    return crypto.createHash("sha256").update("webhunt_dev_only_encryption_key_2026_untrusted_local_salt").digest();
+  }
+  return crypto.createHash("sha256").update(secret.trim()).digest();
 }
 
 /**

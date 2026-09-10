@@ -64,7 +64,7 @@ export default function PwaRegister() {
 
     // 4. Listen for App Installed Event
     const handleAppInstalled = () => {
-      console.log("[PWA] WebHunt installed successfully");
+      console.log("[PWA] WebHunt Delta installed successfully");
       setIsInstallable(false);
       setDeferredPrompt(null);
       setShowToast(false);
@@ -120,26 +120,26 @@ export default function PwaRegister() {
 
       {/* Subtle Install Floating Banner (Only when installable and not in standalone mode) */}
       {isInstallable && !isStandalone && showToast && (
-        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-[calc(100vw-40px)] sm:w-auto bg-[#0D0D0D] border border-[rgba(249,92,75,0.4)] rounded-2xl p-4 shadow-2xl shadow-black/80 flex items-center justify-between space-x-3.5 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-[calc(100vw-40px)] sm:w-auto bg-[#0D0D0D] border border-[rgba(0,72,187,0.4)] rounded-2xl p-4 shadow-2xl shadow-black/80 flex items-center justify-between space-x-3.5 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-[#161616] border border-[rgba(249,92,75,0.3)] flex items-center justify-center text-[#F95C4B] shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#161616] border border-[rgba(0,72,187,0.3)] flex items-center justify-center text-[#0048BB] shrink-0">
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-xs font-bold text-[#F6F4F1]">Install WebHunt App</div>
+              <div className="text-xs font-bold text-[#F8F3F0]">Install WebHunt Delta App</div>
               <div className="text-[11px] text-[#A8A196]">Fast standalone access on your device</div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-1.5 rounded-xl bg-[#F95C4B] hover:bg-[#E04838] text-white text-xs font-semibold shadow-md shadow-[#F95C4B]/20 transition shrink-0"
+              className="px-3 py-1.5 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white text-xs font-semibold shadow-md shadow-[#0048BB]/20 transition shrink-0"
             >
               Install
             </button>
             <button
               onClick={handleDismissToast}
-              className="p-1.5 rounded-lg text-[#A8A196] hover:text-[#F6F4F1] hover:bg-[#161616] transition shrink-0"
+              className="p-1.5 rounded-lg text-[#A8A196] hover:text-[#F8F3F0] hover:bg-[#161616] transition shrink-0"
               aria-label="Dismiss install prompt"
             >
               <X className="w-3.5 h-3.5" />

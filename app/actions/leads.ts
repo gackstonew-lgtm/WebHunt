@@ -21,10 +21,15 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
 }> {
   try {
     const session = await getCurrentSession();
-    const targetUserId = userId || session?.userId;
+    if (!session || !session.userId) {
+      return { success: false, data: [], error: "Authentication required to access lead pipeline." };
+    }
+
+    const isAdmin = session.role === "admin" || session.role === "administrator";
+    const targetUserId = (isAdmin && userId) ? userId : session.userId;
 
     const records = await prisma.lead.findMany({
-      where: targetUserId ? { userId: targetUserId } : undefined,
+      where: { userId: targetUserId },
       orderBy: { createdAt: "desc" },
     });
 
@@ -141,6 +146,14 @@ export async function saveLeadToPipelineAction(
   error?: string;
 }> {
   try {
+    const session = await getCurrentSession();
+    const isAdmin = session?.role === "admin" || session?.role === "administrator";
+    const targetUserId = (isAdmin || !session) && userId ? userId : session?.userId;
+
+    if (!targetUserId) {
+      return { success: false, error: "Authentication required to save leads to pipeline." };
+    }
+
     const isPhysical = lead.type === "physical";
     const pLead = isPhysical ? (lead as PhysicalLead) : null;
     const jLead = !isPhysical ? (lead as OnlineJobLead) : null;
@@ -158,47 +171,36 @@ export async function saveLeadToPipelineAction(
 
     const saved = await prisma.lead.upsert({
       where: {
-        phone_businessName: {
+        userId_phone_businessName: {
+          userId: targetUserId,
           phone,
           businessName,
         },
       },
       create: {
-        userId: userId || null,
+        user: targetUserId ? { connect: { id: targetUserId } } : undefined,
         pipelineType,
+        sourceType: isPhysical ? "physical_business" : "job_board",
+        sourceProvider: isPhysical ? (pLead!.sourceProvider || "osm") : (jLead!.source || "online"),
+        status: lead.status || "NEW",
+        estimatedValue: lead.estimatedValue || 1500,
+        notes: lead.notes || null,
+        contactedAt: lead.contactedAt ? new Date(lead.contactedAt) : null,
         businessName,
         phone,
         phoneFormatted,
-        address: isPhysical ? pLead!.address : jLead!.location,
-        city: isPhysical ? pLead!.city : "Remote",
-        state: isPhysical ? (pLead!.country || pLead!.state) : (jLead!.country || ""),
-        postalCode: isPhysical ? pLead!.postalCode : "",
-        category: isPhysical ? pLead!.category : jLead!.category,
-        rating: isPhysical ? pLead!.rating : null,
-        reviewCount: isPhysical ? pLead!.reviewCount : 0,
-        hasWebsite: false,
-        noWebsiteConfidence: isPhysical ? pLead!.noWebsiteConfidence : "Verified",
-        sourceProvider: isPhysical ? pLead!.sourceProvider : jLead!.source,
-        providerPlaceId: isPhysical ? pLead!.providerPlaceId : jLead!.sourceId,
-        sourceUrl: isPhysical ? pLead!.sourceUrl : jLead!.sourceUrl,
-        sourceType: isPhysical ? pLead!.sourceType : jLead!.sourceType,
-        remoteType: !isPhysical ? jLead!.remoteType : "onsite",
-        verificationStatus: lead.verificationStatus || "SOURCE_LISTED",
-        dataQualityScore: lead.dataQualityScore || 0.90,
-        latitude: isPhysical ? pLead!.latitude : null,
-        longitude: isPhysical ? pLead!.longitude : null,
-        lastVerifiedAt: new Date(),
-        status: lead.status || (isPhysical ? "NEW" : "SAVED"),
-        estimatedValue: lead.estimatedValue || (isPhysical ? 1500 : 3500),
-        notes: lead.notes || null,
-        tags: Array.isArray(lead.tags) ? lead.tags.join(",") : (lead.tags || null),
-
-        // Enriched contact channels
         email: lead.email || null,
         whatsapp: lead.whatsapp || null,
         contactPageUrl: lead.contactPageUrl || null,
         bookingUrl: lead.bookingUrl || null,
-        hasContactForm: lead.hasContactForm || false,
+        address: isPhysical ? pLead!.address || null : null,
+        city: isPhysical ? pLead!.city || null : null,
+        state: isPhysical ? (pLead!.state || pLead!.country || null) : (jLead!.country || null),
+        postalCode: isPhysical ? pLead!.postalCode || null : null,
+        category: isPhysical ? pLead!.category || null : jLead!.category || null,
+        rating: isPhysical ? pLead!.rating || null : null,
+        reviewCount: isPhysical ? pLead!.reviewCount || null : null,
+        noWebsiteConfidence: isPhysical ? pLead!.noWebsiteConfidence || "Low" : "Low",
         facebook: lead.socialProfiles?.facebook || null,
         instagram: lead.socialProfiles?.instagram || null,
         linkedin: lead.socialProfiles?.linkedin || null,
@@ -206,21 +208,28 @@ export async function saveLeadToPipelineAction(
         enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : (lead.contacts ? JSON.stringify(lead.contacts) : null),
       },
       update: {
-        userId: userId !== undefined ? userId : undefined,
         status: lead.status || undefined,
+        estimatedValue: lead.estimatedValue !== undefined ? lead.estimatedValue : undefined,
         notes: lead.notes !== undefined ? lead.notes : undefined,
-        estimatedValue: lead.estimatedValue || undefined,
+        contactedAt: lead.contactedAt ? new Date(lead.contactedAt) : undefined,
+        phoneFormatted: phoneFormatted || undefined,
         email: lead.email || undefined,
         whatsapp: lead.whatsapp || undefined,
         contactPageUrl: lead.contactPageUrl || undefined,
         bookingUrl: lead.bookingUrl || undefined,
-        hasContactForm: lead.hasContactForm !== undefined ? lead.hasContactForm : undefined,
+        address: isPhysical ? pLead!.address || undefined : undefined,
+        city: isPhysical ? pLead!.city || undefined : undefined,
+        state: isPhysical ? (pLead!.state || pLead!.country || undefined) : (jLead!.country || undefined),
+        postalCode: isPhysical ? pLead!.postalCode || undefined : undefined,
+        category: isPhysical ? pLead!.category || undefined : jLead!.category || undefined,
+        rating: isPhysical ? pLead!.rating || undefined : undefined,
+        reviewCount: isPhysical ? pLead!.reviewCount || undefined : undefined,
+        noWebsiteConfidence: isPhysical ? pLead!.noWebsiteConfidence || undefined : undefined,
         facebook: lead.socialProfiles?.facebook || undefined,
         instagram: lead.socialProfiles?.instagram || undefined,
         linkedin: lead.socialProfiles?.linkedin || undefined,
         twitter: lead.socialProfiles?.twitter || undefined,
-        enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : undefined,
-        lastVerifiedAt: new Date(),
+        enrichmentJson: lead.enrichment ? JSON.stringify(lead.enrichment) : (lead.contacts ? JSON.stringify(lead.contacts) : undefined),
       },
     });
 
@@ -229,24 +238,28 @@ export async function saveLeadToPipelineAction(
     return { success: true, data: saved };
   } catch (error: any) {
     console.error("[LeadsAction] Save lead failed:", error);
-    return { success: false, error: error.message || "Failed to save lead to pipeline." };
+    return { success: false, error: error.message || "Failed to save lead" };
   }
 }
 
 export async function bulkSaveLeadsAction(
   leads: LeadItem[],
   userId?: string
-): Promise<{
-  success: boolean;
-  count: number;
-  error?: string;
-}> {
+): Promise<{ success: boolean; count: number; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    const isAdmin = session?.role === "admin" || session?.role === "administrator";
+    const targetUserId = (isAdmin || !session) && userId ? userId : session?.userId;
+
+    if (!targetUserId) {
+      return { success: false, count: 0, error: "Authentication required to bulk save leads." };
+    }
+
     let savedCount = 0;
     for (const lead of leads) {
       try {
-        await saveLeadToPipelineAction(lead, userId);
-        savedCount++;
+        const res = await saveLeadToPipelineAction(lead, targetUserId);
+        if (res.success) savedCount++;
       } catch (itemErr) {
         console.warn("[LeadsAction] Bulk item save skipped duplicate/invalid:", itemErr);
       }
@@ -266,6 +279,25 @@ export async function updateLeadStatusAction(
   status: PipelineStatus
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session && process.env.NODE_ENV === "production") {
+      return { success: false, error: "Authentication required." };
+    }
+
+    // Verify ownership
+    const existing = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Lead not found." };
+    }
+
+    const isAdmin = session?.role === "admin" || session?.role === "administrator";
+    if (session && existing.userId && existing.userId !== session.userId && !isAdmin) {
+      return { success: false, error: "Access denied. You do not own this lead." };
+    }
+
     const updateData: { status: string; contactedAt?: Date } = { status };
     if (status === "CONTACTED" || status === "INTERESTED" || status === "CLOSED" || status === "APPLIED" || status === "INTERVIEW") {
       updateData.contactedAt = new Date();
@@ -291,6 +323,25 @@ export async function updateLeadNotesAction(
   estimatedValue?: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session && process.env.NODE_ENV === "production") {
+      return { success: false, error: "Authentication required." };
+    }
+
+    // Verify ownership
+    const existing = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Lead not found." };
+    }
+
+    const isAdmin = session?.role === "admin" || session?.role === "administrator";
+    if (session && existing.userId && existing.userId !== session.userId && !isAdmin) {
+      return { success: false, error: "Access denied. You do not own this lead." };
+    }
+
     await prisma.lead.update({
       where: { id: leadId },
       data: {
@@ -300,6 +351,7 @@ export async function updateLeadNotesAction(
     });
 
     safeRevalidatePath("/pipeline");
+    safeRevalidatePath("/");
     return { success: true };
   } catch (error: any) {
     console.error("[LeadsAction] Update notes failed:", error);
@@ -309,11 +361,30 @@ export async function updateLeadNotesAction(
 
 export async function deleteLeadAction(leadId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session && process.env.NODE_ENV === "production") {
+      return { success: false, error: "Authentication required." };
+    }
+
+    const existing = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Lead not found." };
+    }
+
+    const isAdmin = session?.role === "admin" || session?.role === "administrator";
+    if (session && existing.userId && existing.userId !== session.userId && !isAdmin) {
+      return { success: false, error: "Access denied. You do not own this lead." };
+    }
+
     await prisma.lead.delete({
       where: { id: leadId },
     });
 
     safeRevalidatePath("/pipeline");
+    safeRevalidatePath("/");
     return { success: true };
   } catch (error: any) {
     console.error("[LeadsAction] Delete lead failed:", error);

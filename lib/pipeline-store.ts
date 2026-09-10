@@ -175,3 +175,16 @@ export function useLeadPipeline() {
     clearPipeline,
   };
 }
+
+export function clearAllClientStorage(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(PIPELINE_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem("webhunt_last_db_sync_timestamp");
+    localStorage.removeItem("webhunt_leads_search_history_v1");
+    localStorage.removeItem("gacks_leads_search_history_v2");
+  } catch (err) {
+    console.error("Failed to clear all client storage:", err);
+  }
+}

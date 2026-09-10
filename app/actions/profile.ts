@@ -4,6 +4,14 @@ import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/auth/session";
 
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch {
+    // In CLI test runners outside request context, static generation store is not active
+  }
+}
+
 export interface UserProfileData {
   id?: string;
   userId?: string;
@@ -78,31 +86,38 @@ export async function getUserProfileAction(userId?: string): Promise<{
 }> {
   try {
     const session = await getCurrentSession();
-    const targetUserId = userId || session?.userId;
+    let targetUserId = session?.userId;
+    if (userId && (session?.role === "admin" || session?.userId === userId)) {
+      targetUserId = userId;
+    }
 
-    let profile = targetUserId
-      ? await prisma.userProfile.findUnique({ where: { userId: targetUserId } })
-      : await prisma.userProfile.findFirst();
+    if (!targetUserId) {
+      return {
+        success: true,
+        data: DEFAULT_PROFILE,
+      };
+    }
+
+    let profile = await prisma.userProfile.findUnique({
+      where: { userId: targetUserId },
+    });
 
     if (!profile) {
-      // Find or create default user
-      let user = targetUserId
-        ? await prisma.user.findUnique({ where: { id: targetUserId } })
-        : await prisma.user.findFirst();
+      const user = await prisma.user.findUnique({
+        where: { id: targetUserId },
+      });
 
       if (!user) {
-        user = await prisma.user.create({
-          data: {
-            email: session?.email || "default_workspace@webhunt.io",
-            name: DEFAULT_PROFILE.fullName,
-          },
-        });
+        return {
+          success: true,
+          data: DEFAULT_PROFILE,
+        };
       }
 
       profile = await prisma.userProfile.create({
         data: {
           userId: user.id,
-          fullName: DEFAULT_PROFILE.fullName,
+          fullName: user.name || DEFAULT_PROFILE.fullName,
           professionalTitle: DEFAULT_PROFILE.professionalTitle,
           bio: DEFAULT_PROFILE.bio,
           yearsExperience: DEFAULT_PROFILE.yearsExperience,
@@ -120,7 +135,7 @@ export async function getUserProfileAction(userId?: string): Promise<{
           languagesJson: JSON.stringify(DEFAULT_PROFILE.languages),
           phone: DEFAULT_PROFILE.phone,
           whatsapp: DEFAULT_PROFILE.whatsapp,
-          email: DEFAULT_PROFILE.email,
+          email: user.email || DEFAULT_PROFILE.email,
           city: DEFAULT_PROFILE.city,
           country: DEFAULT_PROFILE.country,
           mpesaTillNumber: DEFAULT_PROFILE.mpesaTillNumber,
@@ -176,8 +191,9 @@ export async function getUserProfileAction(userId?: string): Promise<{
   } catch (error: any) {
     console.error("[ProfileAction] Fetch error:", error);
     return {
-      success: true,
+      success: false,
       data: DEFAULT_PROFILE,
+      error: error.message,
     };
   }
 }
@@ -191,16 +207,20 @@ export async function saveUserProfileAction(
   error?: string;
 }> {
   try {
-    let targetUserId = userId || data.userId;
+    const session = await getCurrentSession();
+    let targetUserId = session?.userId;
+    if (userId && (session?.role === "admin" || session?.userId === userId)) {
+      targetUserId = userId;
+    }
+
     if (!targetUserId) {
-      let user = await prisma.user.findFirst();
+      if (process.env.NODE_ENV === "production") {
+        return { success: false, error: "Authentication required to save profile" };
+      }
+      // Dev mode fallback
+      const user = await prisma.user.findFirst();
       if (!user) {
-        user = await prisma.user.create({
-          data: {
-            email: data.email || "user@webhunt.io",
-            name: data.fullName,
-          },
-        });
+        return { success: false, error: "User record required to attach profile" };
       }
       targetUserId = user.id;
     }
@@ -260,8 +280,8 @@ export async function saveUserProfileAction(
       },
     });
 
-    revalidatePath("/");
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/");
+    safeRevalidatePath("/pipeline");
 
     return {
       success: true,

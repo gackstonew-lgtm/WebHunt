@@ -58,25 +58,27 @@ async function dispatchEmail(params: SendSystemEmailParams): Promise<EmailDelive
   const resendApiKey = process.env.RESEND_API_KEY;
   const emailFrom = getSenderAddress();
 
-  // Handle mock test domains safely without failing integration suites
+  // Handle mock test domains safely without failing integration suites in dev
   if (to.includes('example.com') || to.includes('test.com') || to.includes('localhost')) {
-    console.log(`[EmailService] Testing address detected (${to}). Logging verification message safely...`);
-    const simulatedId = `simulated-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    try {
-      await prisma.emailDeliveryLog.create({
-        data: {
-          email: to,
-          emailType,
-          messageId: simulatedId,
-          status: 'delivered',
-        },
-      });
-    } catch {}
-    return {
-      success: true,
-      messageId: simulatedId,
-      isSimulated: true,
-    };
+    if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_TEST_EMAIL_SIMULATION === 'true') {
+      console.log(`[EmailService] Testing address detected (${to}). Logging verification message safely...`);
+      const simulatedId = `simulated-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      try {
+        await prisma.emailDeliveryLog.create({
+          data: {
+            email: to,
+            emailType,
+            messageId: simulatedId,
+            status: 'delivered',
+          },
+        });
+      } catch {}
+      return {
+        success: true,
+        messageId: simulatedId,
+        isSimulated: true,
+      };
+    }
   }
 
   // 1. Production Resend Delivery
@@ -113,9 +115,8 @@ async function dispatchEmail(params: SendSystemEmailParams): Promise<EmailDelive
           });
         } catch {}
 
-        // If in development mode or if Resend rejected due to unverified test domain sandbox (403),
-        // gracefully output the OTP/system message to the server console so verification can proceed without blocking!
-        if (process.env.NODE_ENV !== 'production' || res.status === 403) {
+        // In development mode, gracefully output the OTP/system message to the server console
+        if (process.env.NODE_ENV !== 'production') {
           console.log('===============================================================');
           console.log(`[EmailService][DEV/SANDBOX FALLBACK] RECIPIENT: ${to}`);
           console.log(`[EmailService] SENDER: ${emailFrom}`);
@@ -133,7 +134,7 @@ async function dispatchEmail(params: SendSystemEmailParams): Promise<EmailDelive
 
         return {
           success: false,
-          error: `Email provider rejected message (${res.status})`,
+          error: `Email provider rejected message (${res.status}): ${errorText.slice(0, 120)}`,
         };
       }
 
@@ -158,7 +159,6 @@ async function dispatchEmail(params: SendSystemEmailParams): Promise<EmailDelive
     } catch (err: any) {
       console.error('[EmailService] Resend network error:', err);
       
-      // If network error occurs in development mode, fallback to console log
       if (process.env.NODE_ENV !== 'production') {
         console.log('===============================================================');
         console.log(`[EmailService][DEV NETWORK FALLBACK] RECIPIENT: ${to}`);
@@ -181,7 +181,16 @@ async function dispatchEmail(params: SendSystemEmailParams): Promise<EmailDelive
     }
   }
 
-  // 2. Local / Staging Safe Logger Fallback
+  // 2. Missing Resend API Key Handling
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[EmailService] CRITICAL: RESEND_API_KEY is not configured in production environment.');
+    return {
+      success: false,
+      error: 'Email delivery service is not configured on this production instance.',
+    };
+  }
+
+  // Local / Staging Safe Logger Fallback (Dev Only)
   console.log('===============================================================');
   console.log(`[EmailService][DEV/STAGING] SYSTEM EMAIL TO: ${to}`);
   console.log(`[EmailService] SENDER: ${emailFrom}`);
@@ -228,7 +237,7 @@ export async function sendVerificationOtpEmail(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your WebHunt Verification Code</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #F6F4F1;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #F8F3F0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 40px 16px;">
     <tr>
       <td align="center">
@@ -239,8 +248,8 @@ export async function sendVerificationOtpEmail(
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td>
-                    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #F6F4F1;">
-                      <span style="color: #F95C4B;">⚡</span> WebHunt
+                    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #F8F3F0;">
+                      <span style="color: #0048BB;">⚡</span> WebHunt
                     </span>
                   </td>
                   <td align="right">
@@ -260,7 +269,7 @@ export async function sendVerificationOtpEmail(
                 Verify Your Account
               </h1>
               <p style="font-size: 14px; line-height: 22px; color: #AAAAAA; margin: 0 0 24px 0;">
-                Hello <strong style="color: #F6F4F1;">${userName}</strong>, welcome to WebHunt. Use the 6-digit verification code below to activate your account and access the lead discovery radar.
+                Hello <strong style="color: #F8F3F0;">${userName}</strong>, welcome to WebHunt. Use the 6-digit verification code below to activate your account and access the lead discovery radar.
               </p>
             </td>
           </tr>
@@ -268,8 +277,8 @@ export async function sendVerificationOtpEmail(
           <!-- OTP Display Box -->
           <tr>
             <td align="center" style="padding: 12px 0 28px 0;">
-              <div style="background-color: #141414; border: 2px dashed #F95C4B; border-radius: 10px; padding: 20px 24px; display: inline-block;">
-                <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 12px; color: #FFFFFF; text-shadow: 0 0 12px rgba(249, 92, 75, 0.4);">
+              <div style="background-color: #141414; border: 2px dashed #0048BB; border-radius: 10px; padding: 20px 24px; display: inline-block;">
+                <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 12px; color: #FFFFFF; text-shadow: 0 0 12px rgba(0, 72, 187, 0.4);">
                   ${otp}
                 </span>
               </div>
@@ -287,7 +296,7 @@ export async function sendVerificationOtpEmail(
               </p>
               <p style="font-size: 12px; line-height: 18px; color: #777777; margin: 0;">
                 WebHunt &bull; Global Tech & Local Business Outreach Workspace<br>
-                <a href="${appUrl}" style="color: #F95C4B; text-decoration: none;">${appUrl}</a>
+                <a href="${appUrl}" style="color: #0048BB; text-decoration: none;">${appUrl}</a>
               </p>
             </td>
           </tr>
@@ -345,15 +354,15 @@ export async function sendPasswordResetEmail(
   <meta charset="utf-8">
   <title>Reset your WebHunt password</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #F6F4F1;">
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #F8F3F0;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 40px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="100%" style="max-width: 540px; background-color: #0D0D0D; border: 1px solid #222222; border-radius: 12px; overflow: hidden; padding: 32px 28px;">
           <tr>
             <td style="padding-bottom: 24px; border-bottom: 1px solid #1C1C1C;">
-              <span style="font-size: 20px; font-weight: 800; color: #F6F4F1;">
-                <span style="color: #F95C4B;">⚡</span> WebHunt
+              <span style="font-size: 20px; font-weight: 800; color: #F8F3F0;">
+                <span style="color: #0048BB;">⚡</span> WebHunt
               </span>
             </td>
           </tr>
@@ -363,10 +372,10 @@ export async function sendPasswordResetEmail(
                 Password Reset Request
               </h1>
               <p style="font-size: 14px; line-height: 22px; color: #AAAAAA; margin: 0 0 24px 0;">
-                Hello <strong style="color: #F6F4F1;">${userName}</strong>, we received a request to reset your password. Click below to set a new password:
+                Hello <strong style="color: #F8F3F0;">${userName}</strong>, we received a request to reset your password. Click below to set a new password:
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetLink}" style="background-color: #F95C4B; color: #FFFFFF; text-decoration: none; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
+                <a href="${resetLink}" style="background-color: #0048BB; color: #FFFFFF; text-decoration: none; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block;">
                   Reset My Password
                 </a>
               </div>
@@ -423,10 +432,10 @@ export async function sendVerificationEmail(
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"></head>
-<body style="background-color: #000000; font-family: sans-serif; color: #F6F4F1; padding: 30px;">
+<body style="background-color: #000000; font-family: sans-serif; color: #F8F3F0; padding: 30px;">
   <h2>Verify your WebHunt account</h2>
   <p>Hello ${userName}, please click below to verify your account:</p>
-  <p><a href="${verifyLink}" style="background-color: #F95C4B; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Verify Email Address</a></p>
+  <p><a href="${verifyLink}" style="background-color: #0048BB; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Verify Email Address</a></p>
 </body>
 </html>
   `.trim();

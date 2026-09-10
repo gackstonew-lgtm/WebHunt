@@ -38,12 +38,26 @@ export async function createFollowUpTaskAction(params: {
 }): Promise<{ success: boolean; data?: FollowUpTask; error?: string }> {
   try {
     const session = await getCurrentSession();
-    const targetUserId = params.userId || session?.userId;
+    const effectiveUserId =
+      (session?.role === "admin" || !session) && params.userId ? params.userId : session?.userId;
+
+    if (!effectiveUserId) {
+      return { success: false, error: "Authentication required to create tasks" };
+    }
+
+    if (params.leadId) {
+      const lead = await prisma.lead.findUnique({
+        where: { id: params.leadId },
+      });
+      if (lead && lead.userId && lead.userId !== effectiveUserId && session?.role !== "admin") {
+        return { success: false, error: "Forbidden: You cannot create tasks for another user's lead" };
+      }
+    }
 
     const task = await prisma.followUpTask.create({
       data: {
         leadId: params.leadId || null,
-        userId: targetUserId || null,
+        userId: effectiveUserId,
         taskType: params.taskType,
         title: params.title,
         notes: params.notes || null,
@@ -68,11 +82,16 @@ export async function fetchUpcomingTasksAction(userId?: string): Promise<{
 }> {
   try {
     const session = await getCurrentSession();
-    const targetUserId = userId || session?.userId;
+    const effectiveUserId =
+      (session?.role === "admin" || !session) && userId ? userId : session?.userId;
+
+    if (!effectiveUserId) {
+      return { success: true, data: [] };
+    }
 
     const records = await prisma.followUpTask.findMany({
       where: {
-        ...(targetUserId ? { userId: targetUserId } : {}),
+        userId: effectiveUserId,
         isCompleted: false,
       },
       include: {
@@ -112,6 +131,23 @@ export async function toggleTaskCompletedAction(
   isCompleted: boolean
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session && process.env.NODE_ENV === "production") {
+      return { success: false, error: "Authentication required" };
+    }
+
+    const existing = await prisma.followUpTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Task not found" };
+    }
+
+    if (session && existing.userId && existing.userId !== session.userId && session.role !== "admin") {
+      return { success: false, error: "Forbidden: You cannot modify this task" };
+    }
+
     await prisma.followUpTask.update({
       where: { id: taskId },
       data: {
@@ -130,6 +166,23 @@ export async function toggleTaskCompletedAction(
 
 export async function deleteTaskAction(taskId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const session = await getCurrentSession();
+    if (!session && process.env.NODE_ENV === "production") {
+      return { success: false, error: "Authentication required" };
+    }
+
+    const existing = await prisma.followUpTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Task not found" };
+    }
+
+    if (session && existing.userId && existing.userId !== session.userId && session.role !== "admin") {
+      return { success: false, error: "Forbidden: You cannot delete this task" };
+    }
+
     await prisma.followUpTask.delete({
       where: { id: taskId },
     });

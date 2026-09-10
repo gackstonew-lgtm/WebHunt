@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import prisma from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET || '';
 
 /**

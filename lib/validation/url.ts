@@ -32,8 +32,20 @@ export function validateUrl(rawUrl?: string | null): UrlValidationResult {
     const parsed = new URL(candidate);
     const domain = parsed.hostname.toLowerCase();
 
-    // Check that domain contains at least one dot and valid characters
-    if (!domain.includes('.') || domain.startsWith('.') || domain.endsWith('.') || domain.length < 4) {
+    // Check that domain contains at least one dot, valid characters, and is not a loopback address
+    if (
+      !domain.includes('.') || 
+      domain.startsWith('.') || 
+      domain.endsWith('.') || 
+      domain.length < 4 ||
+      domain === 'localhost' ||
+      domain.endsWith('.localhost') ||
+      domain.endsWith('.local') ||
+      domain.endsWith('.internal') ||
+      domain.startsWith('127.') ||
+      domain === '0.0.0.0' ||
+      domain.startsWith('169.254.')
+    ) {
       return {
         raw: trimmed,
         normalizedUrl: null,

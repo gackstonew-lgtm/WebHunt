@@ -11,11 +11,17 @@ export interface SessionPayload {
   expiresAt: number;
 }
 
-const DEFAULT_SECRET = 'webhunt_super_secret_session_signing_key_2026_salt_99';
-
-function getSessionSecret(): Uint8Array {
-  const secret = process.env.ENCRYPTION_SECRET || process.env.NEXTAUTH_SECRET || DEFAULT_SECRET;
-  return new TextEncoder().encode(secret);
+export function getSessionSecret(): Uint8Array {
+  const secret = process.env.ENCRYPTION_SECRET || process.env.NEXTAUTH_SECRET || process.env.SESSION_SECRET;
+  if (!secret || secret.trim() === '') {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        '[SessionSecurity] CRITICAL: ENCRYPTION_SECRET (or NEXTAUTH_SECRET) environment variable is required in production. Fail fast.'
+      );
+    }
+    return new TextEncoder().encode('webhunt_dev_only_session_signing_key_2026_untrusted_local_salt');
+  }
+  return new TextEncoder().encode(secret.trim());
 }
 
 function bufferToHex(buffer: ArrayBuffer): string {

@@ -138,8 +138,8 @@ export class LeadProviderAggregator {
   async search(params: SearchParams): Promise<SearchResult> {
     const industryKey = (params.industryIds || []).sort().join(",");
     const cacheKey = params.mode === "physical"
-      ? `phys:${params.country}:${params.city || ""}:${params.niche}:${industryKey}:${params.provider || "all"}`
-      : `online:${params.query}:${params.category || "all"}:${industryKey}:${params.provider || "all"}`;
+      ? `phys:${params.country}:${params.city || ""}:${params.niche}:${industryKey}:${params.provider || "all"}:${params.radius || 25}:${params.maxResults || 50}`
+      : `online:${params.query}:${params.category || "all"}:${params.country || ""}:${industryKey}:${params.provider || "all"}:${params.maxResults || 50}`;
 
     // 1. Check in-memory cache
     if (!params.forceRefresh) {
@@ -231,11 +231,8 @@ export class LeadProviderAggregator {
       return (b.dataQualityScore || 0) - (a.dataQualityScore || 0);
     });
 
-    // If filtering was overly strict on a small dataset, fallback to deduplicated to ensure zero false empties
-    const baseLeads = scoredLeads.length > 0 ? scoredLeads : deduplicated;
-
     // Fast asynchronous contact enrichment for legitimate contact discovery
-    const finalLeads = await enrichLeadsBatch(baseLeads, { forceRefresh: params.forceRefresh }) as PhysicalLead[];
+    const finalLeads = await enrichLeadsBatch(scoredLeads, { forceRefresh: params.forceRefresh }) as PhysicalLead[];
 
     const displayQuery = normalized.primaryIndustry ? normalized.primaryIndustry.name : params.niche;
 
@@ -326,8 +323,7 @@ export class LeadProviderAggregator {
       return (b.dataQualityScore || 0) - (a.dataQualityScore || 0);
     });
 
-    const baseJobs = scoredJobs.length > 0 ? scoredJobs : deduplicated;
-    const finalJobs = await enrichLeadsBatch(baseJobs, { forceRefresh: params.forceRefresh }) as OnlineJobLead[];
+    const finalJobs = await enrichLeadsBatch(scoredJobs, { forceRefresh: params.forceRefresh }) as OnlineJobLead[];
     const displayQuery = normalized.primaryIndustry ? normalized.primaryIndustry.name : params.query;
 
     const searchResult: SearchResult = {

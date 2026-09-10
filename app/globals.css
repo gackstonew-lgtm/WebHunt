@@ -2,71 +2,212 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* WebHunt Dark Theme Tokens */
+:root, .dark {
+  /* WebHunt Delta Royal Blue & Deep Dark Mode Theme Tokens */
   --background: #000000;          /* Deep Black background */
-  --foreground: #F6F4F1;          /* Paper #F6F4F1 primary text */
+  --foreground: #F8F3F0;          /* Light Cream #F8F3F0 primary text */
 
   --card: #0D0D0D;                /* Raised pure dark surface */
-  --card-foreground: #F6F4F1;     /* Card text */
+  --card-foreground: #F8F3F0;     /* Card text */
+  --card-inner: #161616;
 
   --popover: #0D0D0D;             /* Popovers / Modals */
-  --popover-foreground: #F6F4F1;
+  --popover-foreground: #F8F3F0;
 
   --surface-subtle: #080808;      /* Subtle inner surfaces and inputs */
   --surface-elevated: #161616;    /* Hover and elevated surface */
 
-  --primary: #F95C4B;             /* Exact WebHunt Coral Accent */
-  --primary-foreground: #FFFFFF;  /* White text on coral */
-  --primary-hover: #E04838;       /* Deeper coral for hover */
+  --primary: #0048BB;             /* Royal Blue #0048BB Accent */
+  --primary-foreground: #FFFFFF;  /* White text on royal blue */
+  --primary-hover: #00388A;       /* Deeper royal blue for hover */
 
-  --paper: #F6F4F1;               /* Primary light content */
-  --stone: #E4DED2;               /* Secondary light content / labels */
-  --coral: #F95C4B;               /* Primary visual accent */
+  --paper: #F8F3F0;               /* Primary Light Cream content */
+  --stone: #E6DFD5;               /* Secondary light content / labels */
+  --royal: #0048BB;               /* Royal Blue visual accent */
+  --cream: #F8F3F0;               /* Light Cream visual token */
 
   --muted: #161616;               /* Muted surface */
   --muted-foreground: #A8A196;    /* Stone desaturated for optimal contrast */
 
   --accent: #161616;              /* Hover & active chip surface */
-  --accent-foreground: #F6F4F1;
+  --accent-foreground: #F8F3F0;
 
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
 
-  --border: rgba(228, 222, 210, 0.12);        /* Hairline stone border */
-  --border-subtle: rgba(228, 222, 210, 0.06); /* Faint stone separator */
-  --border-strong: rgba(228, 222, 210, 0.25); /* Focused border */
+  --border: rgba(248, 243, 240, 0.12);        /* Hairline cream border */
+  --border-subtle: rgba(248, 243, 240, 0.06); /* Faint cream separator */
+  --border-strong: rgba(248, 243, 240, 0.25); /* Focused border */
 
   --input: #080808;               /* Input background */
-  --ring: rgba(249, 92, 75, 0.45);/* Coral focus ring */
+  --ring: rgba(0, 72, 187, 0.45); /* Royal Blue focus ring */
 
   --success: #3FA372;             /* Success status */
-  --success-foreground: #F6F4F1;
+  --success-foreground: #F8F3F0;
+}
+
+.light {
+  /* WebHunt Delta Light Cream Theme Tokens with High-Contrast Darkened Fonts */
+  --background: #F8F3F0;          /* Light Cream background from uploaded spec */
+  --foreground: #080C14;          /* Deep rich dark text for high visibility */
+
+  --card: #FFFFFF;                /* Clean light card surface */
+  --card-foreground: #080C14;
+  --card-inner: #F1ECE6;          /* Warm cream card inner */
+
+  --popover: #FFFFFF;
+  --popover-foreground: #080C14;
+
+  --surface-subtle: #F4ECE4;      /* Subtle inner surfaces and inputs */
+  --surface-elevated: #ECE4DA;    /* Hover and elevated surface */
+
+  --primary: #0048BB;             /* Royal Blue #0048BB Accent */
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #00388A;
+
+  --paper: #FFFFFF;
+  --stone: #1E293B;               /* Slate-800 for high readability */
+  --royal: #0048BB;
+  --cream: #F8F3F0;
+
+  --muted: #EFE8E0;
+  --muted-foreground: #334155;    /* Slate-700 for clear secondary text */
+
+  --accent: #E5DDD3;
+  --accent-foreground: #080C14;
+
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+
+  --border: rgba(15, 23, 42, 0.14);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.3);
+
+  --input: #FFFFFF;
+  --ring: rgba(0, 72, 187, 0.45);
+
+  --success: #15803D;
+  --success-foreground: #FFFFFF;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom Scrollbars matching WebHunt Dark Theme */
+/* Light Mode Overrides for Hardcoded Dark Hexes with Crisp Darkened Fonts */
+.light body {
+  background-color: #F8F3F0 !important;
+  color: #080C14 !important;
+}
+
+.light .bg-\[\#000000\] {
+  background-color: #F8F3F0 !important;
+}
+
+.light .bg-\[\#000000\]\/90,
+.light .bg-\[\#000000\]\/95 {
+  background-color: rgba(248, 243, 240, 0.94) !important;
+}
+
+.light .bg-\[\#0D0D0D\] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.light .bg-\[\#080808\] {
+  background-color: #F4ECE4 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.light .bg-\[\#161616\] {
+  background-color: #ECE4DA !important;
+  color: #080C14 !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+/* High Contrast Darkened Fonts for Light Theme */
+.light .text-\[\#F8F3F0\] {
+  color: #080C14 !important;
+}
+
+.light .text-\[\#A8A196\] {
+  color: #334155 !important;
+  font-weight: 500;
+}
+
+.light .text-\[\#A8A196\]\/60,
+.light .text-\[\#A8A196\]\/80 {
+  color: #475569 !important;
+}
+
+.light label {
+  color: #1E293B !important;
+}
+
+.light input,
+.light textarea,
+.light select {
+  color: #080C14 !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* Darkened borders in light mode */
+.light .border-\[rgba\(248\,243\,240\,0\.12\)\] {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+.light .border-\[rgba\(248\,243\,240\,0\.08\)\] {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light .border-\[rgba\(248\,243\,240\,0\.15\)\] {
+  border-color: rgba(15, 23, 42, 0.16) !important;
+}
+
+.light .border-\[rgba\(248\,243\,240\,0\.2\)\] {
+  border-color: rgba(15, 23, 42, 0.22) !important;
+}
+
+.light .border-\[rgba\(248\,243\,240\,0\.22\)\] {
+  border-color: rgba(15, 23, 42, 0.24) !important;
+}
+
+.light .border-\[rgba\(248\,243\,240\,0\.24\)\] {
+  border-color: rgba(15, 23, 42, 0.25) !important;
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: #161616;
+  background: var(--surface-elevated);
   border-radius: 9999px;
-  border: 1px solid rgba(228, 222, 210, 0.08);
+  border: 1px solid var(--border-subtle);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #242424;
+  background: var(--primary);
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #F8F3F0;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #D4CBC0;
+  border-color: rgba(15, 23, 42, 0.1);
 }
 
 /* Focus outline helpers */

@@ -187,12 +187,14 @@ model Lead {
   outreachMessages    OutreachMessage[]
   followUpTasks       FollowUpTask[]
 
-  @@unique([phone, businessName])
+  @@unique([userId, phone, businessName])
   @@index([status])
   @@index([category])
   @@index([city])
   @@index([createdAt])
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
   @@index([pipelineType])
 }
 

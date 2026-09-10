@@ -42,7 +42,13 @@ export async function middleware(request: NextRequest) {
     const isVerificationOrReset = pathname.startsWith("/auth/verify") || pathname.startsWith("/auth/reset-password");
     if (!isVerificationOrReset) {
       const returnUrlParam = request.nextUrl.searchParams.get("returnUrl");
-      const target = returnUrlParam && returnUrlParam.startsWith("/") ? returnUrlParam : "/";
+      const isSafeInternalPath =
+        returnUrlParam &&
+        returnUrlParam.startsWith("/") &&
+        !returnUrlParam.startsWith("//") &&
+        !returnUrlParam.includes(":") &&
+        !returnUrlParam.includes("\\");
+      const target = isSafeInternalPath ? returnUrlParam : "/";
       return NextResponse.redirect(new URL(target, request.url));
     }
   }

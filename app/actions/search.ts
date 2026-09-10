@@ -2,6 +2,8 @@
 
 import { aggregator } from "@/lib/providers";
 import { SearchParams, SearchResult } from "@/lib/types";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { headers } from "next/headers";
 
 export async function executeSearchAction(params: SearchParams): Promise<{
   success: boolean;
@@ -9,6 +11,18 @@ export async function executeSearchAction(params: SearchParams): Promise<{
   error?: string;
 }> {
   try {
+    const headerList = headers();
+    const forwarded = headerList.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
+
+    const rl = checkRateLimit(`search:${ip}`, 30, 60);
+    if (!rl.allowed) {
+      return {
+        success: false,
+        error: `Search rate limit exceeded. Please wait ${rl.retryAfterSeconds} seconds before searching again.`,
+      };
+    }
+
     if (params.mode === "physical") {
       if (!params.niche || params.niche.trim().length === 0) {
         return { success: false, error: "Please enter an industry or niche (e.g. plumbers, auto repair, barbers)." };

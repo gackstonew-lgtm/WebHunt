@@ -127,31 +127,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // C. Network-First for HTML Page Navigation (/, /pipeline, /searches, /auth)
+  // C. Network-Only for HTML Page Navigation with Clean Offline Fallback
+  // (Prevents caching authenticated HTML or leaking user session data across sessions)
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
-          }
-          return networkResponse;
-        })
-        .catch(async () => {
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-
-          // Fallback to cached home page shell
-          const homeCache = await caches.match('/');
-          if (homeCache) {
-            return homeCache;
-          }
-
-          // Return clean offline HTML page
-          return new Response(
+      fetch(request).catch(() => {
+        return new Response(
             `<!DOCTYPE html>
             <html lang="en" class="dark">
             <head>
@@ -163,7 +144,7 @@ self.addEventListener('fetch', (event) => {
                   margin: 0;
                   padding: 32px 16px;
                   background-color: #000000;
-                  color: #F6F4F1;
+                  color: #F8F3F0;
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                   display: flex;
                   flex-direction: column;
@@ -175,7 +156,7 @@ self.addEventListener('fetch', (event) => {
                 .card {
                   max-width: 440px;
                   background-color: #0D0D0D;
-                  border: 1px solid rgba(228,222,210,0.15);
+                  border: 1px solid rgba(248,243,240,0.15);
                   border-radius: 24px;
                   padding: 32px 24px;
                   box-shadow: 0 20px 40px rgba(0,0,0,0.8);
@@ -185,18 +166,18 @@ self.addEventListener('fetch', (event) => {
                   height: 56px;
                   border-radius: 16px;
                   background-color: #161616;
-                  border: 1px solid rgba(249,92,75,0.3);
-                  color: #F95C4B;
+                  border: 1px solid rgba(0,72,187,0.3);
+                  color: #0048BB;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   margin: 0 auto 16px auto;
                   font-size: 24px;
                 }
-                h1 { font-size: 20px; font-weight: 700; margin: 0 0 8px 0; color: #F6F4F1; }
+                h1 { font-size: 20px; font-weight: 700; margin: 0 0 8px 0; color: #F8F3F0; }
                 p { font-size: 13px; line-height: 20px; color: #A8A196; margin: 0 0 24px 0; }
                 button {
-                  background-color: #F95C4B;
+                  background-color: #0048BB;
                   color: #FFFFFF;
                   border: none;
                   padding: 12px 24px;
@@ -204,9 +185,9 @@ self.addEventListener('fetch', (event) => {
                   font-size: 13px;
                   font-weight: 600;
                   cursor: pointer;
-                  transition: opacity 0.2s;
+                  transition: background-color 0.2s;
                 }
-                button:hover { opacity: 0.9; }
+                button:hover { background-color: #00388A; }
               </style>
             </head>
             <body>
