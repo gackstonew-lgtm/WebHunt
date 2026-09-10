@@ -51,7 +51,7 @@ async function runSuite() {
   console.log('--- 1. Prisma Schema & Datasource Compatibility ---');
   
   // Test SQLite mode detection
-  delete process.env.DATABASE_URL;
+  process.env.DATABASE_URL = 'file:./dev.db';
   delete process.env.VERCEL;
   preparePrismaSchema();
   const schemaContentSqlite = fs.readFileSync(path.join(__dirname, '../prisma/schema.prisma'), 'utf8');
@@ -66,6 +66,8 @@ async function runSuite() {
   // Reset to local SQLite for the test runner
   process.env.DATABASE_URL = 'file:./dev.db';
   preparePrismaSchema();
+  const { execSync } = require('child_process');
+  execSync('node ./node_modules/prisma/build/index.js generate', { stdio: 'ignore' });
 
   // --- 2. Database Connectivity & Health Check ---
   console.log('\n--- 2. Database Connectivity & Health Check ---');

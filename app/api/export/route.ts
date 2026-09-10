@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { Prisma, Lead } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
 
-    const whereClause: any = {};
+    const whereClause: Prisma.LeadWhereInput = {};
     if (status && status !== "ALL") {
       whereClause.status = status;
     }
@@ -46,13 +47,13 @@ export async function GET(req: NextRequest) {
       "Date Added",
     ];
 
-    const escapeCsv = (str: any) => {
+    const escapeCsv = (str: string | number | null | undefined): string => {
       if (str === null || str === undefined) return '""';
       const clean = String(str).replace(/"/g, '""');
       return `"${clean}"`;
     };
 
-    const rows = leads.map((lead: any) => [
+    const rows = leads.map((lead: Lead) => [
       escapeCsv(lead.businessName),
       escapeCsv(lead.phone),
       escapeCsv(lead.phoneFormatted),

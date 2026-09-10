@@ -1,8 +1,17 @@
 "use server";
 
 import prisma from "@/lib/db";
+import { FollowUpTask } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/auth/session";
+
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch {
+    // In CLI test runners outside request context, static generation store is not active
+  }
+}
 
 export interface TaskItem {
   id: string;
@@ -26,7 +35,7 @@ export async function createFollowUpTaskAction(params: {
   notes?: string;
   dueAt: Date | string;
   priority?: "LOW" | "MEDIUM" | "HIGH";
-}): Promise<{ success: boolean; data?: any; error?: string }> {
+}): Promise<{ success: boolean; data?: FollowUpTask; error?: string }> {
   try {
     const session = await getCurrentSession();
     const targetUserId = params.userId || session?.userId;
@@ -44,7 +53,7 @@ export async function createFollowUpTaskAction(params: {
       },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true, data: task };
   } catch (error: any) {
     console.error("[TasksAction] Create task failed:", error);
@@ -87,7 +96,7 @@ export async function fetchUpcomingTasksAction(userId?: string): Promise<{
       dueAt: r.dueAt,
       completedAt: r.completedAt,
       isCompleted: r.isCompleted,
-      priority: r.priority as any,
+      priority: (r.priority as "LOW" | "MEDIUM" | "HIGH") || "MEDIUM",
       leadName: r.lead?.businessName,
     }));
 
@@ -111,7 +120,7 @@ export async function toggleTaskCompletedAction(
       },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true };
   } catch (error: any) {
     console.error("[TasksAction] Toggle task failed:", error);
@@ -125,7 +134,7 @@ export async function deleteTaskAction(taskId: string): Promise<{ success: boole
       where: { id: taskId },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true };
   } catch (error: any) {
     console.error("[TasksAction] Delete task failed:", error);

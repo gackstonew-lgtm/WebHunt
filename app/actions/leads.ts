@@ -1,9 +1,18 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
+import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus, SocialProfiles, EnrichedLeadContacts, RemoteType, VerificationStatus, WebsiteConfidence } from "@/lib/types";
+import { Lead } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/auth/session";
+
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch {
+    // In CLI test runners outside request context, static generation store is not active
+  }
+}
 
 export async function fetchPipelineLeadsAction(userId?: string): Promise<{
   success: boolean;
@@ -20,9 +29,9 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
     });
 
     const leads: LeadItem[] = records.map((rec) => {
-      const isOnline = rec.pipelineType === "job_application" || rec.sourceType === "job_board" || rec.sourceProvider.match(/(remotive|arbeitnow|himalayas|weworkremotely|jobspresso|remoteok|africa)/i);
+      const isOnline = rec.pipelineType === "job_application" || rec.sourceType === "job_board" || !!rec.sourceProvider.match(/(remotive|arbeitnow|himalayas|weworkremotely|jobspresso|remoteok|africa)/i);
 
-      let socialProfiles: any = {};
+      let socialProfiles: SocialProfiles = {};
       if (rec.facebook || rec.instagram || rec.linkedin || rec.twitter) {
         socialProfiles = {
           facebook: rec.facebook,
@@ -32,10 +41,10 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
         };
       }
 
-      let parsedEnrichment: any = undefined;
+      let parsedEnrichment: EnrichedLeadContacts | undefined = undefined;
       if (rec.enrichmentJson) {
         try {
-          parsedEnrichment = JSON.parse(rec.enrichmentJson);
+          parsedEnrichment = JSON.parse(rec.enrichmentJson) as EnrichedLeadContacts;
         } catch (_) {}
       }
 
@@ -48,20 +57,20 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
           location: rec.address || rec.city || "Remote",
           country: rec.state || "Global",
           isRemote: true,
-          remoteType: (rec.remoteType as any) || "worldwide",
+          remoteType: (rec.remoteType as RemoteType) || "worldwide",
           category: rec.category,
           tags: rec.tags ? rec.tags.split(",") : [],
           url: rec.phone,
           postedDate: rec.createdAt.toISOString(),
           salary: rec.estimatedValue ? `$${rec.estimatedValue}/yr` : "Competitive",
-          source: rec.sourceProvider,
+          source: rec.sourceProvider as any,
           sourceId: rec.providerPlaceId,
           sourceUrl: rec.sourceUrl,
           sourceType: rec.sourceType,
           status: rec.status as PipelineStatus,
           estimatedValue: rec.estimatedValue,
           notes: rec.notes,
-          verificationStatus: rec.verificationStatus as any,
+          verificationStatus: rec.verificationStatus as VerificationStatus,
           email: rec.email,
           whatsapp: rec.whatsapp,
           contactPageUrl: rec.contactPageUrl,
@@ -92,8 +101,8 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
           rating: rec.rating,
           reviewCount: rec.reviewCount,
           hasWebsite: rec.hasWebsite,
-          noWebsiteConfidence: rec.noWebsiteConfidence as any,
-          sourceProvider: rec.sourceProvider,
+          noWebsiteConfidence: (rec.noWebsiteConfidence as WebsiteConfidence) || "High",
+          sourceProvider: rec.sourceProvider as any,
           sourceUrl: rec.sourceUrl,
           sourceType: rec.sourceType,
           providerPlaceId: rec.providerPlaceId,
@@ -101,7 +110,7 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
           estimatedValue: rec.estimatedValue,
           notes: rec.notes,
           tags: rec.tags ? rec.tags.split(",") : [],
-          verificationStatus: rec.verificationStatus as any,
+          verificationStatus: rec.verificationStatus as VerificationStatus,
           email: rec.email,
           whatsapp: rec.whatsapp,
           contactPageUrl: rec.contactPageUrl,
@@ -128,7 +137,7 @@ export async function saveLeadToPipelineAction(
   userId?: string
 ): Promise<{
   success: boolean;
-  data?: any;
+  data?: Lead;
   error?: string;
 }> {
   try {
@@ -215,8 +224,8 @@ export async function saveLeadToPipelineAction(
       },
     });
 
-    revalidatePath("/pipeline");
-    revalidatePath("/");
+    safeRevalidatePath("/pipeline");
+    safeRevalidatePath("/");
     return { success: true, data: saved };
   } catch (error: any) {
     console.error("[LeadsAction] Save lead failed:", error);
@@ -243,8 +252,8 @@ export async function bulkSaveLeadsAction(
       }
     }
 
-    revalidatePath("/pipeline");
-    revalidatePath("/");
+    safeRevalidatePath("/pipeline");
+    safeRevalidatePath("/");
     return { success: true, count: savedCount };
   } catch (error: any) {
     console.error("[LeadsAction] Bulk save failed:", error);
@@ -257,7 +266,7 @@ export async function updateLeadStatusAction(
   status: PipelineStatus
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const updateData: any = { status };
+    const updateData: { status: string; contactedAt?: Date } = { status };
     if (status === "CONTACTED" || status === "INTERESTED" || status === "CLOSED" || status === "APPLIED" || status === "INTERVIEW") {
       updateData.contactedAt = new Date();
     }
@@ -267,8 +276,8 @@ export async function updateLeadStatusAction(
       data: updateData,
     });
 
-    revalidatePath("/pipeline");
-    revalidatePath("/");
+    safeRevalidatePath("/pipeline");
+    safeRevalidatePath("/");
     return { success: true };
   } catch (error: any) {
     console.error("[LeadsAction] Update status failed:", error);
@@ -290,7 +299,7 @@ export async function updateLeadNotesAction(
       },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true };
   } catch (error: any) {
     console.error("[LeadsAction] Update notes failed:", error);
@@ -304,7 +313,7 @@ export async function deleteLeadAction(leadId: string): Promise<{ success: boole
       where: { id: leadId },
     });
 
-    revalidatePath("/pipeline");
+    safeRevalidatePath("/pipeline");
     return { success: true };
   } catch (error: any) {
     console.error("[LeadsAction] Delete lead failed:", error);
