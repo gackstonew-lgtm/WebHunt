@@ -8,22 +8,28 @@ import {
   KanbanSquare, 
   History, 
   Download, 
-  Globe,
-  User,
-  LogOut,
-  LogIn
+  User, 
+  LogIn,
+  Sparkles,
+  CreditCard,
+  Crown
 } from "lucide-react";
 import ProfileSettingsModal from "./profile/ProfileSettingsModal";
+import KoraCheckoutModal from "./payments/KoraCheckoutModal";
 import { getStoredPipelineLeads, clearAllClientStorage } from "@/lib/pipeline-store";
 import { exportLeadsToCsv } from "@/lib/export";
 import { syncLocalStorageWithDatabase } from "@/lib/sync-bridge";
 import { getAuthStatusAction, logoutAction } from "@/app/actions/auth";
+import { getUserSubscriptionAction } from "@/app/actions/payments";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [showProfile, setShowProfile] = useState(false);
+  const [showKoraCheckout, setShowKoraCheckout] = useState(false);
   const [leadCount, setLeadCount] = useState(0);
   const [userSession, setUserSession] = useState<{ id: string; email: string; name?: string | null } | null>(null);
+  const [hasActiveSub, setHasActiveSub] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   const isAuthRoute = pathname ? pathname === "/auth" || pathname.startsWith("/auth/") : false;
 
@@ -31,14 +37,18 @@ export default function Navbar() {
     const stored = getStoredPipelineLeads();
     setLeadCount(stored.length);
 
-    // Fetch auth status
-    getAuthStatusAction().then((res) => {
+    // Fetch auth and subscription status
+    getUserSubscriptionAction().then((res) => {
       if (res.isAuthenticated && res.user) {
         setUserSession(res.user);
+        setHasActiveSub(res.subscriptionStatus.hasActiveSubscription);
+        setIsAdminUser(res.subscriptionStatus.isAdmin);
       } else {
         setUserSession(null);
+        setHasActiveSub(false);
+        setIsAdminUser(false);
       }
-    });
+    }).catch(() => {});
 
     // Trigger seamless background sync with the database on load
     syncLocalStorageWithDatabase().catch((e) => console.warn("Background sync info:", e));
@@ -76,6 +86,7 @@ export default function Navbar() {
     { href: "/", label: "Radar", icon: Radar },
     { href: "/pipeline", label: "CRM", icon: KanbanSquare, badge: leadCount > 0 ? leadCount : undefined },
     { href: "/searches", label: "History", icon: History },
+    { href: "/subscription", label: "Pricing", icon: CreditCard },
   ];
 
   return (
@@ -98,7 +109,7 @@ export default function Navbar() {
                       Delta
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#A8A196] hidden sm:block">Physical & Online Lead Discovery</p>
+                  <p className="text-[11px] text-[#A8A196] hidden sm:block">Physical &amp; Online Lead Discovery</p>
                 </div>
               </Link>
             </div>
@@ -113,13 +124,13 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                      className={"flex items-center space-x-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all " + (
                         isActive
                           ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
                           : "text-[#A8A196] hover:text-[#F8F3F0] hover:bg-[#161616]/60"
-                      }`}
+                      )}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-[#0048BB]" : "text-[#A8A196]"}`} />
+                      <Icon className={"w-4 h-4 " + (isActive ? "text-[#0048BB]" : "text-[#A8A196]")} />
                       <span>{link.label}</span>
                       {link.badge !== undefined && (
                         <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-[#0048BB] text-white">
@@ -135,7 +146,7 @@ export default function Navbar() {
             {/* Right Action buttons */}
             {!isAuthRoute && (
               <div className="flex items-center space-x-2">
-                {/* Profile & Settings Trigger - always accessible on mobile header & desktop */}
+                {/* Profile & Settings Trigger */}
                 <button
                   onClick={() => setShowProfile(true)}
                   className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F8F3F0] hover:bg-[#161616] border border-[rgba(248,243,240,0.12)] transition shadow-sm"
@@ -144,6 +155,27 @@ export default function Navbar() {
                   <User className="w-3.5 h-3.5 text-[#0048BB]" />
                   <span className="hidden xs:inline">Profile</span>
                 </button>
+
+                {/* Subscription / Upgrade Trigger */}
+                {hasActiveSub ? (
+                  <Link
+                    href="/subscription"
+                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-bold rounded-xl bg-[#10192A] text-emerald-400 border border-emerald-500/30 shadow-sm transition hover:bg-emerald-950/30"
+                    title="Active Subscription Managed"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{isAdminUser ? "Admin" : "Active"}</span>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setShowKoraCheckout(true)}
+                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#161616] text-[#F8F3F0] hover:bg-[#1C1C1C] border border-[rgba(0,72,187,0.4)] shadow-sm transition"
+                    title="Upgrade Subscription (Monthly $50 / Annual $200)"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-[#0048BB]" />
+                    <span>Upgrade</span>
+                  </button>
+                )}
 
                 {!userSession && (
                   <Link
@@ -172,6 +204,17 @@ export default function Navbar() {
       </header>
 
       {showProfile && <ProfileSettingsModal onClose={() => setShowProfile(false)} />}
+      {showKoraCheckout && (
+        <KoraCheckoutModal
+          onClose={() => setShowKoraCheckout(false)}
+          userEmail={userSession?.email || ""}
+          userName={userSession?.name || ""}
+          onSuccess={() => {
+            setShowKoraCheckout(false);
+            setHasActiveSub(true);
+          }}
+        />
+      )}
     </>
   );
 }

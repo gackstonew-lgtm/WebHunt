@@ -3,12 +3,17 @@
 import { aggregator } from "@/lib/providers";
 import { SearchParams, SearchResult } from "@/lib/types";
 import { checkRateLimit } from "@/lib/security/rate-limit";
+import { getCurrentSession } from "@/lib/auth/session";
+import { checkUserSubscription } from "@/lib/auth/subscription";
 import { headers } from "next/headers";
 
 export async function executeSearchAction(params: SearchParams): Promise<{
   success: boolean;
   data?: SearchResult;
   error?: string;
+  requireAuth?: boolean;
+  requireSubscription?: boolean;
+  returnTo?: string;
 }> {
   try {
     const headerList = headers();
@@ -20,6 +25,28 @@ export async function executeSearchAction(params: SearchParams): Promise<{
       return {
         success: false,
         error: `Search rate limit exceeded. Please wait ${rl.retryAfterSeconds} seconds before searching again.`,
+      };
+    }
+
+    // 1. Enforce Server-Side Authentication
+    const session = await getCurrentSession();
+    if (!session || !session.userId) {
+      return {
+        success: false,
+        requireAuth: true,
+        error: "Authentication required. Please sign in or create an account to launch lead radar scans.",
+        returnTo: params.mode || "physical",
+      };
+    }
+
+    // 2. Enforce Authoritative Server-Side Subscription Guard
+    const subCheck = await checkUserSubscription(session.userId);
+    if (!subCheck.hasActiveSubscription) {
+      return {
+        success: false,
+        requireSubscription: true,
+        error: "Active subscription required. Please choose a subscription plan (Monthly $50 or Annual $200) to launch Lead Radar scans.",
+        returnTo: params.mode || "physical",
       };
     }
 

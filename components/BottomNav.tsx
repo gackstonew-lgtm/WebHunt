@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, KanbanSquare, History } from "lucide-react";
+import { Radar, KanbanSquare, History, CreditCard } from "lucide-react";
 import { getStoredPipelineLeads } from "@/lib/pipeline-store";
 
 export default function BottomNav() {
@@ -33,6 +33,7 @@ export default function BottomNav() {
     { href: "/", label: "Radar", icon: Radar },
     { href: "/pipeline", label: "CRM", icon: KanbanSquare, badge: leadCount > 0 ? leadCount : undefined },
     { href: "/searches", label: "History", icon: History },
+    { href: "/subscription", label: "Plans", icon: CreditCard },
   ];
 
   return (

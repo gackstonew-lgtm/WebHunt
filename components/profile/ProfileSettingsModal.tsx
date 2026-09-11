@@ -13,17 +13,21 @@ import {
   Phone, 
   Mail, 
   Coins, 
-  LogOut,
-  Moon,
-  Sun,
-  Edit3,
-  Sliders,
-  Palette
+  LogOut, 
+  Moon, 
+  Sun, 
+  Edit3, 
+  Sliders, 
+  Palette,
+  CreditCard,
+  Sparkles,
+  Smartphone
 } from "lucide-react";
 import { getUserProfileAction, saveUserProfileAction, UserProfileData } from "@/app/actions/profile";
 import { logoutAction } from "@/app/actions/auth";
 import { clearAllClientStorage } from "@/lib/pipeline-store";
 import { useTheme } from "@/lib/theme-context";
+import KoraCheckoutModal from "@/components/payments/KoraCheckoutModal";
 
 interface ProfileSettingsModalProps {
   onClose: () => void;
@@ -37,6 +41,7 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [newSkill, setNewSkill] = useState("");
+  const [showKoraCheckout, setShowKoraCheckout] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -239,6 +244,62 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
                   <option value="USD">USD ($)</option>
                   <option value="KES">KES (KSh)</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          {/* GROUP: SUBSCRIPTION & PAYMENT METHODS (POWERED BY KORA) */}
+          <div className="space-y-2">
+            <div className="px-1 text-[11px] font-bold text-[#A8A196] uppercase tracking-wider flex items-center justify-between">
+              <div className="flex items-center space-x-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-[#0048BB]" />
+                <span>Subscription &amp; Payment Methods</span>
+              </div>
+              <span className="text-[10px] text-[#5EBA8C] font-semibold">
+                Kora Gateway Active
+              </span>
+            </div>
+
+            <div className="bg-[#080808] border border-[rgba(248,243,240,0.12)] rounded-2xl p-4 space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[rgba(248,243,240,0.08)]">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-[#F8F3F0] text-sm">WebHunt Radar Plan</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#10192A] text-[#0048BB] border border-[rgba(0,72,187,0.3)]">
+                      Standard
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#A8A196] mt-0.5">
+                    Multi-channel local business discovery, remote gigs, and proposal exports.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowKoraCheckout(true)}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-bold text-xs shadow-md shadow-[#0048BB]/20 transition shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Upgrade / Add Credits</span>
+                </button>
+              </div>
+
+              {/* Supported Payment Channels Pill Strip */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#A8A196]">
+                <span>Accepted via Kora:</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-md bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.1)] text-[10px] font-medium flex items-center space-x-1">
+                    <Smartphone className="w-3 h-3 text-[#5EBA8C]" />
+                    <span>M-Pesa (Kenya)</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.1)] text-[10px] font-medium flex items-center space-x-1">
+                    <CreditCard className="w-3 h-3 text-[#0048BB]" />
+                    <span>Visa / Mastercard</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.1)] text-[10px] font-medium">
+                    Bank Transfer
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -498,6 +559,15 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
         </div>
 
       </div>
+
+      {showKoraCheckout && (
+        <KoraCheckoutModal
+          onClose={() => setShowKoraCheckout(false)}
+          userEmail={profile.email || ""}
+          userName={profile.fullName || ""}
+        />
+      )}
     </div>
   );
 }
+
