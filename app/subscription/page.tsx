@@ -209,8 +209,8 @@ function SubscriptionContent() {
         </div>
       )}
 
-      {/* Current Active Status Card */}
-      {subStatus?.hasActiveSubscription && (
+      {/* Current Active Status Card (Only shown for verified paid subscriptions) */}
+      {subStatus?.subscription && (
         <div className="bg-gradient-to-r from-[#10192A] via-[#0D0D0D] to-[#10192A] border border-[#0048BB]/40 rounded-3xl p-6 shadow-xl relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
@@ -220,16 +220,14 @@ function SubscriptionContent() {
               <div>
                 <div className="flex items-center space-x-2">
                   <h3 className="text-lg font-bold text-[#F8F3F0]">
-                    {subStatus.isAdmin ? "Administrator Privilege (Full Access)" : "Active Subscription"}
+                    Active Subscription
                   </h3>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider">
                     Active
                   </span>
                 </div>
                 <p className="text-xs text-[#A8A196] mt-0.5">
-                  {subStatus.isAdmin
-                    ? "Your account has unrestricted administrator privileges to run all lead discovery radars."
-                    : "Plan: " + (subStatus.subscription?.plan === "annual" ? "Annual Pass ($200/yr)" : "Monthly Access ($50/mo)") + " • " + (subStatus.subscription?.daysRemaining || 0) + " days remaining"}
+                  {"Plan: " + (subStatus.subscription.plan === "annual" ? "Annual Pass ($200/yr)" : "Monthly Access ($50/mo)") + " • " + (subStatus.subscription.daysRemaining || 0) + " days remaining"}
                 </p>
               </div>
             </div>

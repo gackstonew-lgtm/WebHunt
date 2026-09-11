@@ -29,7 +29,6 @@ export default function Navbar() {
   const [leadCount, setLeadCount] = useState(0);
   const [userSession, setUserSession] = useState<{ id: string; email: string; name?: string | null } | null>(null);
   const [hasActiveSub, setHasActiveSub] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(false);
 
   const isAuthRoute = pathname ? pathname === "/auth" || pathname.startsWith("/auth/") : false;
 
@@ -41,12 +40,10 @@ export default function Navbar() {
     getUserSubscriptionAction().then((res) => {
       if (res.isAuthenticated && res.user) {
         setUserSession(res.user);
-        setHasActiveSub(res.subscriptionStatus.hasActiveSubscription);
-        setIsAdminUser(res.subscriptionStatus.isAdmin);
+        setHasActiveSub(!!res.subscriptionStatus.subscription);
       } else {
         setUserSession(null);
         setHasActiveSub(false);
-        setIsAdminUser(false);
       }
     }).catch(() => {});
 
@@ -164,7 +161,7 @@ export default function Navbar() {
                     title="Active Subscription Managed"
                   >
                     <Crown className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{isAdminUser ? "Admin" : "Active"}</span>
+                    <span>Active</span>
                   </Link>
                 ) : (
                   <button
