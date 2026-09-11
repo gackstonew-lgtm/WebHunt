@@ -184,7 +184,7 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               {/* Job Keyword / Industry Selector */}
-              <div className="md:col-span-8 space-y-1.5">
+              <div className="md:col-span-12 space-y-1.5">
                 <label className="text-xs font-semibold text-[#A8A196] flex items-center space-x-1.5">
                   <Terminal className="w-3.5 h-3.5 text-[#0048BB]" />
                   <span>Job Role, Field or Service Keyword</span>
@@ -199,33 +199,6 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
                   }}
                   placeholder="Search job fields (e.g. Software Development, AI Data, Writing)..."
                 />
-              </div>
-
-              {/* Online Provider Selector */}
-              <div className="md:col-span-4 space-y-1.5">
-                <label className="text-xs font-semibold text-[#A8A196] flex items-center space-x-1.5">
-                  <Layers className="w-3.5 h-3.5 text-[#0048BB]" />
-                  <span>Job Source Feed</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={onlineProvider}
-                    onChange={(e) => setOnlineProvider(e.target.value as OnlineProviderType)}
-                    className="w-full bg-[#080808] border border-[rgba(248,243,240,0.12)] rounded-xl px-4 py-3 text-sm text-[#F8F3F0] focus:outline-none focus:ring-2 focus:ring-[#0048BB]/40 focus:border-[#0048BB] appearance-none cursor-pointer transition"
-                  >
-                    <option value="all" className="bg-[#0D0D0D]">⚡ All Public Job Feeds & APIs</option>
-                    <option value="remotive" className="bg-[#0D0D0D]">🌐 Remotive Public API (Worldwide)</option>
-                    <option value="arbeitnow" className="bg-[#0D0D0D]">💼 Arbeitnow Job API (Tech)</option>
-                    <option value="himalayas" className="bg-[#0D0D0D]">🏔️ Himalayas Remote Jobs API</option>
-                    <option value="weworkremotely" className="bg-[#0D0D0D]">📰 We Work Remotely Feeds</option>
-                    <option value="jobspresso" className="bg-[#0D0D0D]">☕ Jobspresso Remote Feed</option>
-                    <option value="remoteok" className="bg-[#0D0D0D]">⚡ Remote OK Public API</option>
-                    <option value="africa" className="bg-[#0D0D0D]">🇰🇪 Africa & Kenya Remote Discovery</option>
-                  </select>
-                  <div className="absolute right-3.5 top-3.5 pointer-events-none text-[#A8A196] text-xs">
-                    ▼
-                  </div>
-                </div>
               </div>
             </div>
           </div>

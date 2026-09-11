@@ -157,7 +157,7 @@ export default function Navbar() {
                 {hasActiveSub ? (
                   <Link
                     href="/subscription"
-                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-bold rounded-xl bg-[#10192A] text-emerald-400 border border-emerald-500/30 shadow-sm transition hover:bg-emerald-950/30"
+                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-bold rounded-xl bg-[#10192A] text-emerald-400 border border-emerald-500/30 shadow-sm transition hover:bg-emerald-950/30"
                     title="Active Subscription Managed"
                   >
                     <Crown className="w-3.5 h-3.5 text-emerald-400" />
@@ -166,7 +166,7 @@ export default function Navbar() {
                 ) : (
                   <button
                     onClick={() => setShowKoraCheckout(true)}
-                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#161616] text-[#F8F3F0] hover:bg-[#1C1C1C] border border-[rgba(0,72,187,0.4)] shadow-sm transition"
+                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#161616] text-[#F8F3F0] hover:bg-[#1C1C1C] border border-[rgba(0,72,187,0.4)] shadow-sm transition"
                     title="Upgrade Subscription (Monthly $50 / Annual $200)"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#0048BB]" />

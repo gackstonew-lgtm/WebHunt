@@ -290,7 +290,7 @@ export default function ResultsTable({
                             <div className="flex items-center justify-between bg-[#080808] px-2 py-1 rounded-lg border border-[rgba(248,243,240,0.08)]">
                               <a
                                 href={`tel:${lead.phone}`}
-                                className="font-mono text-[#5EBA8C] hover:underline flex items-center space-x-1 text-xs"
+                                className="font-mono text-[#F8F3F0] hover:underline flex items-center space-x-1 text-xs"
                                 title="Click to call"
                               >
                                 <Phone className="w-3.5 h-3.5 shrink-0" />

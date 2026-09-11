@@ -364,7 +364,7 @@ export default function LeadPipeline({
                       <div className="flex items-center justify-between bg-[#080808] p-2.5 rounded-xl border border-[rgba(248,243,240,0.12)]">
                         <a
                           href={`tel:${physLead.phone}`}
-                          className="font-mono text-[#5EBA8C] hover:underline flex items-center space-x-1.5"
+                          className="font-mono text-[#F8F3F0] hover:underline flex items-center space-x-1.5"
                         >
                           <Phone className="w-3.5 h-3.5 shrink-0" />
                           <span>{physLead.phoneFormatted || physLead.phone}</span>
@@ -467,7 +467,7 @@ export default function LeadPipeline({
 
                   {/* Deal Value */}
                   <div className="mt-3 flex items-center justify-between text-xs text-[#A8A196]">
-                    <span className="font-semibold text-[#5EBA8C]">
+                    <span className="font-semibold text-[#F8F3F0]">
                       Est. Value: {formatCurrency(lead.estimatedValue || (isPhysical ? 1500 : 3500))}
                     </span>
                     <span className="text-[11px] text-[#A8A196]">
