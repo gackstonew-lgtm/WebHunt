@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Radar, 
@@ -11,7 +11,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   ArrowRight, 
-  RefreshCw, 
   ShieldCheck, 
   Eye, 
   EyeOff,
@@ -20,12 +19,10 @@ import {
 import { 
   loginAction, 
   registerAction, 
-  verifyOtpAction,
-  resendOtpAction, 
   requestPasswordResetAction 
 } from "@/app/actions/auth";
 
-type AuthTab = "signin" | "register" | "verify_sent" | "forgot";
+type AuthTab = "signin" | "register" | "forgot";
 
 function AuthContent() {
   const router = useRouter();
@@ -35,7 +32,7 @@ function AuthContent() {
   const initialEmail = searchParams.get("email") || "";
 
   const [tab, setTab] = useState<AuthTab>(
-    initialMode && ["signin", "register", "verify_sent", "forgot"].includes(initialMode) 
+    initialMode && ["signin", "register", "forgot"].includes(initialMode) 
       ? initialMode 
       : "signin"
   );
@@ -46,33 +43,11 @@ function AuthContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState("");
 
   // Status & Feedback
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [unverifiedEmail, setUnverifiedEmail] = useState<string>(initialEmail);
-
-  // Resend cooldown timer
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const otpInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    let interval: any;
-    if (resendCooldown > 0) {
-      interval = setInterval(() => {
-        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendCooldown]);
-
-  useEffect(() => {
-    if (tab === "verify_sent" && otpInputRef.current) {
-      setTimeout(() => otpInputRef.current?.focus(), 100);
-    }
-  }, [tab]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,10 +63,6 @@ function AuthContent() {
         setTimeout(() => {
           window.location.href = target;
         }, 400);
-      } else if (res.isUnverified) {
-        setUnverifiedEmail(res.email || email);
-        setTab("verify_sent");
-        setErrorMessage(res.error || "Please enter the 6-digit verification code sent to your email.");
       } else {
         setErrorMessage(res.error || "Invalid email or password.");
       }
@@ -116,69 +87,16 @@ function AuthContent() {
     try {
       const res = await registerAction({ name, email, password });
       if (res.success) {
-        setUnverifiedEmail(email);
-        setTab("verify_sent");
-        setSuccessMessage(res.message || "Verification code sent. Please enter the 6-digit code below.");
-        setResendCooldown(60);
-      } else {
-        setErrorMessage(res.error || "Failed to create account.");
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Registration encountered an unexpected error.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const targetEmail = unverifiedEmail || email;
-    if (!targetEmail || !otp) {
-      setErrorMessage("Please enter the 6-digit verification code.");
-      return;
-    }
-
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsLoading(true);
-
-    try {
-      const res = await verifyOtpAction({ email: targetEmail, otp: otp.trim() });
-      if (res.success) {
-        setSuccessMessage(res.message || "Account verified! Redirecting to workspace...");
+        setSuccessMessage(res.message || "Account created successfully. Redirecting to workspace...");
         const target = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/";
         setTimeout(() => {
           window.location.href = target;
         }, 400);
       } else {
-        setErrorMessage(res.error || "Invalid verification code.");
+        setErrorMessage(res.error || "Failed to create account.");
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to verify code.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    const targetEmail = unverifiedEmail || email;
-    if (!targetEmail || resendCooldown > 0) return;
-
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const res = await resendOtpAction(targetEmail);
-      if (res.success) {
-        setSuccessMessage(res.message || "Fresh 6-digit verification code sent!");
-        setResendCooldown(60);
-      } else {
-        setErrorMessage(res.error || "Failed to resend verification code.");
-        if (res.cooldownSeconds) {
-          setResendCooldown(res.cooldownSeconds);
-        }
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Error resending verification code.");
+      setErrorMessage(err.message || "Registration encountered an unexpected error.");
     } finally {
       setIsLoading(false);
     }
@@ -217,13 +135,11 @@ function AuthContent() {
         <h1 className="text-2xl sm:text-3xl font-bold text-[#F8F3F0] tracking-tight">
           {tab === "signin" && "Sign In to Your Workspace"}
           {tab === "register" && "Create Your WebHunt Account"}
-          {tab === "verify_sent" && "Enter Verification Code"}
           {tab === "forgot" && "Reset Your Password"}
         </h1>
         <p className="text-xs sm:text-sm text-[#A8A196] max-w-md mx-auto">
           {tab === "signin" && "Access verified physical business radar, live remote tech gigs, and proposal generator."}
           {tab === "register" && "Join WebHunt to discover high-value prospects and track multi-channel outreach."}
-          {tab === "verify_sent" && "Enter the 6-digit verification code sent to your email to activate your account."}
           {tab === "forgot" && "Enter your registered email address to receive a secure recovery link."}
         </p>
       </div>
@@ -424,7 +340,7 @@ function AuthContent() {
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Create Account & Get Code</span>
+                  <span>Create Account</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
@@ -432,86 +348,7 @@ function AuthContent() {
           </form>
         )}
 
-        {/* TAB 3: ENTER 6-DIGIT OTP FORM */}
-        {tab === "verify_sent" && (
-          <form onSubmit={handleVerifyOtp} className="space-y-5 py-1">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[#5EBA8C]/30 text-[#5EBA8C] flex items-center justify-center mx-auto shadow-xl">
-                <Mail className="w-6 h-6 text-[#5EBA8C]" />
-              </div>
-              <h3 className="font-bold text-base text-[#F8F3F0]">Enter Verification Code</h3>
-              <p className="text-xs text-[#A8A196]">
-                We sent a 6-digit code via Resend to:
-              </p>
-              <div className="inline-block font-mono text-xs font-semibold px-3 py-1 rounded-xl bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.12)]">
-                {unverifiedEmail || email}
-              </div>
-            </div>
-
-            {/* OTP Input Field */}
-            <div>
-              <label className="block text-[11px] font-medium text-center text-[#A8A196] mb-2">
-                6-Digit Code (Valid for 10 minutes)
-              </label>
-              <input
-                ref={otpInputRef}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                required
-                autoFocus
-                autoComplete="one-time-code"
-                value={otp}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setOtp(val);
-                }}
-                placeholder="123456"
-                className="w-full text-center tracking-[0.5em] font-mono text-2xl font-bold py-3.5 rounded-2xl bg-[#080808] border-2 border-[rgba(0,72,187,0.4)] focus:border-[#0048BB] focus:outline-none focus:ring-2 focus:ring-[#0048BB]/20 text-[#F8F3F0] transition"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || otp.length !== 6}
-              className="w-full py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Verify & Activate Account</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </button>
-
-            <div className="pt-3 border-t border-[rgba(248,243,240,0.08)] flex items-center justify-between">
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={isLoading || resendCooldown > 0}
-                className="text-xs font-semibold text-[#0048BB] hover:underline flex items-center space-x-1.5 disabled:opacity-50 disabled:no-underline"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                <span>
-                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend Code"}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
-                className="text-xs text-[#A8A196] hover:text-[#F8F3F0] transition"
-              >
-                ← Back to Sign In
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* TAB 4: FORGOT PASSWORD */}
+        {/* TAB 3: FORGOT PASSWORD */}
         {tab === "forgot" && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="text-center pb-2">
@@ -566,12 +403,6 @@ function AuthContent() {
             </div>
           </form>
         )}
-      </div>
-
-      {/* Security & Support Guidance Footer Note */}
-      <div className="mt-8 text-center text-xs text-[#A8A196]/80 flex items-center space-x-2">
-        <Mail className="w-4 h-4 text-[#0048BB]" />
-        <span>Can&apos;t find your OTP? Check your spam or junk folder, then try again.</span>
       </div>
     </div>
   );

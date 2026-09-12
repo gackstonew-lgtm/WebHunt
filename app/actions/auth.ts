@@ -5,10 +5,7 @@ import {
   hashPassword, 
   verifyPassword, 
   validatePasswordStrength, 
-  generateSecureToken,
-  generateSecureOtp,
-  hashOtp,
-  verifyOtp
+  generateSecureToken
 } from "@/lib/auth/password";
 import { 
   setSessionCookie, 
@@ -16,11 +13,7 @@ import {
   getCurrentSession,
   isAdminSession
 } from "@/lib/auth/session";
-import { 
-  sendVerificationOtpEmail,
-  sendVerificationEmail, 
-  sendPasswordResetEmail 
-} from "@/lib/email/service";
+import { sendPasswordResetEmail } from "@/lib/email/service";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { revalidatePath } from "next/cache";
 
@@ -35,7 +28,7 @@ function safeRevalidatePath(path: string) {
 }
 
 /**
- * Register a new user account and dispatch a 6-digit Resend OTP
+ * Register a new user account — immediately activated, no email verification required.
  */
 export async function registerAction(formData: {
   name?: string;
@@ -77,12 +70,6 @@ export async function registerAction(formData: {
       where: { email },
     });
 
-    const otp = generateSecureOtp(6);
-    const otpHash = hashOtp(otp);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    const verificationToken = generateSecureToken(32);
-    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
     if (existingUser) {
       if (existingUser.emailVerified) {
         return {
@@ -90,7 +77,7 @@ export async function registerAction(formData: {
           error: "An account with this email address already exists. Please sign in.",
         };
       } else {
-        // Unverified account: rotate OTP and update password
+        // Previously unverified account: update password and immediately activate
         const newPasswordHash = await hashPassword(password);
 
         await prisma.user.update({
@@ -98,51 +85,40 @@ export async function registerAction(formData: {
           data: {
             name: name || existingUser.name,
             passwordHash: newPasswordHash,
-            verificationOtpHash: otpHash,
-            verificationOtpExpiry: otpExpiry,
+            emailVerified: new Date(),
+            verificationOtpHash: null,
+            verificationOtpExpiry: null,
             verificationOtpAttempts: 0,
-            verificationOtpSentAt: new Date(),
-            verificationToken,
-            verificationTokenExpiry,
+            verificationToken: null,
+            verificationTokenExpiry: null,
           },
         });
 
-        const emailResult = await sendVerificationOtpEmail(email, name || existingUser.name || "WebHunt User", otp);
+        // Establish authenticated session immediately
+        await setSessionCookie(existingUser.id, existingUser.email, existingUser.role);
 
-        if (!emailResult.success && !emailResult.isSimulated) {
-          return {
-            success: false,
-            error: "We couldn't send the verification code right now. Please try again.",
-          };
-        }
+        safeRevalidatePath("/");
+        safeRevalidatePath("/pipeline");
 
         return {
           success: true,
-          requireOtp: true,
-          requireVerification: true,
           email,
-          message: "Verification code sent to your email. Please enter the 6-digit code.",
+          message: "Account activated successfully. Welcome back to WebHunt.",
         };
       }
     }
 
-    // New user registration
+    // New user registration — immediately verified, no OTP required
     const passwordHash = await hashPassword(password);
 
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         email,
         name: name || null,
         passwordHash,
         role: "user",
         status: "active",
-        emailVerified: null,
-        verificationOtpHash: otpHash,
-        verificationOtpExpiry: otpExpiry,
-        verificationOtpAttempts: 0,
-        verificationOtpSentAt: new Date(),
-        verificationToken,
-        verificationTokenExpiry,
+        emailVerified: new Date(),
         profile: {
           create: {
             fullName: name || email.split("@")[0],
@@ -157,21 +133,16 @@ export async function registerAction(formData: {
       },
     });
 
-    const emailResult = await sendVerificationOtpEmail(email, name || "WebHunt User", otp);
+    // Establish authenticated session immediately
+    await setSessionCookie(newUser.id, newUser.email, newUser.role);
 
-    if (!emailResult.success && !emailResult.isSimulated) {
-      return {
-        success: false,
-        error: "We couldn't send the verification code right now. Please try again.",
-      };
-    }
+    safeRevalidatePath("/");
+    safeRevalidatePath("/pipeline");
 
     return {
       success: true,
-      requireOtp: true,
-      requireVerification: true,
       email,
-      message: "Verification code sent to your email. Please enter the 6-digit code.",
+      message: "Account created successfully. Welcome to WebHunt.",
     };
   } catch (error: any) {
     console.error("[AuthAction] Registration failed:", error);
@@ -183,7 +154,10 @@ export async function registerAction(formData: {
 }
 
 /**
- * Verify account using the 6-digit numeric OTP
+ * verifyOtpAction — Email verification is no longer required.
+ * This stub exists for backward compatibility with any existing imports.
+ * All newly registered users are immediately activated; this function
+ * simply establishes a session for any valid account.
  */
 export async function verifyOtpAction(params: {
   email: string;
@@ -196,109 +170,34 @@ export async function verifyOtpAction(params: {
   isLocked?: boolean;
 }> {
   try {
-    const rawEmail = params.email || "";
-    const email = rawEmail.toLowerCase().trim();
-    const otp = (params.otp || "").trim();
-
-    if (!email || !otp) {
-      return { success: false, error: "Please enter your email and 6-digit verification code." };
+    const email = (params.email || "").toLowerCase().trim();
+    if (!email) {
+      return { success: false, error: "Email address is required." };
     }
 
-    if (!/^\d{6}$/.test(otp)) {
-      return { success: false, error: "Please enter a valid 6-digit verification code." };
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return { success: false, error: "Account not found or invalid request." };
+      return { success: false, error: "Account not found." };
     }
 
-    if (user.emailVerified) {
-      await setSessionCookie(user.id, user.email, user.role);
-      return { success: true, message: "Account is already verified. Redirecting to workspace..." };
-    }
-
-    // Check if OTP exists
-    if (!user.verificationOtpHash) {
-      return {
-        success: false,
-        error: "No active verification code found. Please request a new code.",
-        isExpired: true,
-      };
-    }
-
-    // Check expiration
-    if (user.verificationOtpExpiry && user.verificationOtpExpiry < new Date()) {
-      return {
-        success: false,
-        error: "This verification code has expired. Please request a new code.",
-        isExpired: true,
-      };
-    }
-
-    // Brute force protection: maximum 5 attempts per OTP
-    if ((user.verificationOtpAttempts || 0) >= 5) {
-      // Invalidate OTP
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          verificationOtpHash: null,
-          verificationOtpExpiry: null,
-        },
-      });
-      return {
-        success: false,
-        error: "Too many incorrect attempts. For security, please request a new verification code.",
-        isLocked: true,
-      };
-    }
-
-    // Verify OTP hash
-    const isValidOtp = verifyOtp(otp, user.verificationOtpHash);
-    if (!isValidOtp) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          verificationOtpAttempts: (user.verificationOtpAttempts || 0) + 1,
-        },
-      });
-      return { success: false, error: "Incorrect verification code. Please check your email and try again." };
-    }
-
-    // Mark user verified and consume OTP
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: new Date(),
-        verificationOtpHash: null,
-        verificationOtpExpiry: null,
-        verificationOtpAttempts: 0,
-        verificationToken: null,
-        verificationTokenExpiry: null,
-      },
-    });
-
-    // Establish authenticated session
+    // If account exists, establish a session (verification no longer required)
     await setSessionCookie(user.id, user.email, user.role);
-
     safeRevalidatePath("/");
-    safeRevalidatePath("/pipeline");
 
     return {
       success: true,
-      message: "Your email address has been verified successfully! Welcome to WebHunt.",
+      message: "Account verified. Redirecting to workspace...",
     };
   } catch (error: any) {
-    console.error("[AuthAction] OTP verification failed:", error);
-    return { success: false, error: "Failed to verify code. Please try again." };
+    console.error("[AuthAction] verifyOtpAction (stub) error:", error);
+    return { success: false, error: "An error occurred. Please sign in directly." };
   }
 }
 
+
 /**
- * Resend a fresh 6-digit OTP with 60-second rate limiting
+ * resendOtpAction — Email verification is no longer required.
+ * This stub exists for backward compatibility with any existing imports.
  */
 export async function resendOtpAction(email: string): Promise<{
   success: boolean;
@@ -306,69 +205,13 @@ export async function resendOtpAction(email: string): Promise<{
   error?: string;
   cooldownSeconds?: number;
 }> {
-  try {
-    const cleanEmail = (email || "").toLowerCase().trim();
-    if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
-      return { success: false, error: "Please enter a valid email address." };
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-    });
-
-    // Safe response to avoid account enumeration
-    if (!user || user.emailVerified) {
-      return {
-        success: true,
-        message: "If an unverified account exists with that email, a new code has been sent.",
-      };
-    }
-
-    // Enforce 60-second rate-limit cooldown
-    if (user.verificationOtpSentAt) {
-      const elapsedSeconds = Math.floor((Date.now() - user.verificationOtpSentAt.getTime()) / 1000);
-      if (elapsedSeconds < 60) {
-        const remaining = 60 - elapsedSeconds;
-        return {
-          success: false,
-          error: `Please wait ${remaining} second${remaining === 1 ? '' : 's'} before requesting another code.`,
-          cooldownSeconds: remaining,
-        };
-      }
-    }
-
-    const otp = generateSecureOtp(6);
-    const otpHash = hashOtp(otp);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        verificationOtpHash: otpHash,
-        verificationOtpExpiry: otpExpiry,
-        verificationOtpAttempts: 0,
-        verificationOtpSentAt: new Date(),
-      },
-    });
-
-    const emailResult = await sendVerificationOtpEmail(user.email, user.name || "WebHunt User", otp);
-
-    if (!emailResult.success && !emailResult.isSimulated) {
-      return {
-        success: false,
-        error: "We couldn't send the verification code right now. Please try again.",
-      };
-    }
-
-    return {
-      success: true,
-      message: "A fresh 6-digit verification code has been dispatched to your inbox.",
-    };
-  } catch (error: any) {
-    console.error("[AuthAction] Resend OTP failed:", error);
-    return { success: false, error: "Failed to resend verification code." };
-  }
+  // Email verification has been removed; this is a no-op stub.
+  return {
+    success: true,
+    message: "Email verification is no longer required. Please sign in directly.",
+  };
 }
+
 
 /**
  * Sign in an existing user with verified credentials
@@ -431,35 +274,6 @@ export async function loginAction(formData: {
       return { success: false, error: "Invalid email or password." };
     }
 
-    // Check if email has been verified
-    if (!user.emailVerified) {
-      // Auto-dispatch a fresh OTP if none active or expired
-      if (!user.verificationOtpExpiry || user.verificationOtpExpiry < new Date()) {
-        const otp = generateSecureOtp(6);
-        const otpHash = hashOtp(otp);
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            verificationOtpHash: otpHash,
-            verificationOtpExpiry: otpExpiry,
-            verificationOtpAttempts: 0,
-            verificationOtpSentAt: new Date(),
-          },
-        });
-
-        await sendVerificationOtpEmail(user.email, user.name || "WebHunt User", otp);
-      }
-
-      return {
-        success: false,
-        isUnverified: true,
-        email: user.email,
-        error: "Your email address has not been verified yet. A 6-digit verification code was sent to your inbox.",
-      };
-    }
-
     // Reset login attempt counters on successful sign-in
     await prisma.user.update({
       where: { id: user.id },
@@ -485,62 +299,22 @@ export async function loginAction(formData: {
 }
 
 /**
- * Backward-compatible token link verification
+ * verifyEmailAction — Email verification is no longer required.
+ * This stub exists for backward compatibility with any existing imports.
+ * Visiting /auth/verify will simply redirect to the dashboard.
  */
 export async function verifyEmailAction(token: string): Promise<{
   success: boolean;
   message?: string;
   error?: string;
 }> {
-  try {
-    if (!token || token.trim() === "") {
-      return { success: false, error: "Missing verification token." };
-    }
-
-    const cleanToken = token.trim();
-    const user = await prisma.user.findUnique({
-      where: { verificationToken: cleanToken },
-    });
-
-    if (!user) {
-      return {
-        success: false,
-        error: "This verification link is invalid or has already been used.",
-      };
-    }
-
-    if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
-      return {
-        success: false,
-        error: "This verification link has expired. Please request a new verification code.",
-      };
-    }
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: new Date(),
-        verificationToken: null,
-        verificationTokenExpiry: null,
-        verificationOtpHash: null,
-        verificationOtpExpiry: null,
-      },
-    });
-
-    await setSessionCookie(user.id, user.email, user.role);
-
-    safeRevalidatePath("/");
-    safeRevalidatePath("/pipeline");
-
-    return {
-      success: true,
-      message: "Your email address has been verified successfully! Welcome to WebHunt.",
-    };
-  } catch (error: any) {
-    console.error("[AuthAction] Email verification failed:", error);
-    return { success: false, error: "Failed to verify email. Please try again." };
-  }
+  // Email verification has been removed; always return success.
+  return {
+    success: true,
+    message: "Account is active. Redirecting to workspace...",
+  };
 }
+
 
 /**
  * Backward-compatible token resend
@@ -584,7 +358,7 @@ export async function requestPasswordResetAction(email: string): Promise<{
       where: { email: cleanEmail },
     });
 
-    if (user && user.emailVerified) {
+    if (user) {
       const resetToken = generateSecureToken(32);
       const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
