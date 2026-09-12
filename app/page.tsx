@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import SearchForm from "@/components/SearchForm";
 import ResultsTable from "@/components/ResultsTable";
-import KoraCheckoutModal from "@/components/payments/KoraCheckoutModal";
 import { LeadItem, SearchParams, SearchResult } from "@/lib/types";
 import { executeSearchAction, getProviderStatusesAction } from "./actions/search";
 import { useLeadPipeline } from "@/lib/pipeline-store";
@@ -14,21 +14,19 @@ import {
   Store, 
   Terminal, 
   Layers, 
-  Lock, 
-  Sparkles, 
   ArrowRight, 
-  LogIn,
-  Crown
+  LogIn
 } from "lucide-react";
 
+
 export default function HomePage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState<boolean>(false);
-  const [subRequired, setSubRequired] = useState<boolean>(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
   const [lastSearchMode, setLastSearchMode] = useState<string>("physical");
+
 
   const [providersStatus, setProvidersStatus] = useState<{
     physical: { key: string; name: string; configured: boolean; isFree: boolean }[];
@@ -58,7 +56,6 @@ export default function HomePage() {
     setIsLoading(true);
     setErrorMessage(null);
     setAuthRequired(false);
-    setSubRequired(false);
     setLastSearchMode(params.mode || "physical");
 
     try {
@@ -71,8 +68,10 @@ export default function HomePage() {
       }
 
       if (res.requireSubscription) {
-        setSubRequired(true);
-        setErrorMessage(res.error || "Active subscription required to run lead radar scans.");
+        // Immediately redirect to the subscription/pricing page.
+        // No banner is shown. The backend guard already blocked the scan.
+        const mode = res.returnTo || params.mode || "physical";
+        router.push("/subscription?returnTo=" + encodeURIComponent(mode));
         return;
       }
 
@@ -96,6 +95,7 @@ export default function HomePage() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="space-y-8 pb-12">
@@ -122,59 +122,19 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center space-x-2 shrink-0">
-            <Link
+            <a
               href={"/auth?mode=signin&returnTo=" + encodeURIComponent("/?mode=" + lastSearchMode)}
               className="px-4 py-2.5 bg-[#0048BB] hover:bg-[#00388A] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5"
             >
               <span>Sign In / Register</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </a>
           </div>
         </div>
       )}
 
-      {/* Subscription Required Notice Banner */}
-      {subRequired && (
-        <div className="p-5 rounded-3xl bg-gradient-to-r from-[#10192A] via-[#0D0D0D] to-[#10192A] border border-[#0048BB] text-[#F8F3F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xl animate-in slide-in-from-top-2">
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#0048BB] text-white flex items-center justify-center shadow-md shadow-[#0048BB]/30 shrink-0">
-              <Crown className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-sm text-[#F8F3F0]">Active Subscription Required</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#0048BB]/20 text-[#0048BB] text-[10px] font-bold uppercase tracking-wider border border-[#0048BB]/30">
-                  Monthly $50 • Annual $200
-                </span>
-              </div>
-              <p className="text-xs text-[#A8A196] mt-0.5">
-                Subscribe to unlock uncapped Physical Lead Radar &amp; Remote Opportunities scans with contact enrichment.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowCheckoutModal(true)}
-              className="px-3.5 py-2 text-xs font-semibold text-[#A8A196] hover:text-[#F8F3F0] bg-[#161616] hover:bg-[#202020] rounded-xl border border-[rgba(248,243,240,0.1)] transition"
-            >
-              Quick Pay
-            </button>
-
-            <Link
-              href={"/subscription?returnTo=" + encodeURIComponent(lastSearchMode)}
-              className="px-4 py-2 bg-[#0048BB] hover:bg-[#00388A] text-white font-bold text-xs rounded-xl shadow-md shadow-[#0048BB]/25 transition flex items-center space-x-1.5"
-            >
-              <span>View Plans ($50/mo)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Standard Error Notice (if not auth or sub required) */}
-      {errorMessage && !authRequired && !subRequired && (
+      {/* Standard Error Notice */}
+      {errorMessage && !authRequired && (
         <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-red-500/30 text-red-300 text-xs flex items-center space-x-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
           <span>{errorMessage}</span>
@@ -222,19 +182,6 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-      )}
-
-      {/* Checkout Modal Trigger */}
-      {showCheckoutModal && (
-        <KoraCheckoutModal
-          onClose={() => setShowCheckoutModal(false)}
-          defaultPlanId="annual"
-          returnTo={lastSearchMode}
-          onSuccess={() => {
-            setShowCheckoutModal(false);
-            setSubRequired(false);
-          }}
-        />
       )}
     </div>
   );
