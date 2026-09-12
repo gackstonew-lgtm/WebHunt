@@ -15,7 +15,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#08090B",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -81,7 +81,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-[#000000] text-[#F8F3F0] font-sans min-h-screen flex flex-col antialiased selection:bg-[#0048BB] selection:text-white transition-colors duration-150">
+      <body className="bg-[#08090B] text-[#EEEEEE] font-sans min-h-screen flex flex-col antialiased selection:bg-white/20 selection:text-white transition-colors duration-150">
         <ThemeProvider>
           <PwaRegister />
           <Navbar />

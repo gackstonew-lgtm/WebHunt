@@ -112,7 +112,7 @@ export default function PwaRegister() {
     <>
       {/* Offline Status Warning Bar */}
       {isOffline && (
-        <div className="bg-[#1f0e0e] border-b border-red-500/30 text-red-300 px-4 py-2 text-xs flex items-center justify-center space-x-2 fixed top-0 left-0 right-0 z-50 animate-in slide-in-from-top">
+        <div className="bg-[#18191D] border-b border-red-500/20 text-red-400 px-4 py-2 text-xs flex items-center justify-center space-x-2 fixed top-0 left-0 right-0 z-50 animate-in slide-in-from-top">
           <WifiOff className="w-3.5 h-3.5 text-red-400" />
           <span>You are currently offline. Live lead scanning requires an internet connection.</span>
         </div>
@@ -120,26 +120,26 @@ export default function PwaRegister() {
 
       {/* Subtle Install Floating Banner (Only when installable and not in standalone mode) */}
       {isInstallable && !isStandalone && showToast && (
-        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-[calc(100vw-40px)] sm:w-auto bg-[#0D0D0D] border border-[rgba(0,72,187,0.4)] rounded-2xl p-4 shadow-2xl shadow-black/80 flex items-center justify-between space-x-3.5 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-[calc(100vw-40px)] sm:w-auto bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] rounded-xl p-3.5 shadow-2xl shadow-black/80 flex items-center justify-between space-x-3.5 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-[#161616] border border-[rgba(0,72,187,0.3)] flex items-center justify-center text-[#0048BB] shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08] flex items-center justify-center text-neutral-900 dark:text-[#EEEEEE] shrink-0">
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-xs font-bold text-[#F8F3F0]">Install WebHunt Delta App</div>
-              <div className="text-[11px] text-[#A8A196]">Fast standalone access on your device</div>
+              <div className="text-xs font-semibold text-neutral-900 dark:text-[#EEEEEE]">Install WebHunt Delta App</div>
+              <div className="text-[11px] text-neutral-500 dark:text-[#989BA3]">Fast standalone access on your device</div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-1.5 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white text-xs font-semibold shadow-md shadow-[#0048BB]/20 transition shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-white text-black hover:bg-neutral-200 text-xs font-semibold shadow-sm transition shrink-0"
             >
               Install
             </button>
             <button
               onClick={handleDismissToast}
-              className="p-1.5 rounded-lg text-[#A8A196] hover:text-[#F8F3F0] hover:bg-[#161616] transition shrink-0"
+              className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:text-[#989BA3] dark:hover:text-[#EEEEEE] hover:bg-black/5 dark:hover:bg-white/5 transition shrink-0"
               aria-label="Dismiss install prompt"
             >
               <X className="w-3.5 h-3.5" />

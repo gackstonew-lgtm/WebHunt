@@ -126,18 +126,18 @@ function AuthContent() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-8">
       {/* Brand Header */}
       <div className="text-center mb-8 space-y-3">
-        <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] shadow-xl mb-1">
-          <div className="w-6 h-6 rounded-lg bg-[#0048BB] flex items-center justify-center">
-            <Radar className="w-3.5 h-3.5 text-white" />
+        <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#111214] border border-white/[0.08] shadow-sm mb-1">
+          <div className="w-6 h-6 rounded-lg bg-[#18191D] flex items-center justify-center">
+            <Radar className="w-3.5 h-3.5 text-[#EEEEEE]" />
           </div>
-          <span className="font-bold text-sm text-[#F8F3F0] tracking-tight">WebHunt Workspace</span>
+          <span className="font-bold text-sm text-[#EEEEEE] tracking-tight">WebHunt Workspace</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#F8F3F0] tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#EEEEEE] tracking-tight">
           {tab === "signin" && "Sign In to Your Workspace"}
           {tab === "register" && "Create Your WebHunt Account"}
           {tab === "forgot" && "Reset Your Password"}
         </h1>
-        <p className="text-xs sm:text-sm text-[#A8A196] max-w-md mx-auto">
+        <p className="text-xs sm:text-sm text-[#989BA3] max-w-md mx-auto">
           {tab === "signin" && "Access verified physical business radar, live remote tech gigs, and proposal generator."}
           {tab === "register" && "Join WebHunt to discover high-value prospects and track multi-channel outreach."}
           {tab === "forgot" && "Enter your registered email address to receive a secure recovery link."}
@@ -145,17 +145,17 @@ function AuthContent() {
       </div>
 
       {/* Main Auth Card */}
-      <div className="w-full max-w-md bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-[#111214] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
         {/* Tab Switcher */}
         {(tab === "signin" || tab === "register") && (
-          <div className="flex rounded-2xl bg-[#080808] p-1 border border-[rgba(248,243,240,0.1)]">
+          <div className="flex rounded-xl bg-[#0D0E11] p-1 border border-white/[0.08]">
             <button
               type="button"
               onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${
                 tab === "signin"
-                  ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
-                  : "text-[#A8A196] hover:text-[#F8F3F0]"
+                  ? "bg-[#18191D] text-[#EEEEEE] border border-white/20 shadow-sm"
+                  : "text-[#989BA3] hover:text-[#EEEEEE]"
               }`}
             >
               Sign In
@@ -163,10 +163,10 @@ function AuthContent() {
             <button
               type="button"
               onClick={() => { setTab("register"); setErrorMessage(null); setSuccessMessage(null); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${
                 tab === "register"
-                  ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
-                  : "text-[#A8A196] hover:text-[#F8F3F0]"
+                  ? "bg-[#18191D] text-[#EEEEEE] border border-white/20 shadow-sm"
+                  : "text-[#989BA3] hover:text-[#EEEEEE]"
               }`}
             >
               Create Account
@@ -176,15 +176,15 @@ function AuthContent() {
 
         {/* Feedback Alerts */}
         {errorMessage && (
-          <div className="p-3.5 rounded-2xl bg-[#1f0e0e] border border-red-500/30 text-red-300 text-xs flex items-start space-x-2.5 animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-start space-x-2.5 animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span className="leading-relaxed">{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3.5 rounded-2xl bg-[#0e1f14] border border-[#5EBA8C]/30 text-[#5EBA8C] text-xs flex items-start space-x-2.5 animate-in fade-in duration-200">
-            <CheckCircle2 className="w-4 h-4 text-[#5EBA8C] shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-start space-x-2.5 animate-in fade-in duration-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <span className="leading-relaxed">{successMessage}</span>
           </div>
         )}
@@ -193,9 +193,9 @@ function AuthContent() {
         {tab === "signin" && (
           <form onSubmit={handleSignIn} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Email Address</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Email Address</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type="email"
                   required
@@ -203,24 +203,24 @@ function AuthContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-medium text-[#A8A196]">Password</label>
+                <label className="text-[11px] font-medium text-[#989BA3]">Password</label>
                 <button
                   type="button"
                   onClick={() => { setTab("forgot"); setErrorMessage(null); setSuccessMessage(null); }}
-                  className="text-[11px] text-[#0048BB] hover:underline"
+                  className="text-[11px] text-[#989BA3] hover:text-[#EEEEEE] transition"
                 >
                   Forgot password?
                 </button>
               </div>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -228,12 +228,12 @@ function AuthContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F8F3F0]"
+                  className="absolute right-3 top-3 text-[#989BA3] hover:text-[#EEEEEE]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -243,10 +243,10 @@ function AuthContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full mt-2 py-3 rounded-xl bg-white text-black hover:bg-neutral-200 font-semibold text-xs shadow-sm flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Sign In</span>
@@ -261,9 +261,9 @@ function AuthContent() {
         {tab === "register" && (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Full Name / Agency Name</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Full Name / Agency Name</label>
               <div className="relative">
-                <User className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <User className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type="text"
                   required
@@ -271,15 +271,15 @@ function AuthContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Full Name / Agency Name"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Email Address</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Email Address</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type="email"
                   required
@@ -287,15 +287,15 @@ function AuthContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Password (Min 8 chars, 1 number, 1 letter)</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Password (Min 8 chars, 1 number, 1 letter)</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -303,12 +303,12 @@ function AuthContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[#A8A196] hover:text-[#F8F3F0]"
+                  className="absolute right-3 top-3 text-[#989BA3] hover:text-[#EEEEEE]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -316,9 +316,9 @@ function AuthContent() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Confirm Password</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Confirm Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -326,7 +326,7 @@ function AuthContent() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
               </div>
             </div>
@@ -334,10 +334,10 @@ function AuthContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full mt-2 py-3 rounded-xl bg-white text-black hover:bg-neutral-200 font-semibold text-xs shadow-sm flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Create Account</span>
@@ -352,19 +352,19 @@ function AuthContent() {
         {tab === "forgot" && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="text-center pb-2">
-              <div className="w-12 h-12 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-[#0D0E11] border border-white/[0.08] text-[#EEEEEE] flex items-center justify-center mx-auto mb-2">
                 <KeyRound className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-[#F8F3F0]">Password Recovery</h3>
-              <p className="text-[11px] text-[#A8A196] mt-0.5">
+              <h3 className="font-bold text-sm text-[#EEEEEE]">Password Recovery</h3>
+              <p className="text-[11px] text-[#989BA3] mt-0.5">
                 We will email you a single-use recovery link valid for 1 hour.
               </p>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-[#A8A196] mb-1.5">Registered Email Address</label>
+              <label className="block text-[11px] font-medium text-[#989BA3] mb-1.5">Registered Email Address</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#A8A196] absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-[#989BA3] absolute left-3.5 top-3" />
                 <input
                   type="email"
                   required
@@ -372,7 +372,7 @@ function AuthContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] focus:outline-none focus:ring-1 focus:ring-[#0048BB] text-xs text-[#F8F3F0] transition"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] transition"
                 />
               </div>
             </div>
@@ -380,10 +380,10 @@ function AuthContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-white text-black hover:bg-neutral-200 font-semibold text-xs shadow-sm flex items-center justify-center space-x-2 transition disabled:opacity-50"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Send Recovery Link</span>
@@ -396,7 +396,7 @@ function AuthContent() {
               <button
                 type="button"
                 onClick={() => { setTab("signin"); setErrorMessage(null); setSuccessMessage(null); }}
-                className="text-xs text-[#A8A196] hover:text-[#F8F3F0] transition"
+                className="text-xs text-[#989BA3] hover:text-[#EEEEEE] transition"
               >
                 ← Back to Sign In
               </button>
@@ -411,9 +411,9 @@ function AuthContent() {
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4 text-[#F8F3F0]">
+      <div className="min-h-screen bg-[#08090B] flex items-center justify-center p-4 text-[#EEEEEE]">
         <div className="flex items-center space-x-3">
-          <div className="w-5 h-5 border-2 border-[#0048BB] border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
           <span className="text-sm font-medium">Loading authentication workspace...</span>
         </div>
       </div>

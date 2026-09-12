@@ -131,25 +131,25 @@ export default function ResultsTable({
   return (
     <div className="space-y-4">
       {/* Metrics Banner */}
-      <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xl">
+      <div className="bg-[#111214] border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xl">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#F8F3F0]">
-            {searchResult.mode === "physical" ? <Store className="w-5 h-5 text-[#0048BB]" /> : <Terminal className="w-5 h-5 text-[#0048BB]" />}
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-[#18191D] border border-white/[0.1] text-[#EEEEEE]">
+            {searchResult.mode === "physical" ? <Store className="w-4 h-4 text-[#EEEEEE]" /> : <Terminal className="w-4 h-4 text-[#EEEEEE]" />}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-bold text-[#F8F3F0] text-base">
+              <h3 className="font-extrabold text-[#EEEEEE] text-sm sm:text-base tracking-tight">
                 {searchResult.mode === "physical"
                   ? `Found ${leads.length} Verified Local Businesses Without Websites`
                   : `Found ${leads.length} Live Remote Opportunities (100% Real Data)`}
               </h3>
               {searchResult.fromCache && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#161616] text-[#A8A196] border border-[rgba(248,243,240,0.12)]">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#18191D] text-[#989BA3] border border-white/[0.08]">
                   Cached
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#A8A196]">
+            <p className="text-xs text-[#989BA3] mt-0.5">
               {searchResult.mode === "physical"
                 ? `Scanned ${searchResult.totalFetched} live records in ${searchResult.location} for "${searchResult.query}"`
                 : `Queried official public developer endpoints for "${searchResult.query}"`}
@@ -161,42 +161,42 @@ export default function ResultsTable({
         <div className="flex flex-wrap items-center gap-2">
           {/* Physical Rating Filter */}
           {searchResult.mode === "physical" && (
-            <div className="flex items-center space-x-1.5 bg-[#080808] border border-[rgba(248,243,240,0.12)] px-3 py-1.5 rounded-xl text-xs text-[#A8A196]">
-              <Filter className="w-3.5 h-3.5 text-[#A8A196]" />
+            <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
+              <Filter className="w-3.5 h-3.5 text-[#989BA3]" />
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(parseFloat(e.target.value))}
-                className="bg-transparent text-[#F8F3F0] focus:outline-none cursor-pointer"
+                className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
               >
-                <option value="0" className="bg-[#0D0D0D]">All Ratings</option>
-                <option value="4.0" className="bg-[#0D0D0D]">★ 4.0+ Rating</option>
-                <option value="4.5" className="bg-[#0D0D0D]">★ 4.5+ Rating</option>
+                <option value="0" className="bg-[#111214]">All Ratings</option>
+                <option value="4.0" className="bg-[#111214]">4.0+ Stars</option>
+                <option value="4.5" className="bg-[#111214]">4.5+ Stars</option>
               </select>
             </div>
           )}
 
           {/* Sort Selector */}
-          <div className="flex items-center space-x-1.5 bg-[#080808] border border-[rgba(248,243,240,0.12)] px-3 py-1.5 rounded-xl text-xs text-[#A8A196]">
-            <ArrowUpDown className="w-3.5 h-3.5 text-[#A8A196]" />
+          <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#989BA3]" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-[#F8F3F0] focus:outline-none cursor-pointer"
+              className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
             >
-              <option value="default" className="bg-[#0D0D0D]">Default Order</option>
+              <option value="default" className="bg-[#111214]">Default Order</option>
               {searchResult.mode === "physical" && (
-                <option value="rating" className="bg-[#0D0D0D]">Highest Rating</option>
+                <option value="rating" className="bg-[#111214]">Highest Rating</option>
               )}
-              <option value="name" className="bg-[#0D0D0D]">Alphabetical</option>
+              <option value="name" className="bg-[#111214]">Alphabetical</option>
             </select>
           </div>
 
           {/* Export CSV */}
           <button
             onClick={handleExport}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#080808] hover:bg-[#161616] text-[#F8F3F0] border border-[rgba(248,243,240,0.12)] text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#111214] hover:bg-[#18191D] text-[#EEEEEE] border border-white/[0.08] hover:border-white/[0.18] text-xs font-semibold transition"
           >
-            <Download className="w-3.5 h-3.5 text-[#A8A196]" />
+            <Download className="w-3.5 h-3.5 text-[#989BA3]" />
             <span>Export CSV</span>
           </button>
 
@@ -204,7 +204,7 @@ export default function ResultsTable({
           <button
             onClick={handleSaveAll}
             disabled={filteredLeads.length === 0}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white font-semibold text-xs shadow-md shadow-[#0048BB]/20 disabled:opacity-50 transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold text-xs shadow-sm disabled:opacity-50 transition"
           >
             <BookmarkCheck className="w-3.5 h-3.5" />
             <span>
@@ -219,30 +219,30 @@ export default function ResultsTable({
       {/* Results Content */}
       {searchResult.mode === "physical" ? (
         /* ================= PHYSICAL TABLE ================= */
-        <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#111214] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[rgba(248,243,240,0.12)] bg-[#080808]/90 text-[#A8A196] font-semibold uppercase tracking-wider">
-                  <th className="p-4 w-10 text-center">
-                    <button onClick={toggleSelectAll} className="text-[#A8A196] hover:text-[#F8F3F0]">
+                <tr className="border-b border-white/[0.08] bg-[#0D0E11]/90 text-[#989BA3] font-semibold uppercase tracking-wider text-[11px]">
+                  <th className="p-3.5 w-10 text-center">
+                    <button onClick={toggleSelectAll} className="text-[#989BA3] hover:text-[#EEEEEE]">
                       {selectedLeadIds.size === filteredLeads.length && filteredLeads.length > 0 ? (
-                        <CheckSquare className="w-4 h-4 text-[#0048BB]" />
+                        <CheckSquare className="w-4 h-4 text-[#EEEEEE]" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
                     </button>
                   </th>
-                  <th className="p-4">Business & Niche</th>
-                  <th className="p-4">Contact Channels</th>
-                  <th className="p-4">Location & Country</th>
-                  <th className="p-4">Reputation</th>
-                  <th className="p-4">Website Status</th>
-                  <th className="p-4">Source & Provenance</th>
-                  <th className="p-4 text-right">Actions</th>
+                  <th className="p-3.5">Business &amp; Niche</th>
+                  <th className="p-3.5">Contact Channels</th>
+                  <th className="p-3.5">Location &amp; Country</th>
+                  <th className="p-3.5">Reputation</th>
+                  <th className="p-3.5">Website Status</th>
+                  <th className="p-3.5">Source &amp; Provenance</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[rgba(248,243,240,0.06)] text-[#F8F3F0]">
+              <tbody className="divide-y divide-white/[0.06] text-[#EEEEEE]">
                 {filteredLeads.map((item) => {
                   const lead = item as PhysicalLead;
                   const isSelected = selectedLeadIds.has(lead.id);
@@ -252,18 +252,18 @@ export default function ResultsTable({
                   return (
                     <tr
                       key={lead.id}
-                      className={`hover:bg-[#161616]/50 transition group ${
-                        isSelected ? "bg-[#161616]/70" : ""
+                      className={`hover:bg-white/[0.03] transition group ${
+                        isSelected ? "bg-white/[0.05]" : ""
                       }`}
                     >
                       {/* Checkbox */}
-                      <td className="p-4 text-center">
+                      <td className="p-3.5 text-center">
                         <button
                           onClick={() => toggleSelect(lead.id)}
-                          className="text-[#A8A196] hover:text-[#F8F3F0] transition"
+                          className="text-[#989BA3] hover:text-[#EEEEEE] transition"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-[#0048BB]" />
+                            <CheckSquare className="w-4 h-4 text-[#EEEEEE]" />
                           ) : (
                             <Square className="w-4 h-4" />
                           )}
@@ -271,45 +271,45 @@ export default function ResultsTable({
                       </td>
 
                       {/* Business Name & Niche */}
-                      <td className="p-4">
-                        <div className="font-bold text-[#F8F3F0] text-sm group-hover:text-[#0048BB] transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-[#EEEEEE] text-sm group-hover:text-white transition">
                           {lead.businessName}
                         </div>
-                        <div className="text-[#A8A196] mt-0.5 inline-flex items-center space-x-1">
-                          <span className="px-2 py-0.5 rounded-md bg-[#080808] text-[10px] text-[#A8A196] border border-[rgba(248,243,240,0.08)]">
+                        <div className="text-[#989BA3] mt-0.5 inline-flex items-center space-x-1">
+                          <span className="px-2 py-0.5 rounded-md bg-[#0D0E11] text-[10px] text-[#989BA3] border border-white/[0.08]">
                             {lead.category || "Local Business"}
                           </span>
                         </div>
                       </td>
 
                       {/* Contact Channels (Phone, Email, WhatsApp, Socials, Booking) */}
-                      <td className="p-4">
+                      <td className="p-3.5">
                         <div className="space-y-1.5 min-w-[200px]">
                           {/* Phone */}
                           {hasValidPhone ? (
-                            <div className="flex items-center justify-between bg-[#080808] px-2 py-1 rounded-lg border border-[rgba(248,243,240,0.08)]">
+                            <div className="flex items-center justify-between bg-[#0D0E11] px-2.5 py-1 rounded-lg border border-white/[0.08]">
                               <a
                                 href={`tel:${lead.phone}`}
-                                className="font-mono text-[#F8F3F0] hover:underline flex items-center space-x-1 text-xs"
+                                className="font-mono text-[#EEEEEE] hover:underline flex items-center space-x-1.5 text-xs"
                                 title="Click to call"
                               >
-                                <Phone className="w-3.5 h-3.5 shrink-0" />
+                                <Phone className="w-3 h-3 text-[#989BA3] shrink-0" />
                                 <span>{lead.phoneFormatted || lead.phone}</span>
                               </a>
                               <button
                                 onClick={(e) => handleCopyPhone(lead.phone, e)}
-                                className="p-1 rounded text-[#A8A196] hover:text-[#F8F3F0] hover:bg-[#161616] transition"
+                                className="p-1 rounded text-[#989BA3] hover:text-[#EEEEEE] hover:bg-white/[0.06] transition"
                                 title="Copy phone number"
                               >
                                 {copiedPhone === lead.phone ? (
-                                  <Check className="w-3 h-3 text-[#5EBA8C]" />
+                                  <Check className="w-3 h-3 text-[#34D399]" />
                                 ) : (
                                   <Copy className="w-3 h-3" />
                                 )}
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[#A8A196]/60 italic font-mono text-[11px]">
+                            <span className="text-[#989BA3]/60 italic font-mono text-[11px]">
                               Phone unavailable
                             </span>
                           )}
@@ -319,22 +319,22 @@ export default function ResultsTable({
                             <div className="flex flex-wrap items-center gap-1 pt-0.5">
                               {/* Email */}
                               {lead.email && (
-                                <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#141414] text-[#F8F3F0] border border-[rgba(0,72,187,0.3)] text-[10px] font-medium">
+                                <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#EEEEEE] border border-white/[0.1] text-[10px] font-medium">
                                   <a
                                     href={`mailto:${lead.email}`}
-                                    className="hover:text-[#0048BB] flex items-center space-x-1"
+                                    className="hover:text-white flex items-center space-x-1"
                                     title={`Email: ${lead.email}`}
                                   >
-                                    <Mail className="w-3 h-3 text-[#0048BB] shrink-0" />
+                                    <Mail className="w-3 h-3 text-[#989BA3] shrink-0" />
                                     <span className="max-w-[120px] truncate">{lead.email}</span>
                                   </a>
                                   <button
                                     onClick={(e) => handleCopyEmail(lead.email!, e)}
-                                    className="text-[#A8A196] hover:text-[#F8F3F0] p-0.5 ml-0.5"
+                                    className="text-[#989BA3] hover:text-[#EEEEEE] p-0.5 ml-0.5"
                                     title="Copy email"
                                   >
                                     {copiedEmail === lead.email ? (
-                                      <Check className="w-2.5 h-2.5 text-[#5EBA8C]" />
+                                      <Check className="w-2.5 h-2.5 text-[#34D399]" />
                                     ) : (
                                       <Copy className="w-2.5 h-2.5" />
                                     )}
@@ -352,10 +352,10 @@ export default function ResultsTable({
                                   }
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#101914] text-[#5EBA8C] hover:bg-[#5EBA8C]/20 border border-[rgba(94,186,140,0.3)] text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-medium transition"
                                   title="Open Direct WhatsApp Chat"
                                 >
-                                  <MessageCircle className="w-3 h-3 text-[#5EBA8C] shrink-0" />
+                                  <MessageCircle className="w-3 h-3 text-emerald-400 shrink-0" />
                                   <span>WhatsApp</span>
                                 </a>
                               )}
@@ -366,10 +366,10 @@ export default function ResultsTable({
                                   href={lead.bookingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#F8F3F0] hover:text-[#0048BB] border border-[rgba(248,243,240,0.12)] text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#EEEEEE] hover:text-white border border-white/[0.1] text-[10px] font-medium transition"
                                   title="Book Appointment"
                                 >
-                                  <Calendar className="w-3 h-3 text-[#0048BB] shrink-0" />
+                                  <Calendar className="w-3 h-3 text-[#989BA3] shrink-0" />
                                   <span>Book</span>
                                 </a>
                               )}
@@ -380,10 +380,10 @@ export default function ResultsTable({
                                   href={lead.contactPageUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.08)] text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-medium transition"
                                   title="Contact Page"
                                 >
-                                  <Globe className="w-3 h-3 text-[#A8A196] shrink-0" />
+                                  <Globe className="w-3 h-3 text-[#989BA3] shrink-0" />
                                   <span>Contact Page</span>
                                 </a>
                               )}
@@ -394,7 +394,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.facebook}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.08)] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
                                   title="Facebook Page"
                                 >
                                   fb
@@ -405,7 +405,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.instagram}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.08)] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
                                   title="Instagram Profile"
                                 >
                                   ig
@@ -416,7 +416,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.linkedin}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.08)] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
                                   title="LinkedIn Profile"
                                 >
                                   in
@@ -427,10 +427,10 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.twitter}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.08)] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
                                   title="X / Twitter"
                                 >
-                                  𝕏
+                                  X
                                 </a>
                               )}
                             </div>
@@ -439,42 +439,42 @@ export default function ResultsTable({
                       </td>
 
                       {/* Location & Country */}
-                      <td className="p-4 max-w-[200px] truncate">
-                        <div className="flex items-center space-x-1 text-[#A8A196] truncate">
-                          <MapPin className="w-3.5 h-3.5 text-[#A8A196] shrink-0" />
+                      <td className="p-3.5 max-w-[200px] truncate">
+                        <div className="flex items-center space-x-1 text-[#989BA3] truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#989BA3] shrink-0" />
                           <span className="truncate">{lead.address || `${lead.city}, ${lead.country}`}</span>
                         </div>
                       </td>
 
                       {/* Reputation */}
-                      <td className="p-4 whitespace-nowrap">
+                      <td className="p-3.5 whitespace-nowrap">
                         {lead.rating ? (
                           <div className="flex items-center space-x-1">
-                            <div className="flex items-center space-x-0.5 text-[#5EBA8C] font-bold">
-                              <Star className="w-3.5 h-3.5 fill-[#5EBA8C] text-[#5EBA8C]" />
+                            <div className="flex items-center space-x-0.5 text-amber-400 font-bold">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                               <span>{lead.rating.toFixed(1)}</span>
                             </div>
-                            <span className="text-[#A8A196] text-[11px]">
+                            <span className="text-[#989BA3] text-[11px]">
                               ({lead.reviewCount || 0})
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[#A8A196]/60 italic">No reviews</span>
+                          <span className="text-[#989BA3]/60 italic">No reviews</span>
                         )}
                       </td>
 
                       {/* Website Status Flag */}
-                      <td className="p-4 whitespace-nowrap">
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#161616] text-[#5EBA8C] border border-[rgba(248,243,240,0.12)]">
-                          <ShieldCheck className="w-3 h-3 text-[#5EBA8C]" />
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <ShieldCheck className="w-3 h-3 text-emerald-400" />
                           <span>No Website</span>
                         </span>
                       </td>
 
                       {/* Provider Source & Provenance */}
-                      <td className="p-4 whitespace-nowrap">
+                      <td className="p-3.5 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
-                          <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#080808] text-[#A8A196] border border-[rgba(248,243,240,0.08)]">
+                          <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#0D0E11] text-[#989BA3] border border-white/[0.08]">
                             {lead.sourceProvider}
                           </span>
                           {lead.sourceUrl && (
@@ -482,7 +482,7 @@ export default function ResultsTable({
                               href={lead.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[#A8A196] hover:text-[#F8F3F0] p-0.5"
+                              className="text-[#989BA3] hover:text-[#EEEEEE] p-0.5"
                               title="View original source record"
                             >
                               <ExternalLink className="w-3 h-3" />
@@ -492,22 +492,22 @@ export default function ResultsTable({
                       </td>
 
                       {/* Actions */}
-                      <td className="p-4 text-right whitespace-nowrap">
+                      <td className="p-3.5 text-right whitespace-nowrap">
                         <div className="inline-flex items-center space-x-1.5">
                           {/* Pitch script button */}
                           <button
                             onClick={() => setPitchLead(lead)}
-                            className="px-2.5 py-1 rounded-lg bg-[#161616] hover:bg-[#161616]/80 text-[#F8F3F0] border border-[rgba(248,243,240,0.2)] font-medium transition flex items-center space-x-1"
+                            className="px-2.5 py-1 rounded-lg bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] border border-white/[0.1] font-medium transition flex items-center space-x-1"
                             title="Generate cold call pitch script"
                           >
-                            <MessageSquareQuote className="w-3.5 h-3.5 text-[#0048BB]" />
+                            <MessageSquareQuote className="w-3.5 h-3.5 text-[#989BA3]" />
                             <span>Pitch</span>
                           </button>
 
                           {/* Notes */}
                           <button
                             onClick={() => setNotesLead(lead)}
-                            className="p-1.5 rounded-lg bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.12)] transition"
+                            className="p-1.5 rounded-lg bg-[#111214] hover:bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] transition"
                             title="Add notes"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -519,13 +519,13 @@ export default function ResultsTable({
                             disabled={isSaved}
                             className={`px-3 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
                               isSaved
-                                ? "bg-[#161616] text-[#5EBA8C] border border-[rgba(248,243,240,0.12)] cursor-default"
-                                : "bg-[#0048BB] hover:bg-[#00388A] text-white shadow-sm"
+                                ? "bg-white/[0.06] text-[#34D399] border border-white/[0.1] cursor-default"
+                                : "bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold shadow-sm"
                             }`}
                           >
                             {isSaved ? (
                               <>
-                                <Check className="w-3.5 h-3.5 text-[#5EBA8C]" />
+                                <Check className="w-3.5 h-3.5 text-[#34D399]" />
                                 <span>Saved</span>
                               </>
                             ) : (

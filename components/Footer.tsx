@@ -14,20 +14,23 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="border-t border-[rgba(248,243,240,0.12)] bg-[#000000] py-6 text-xs text-[#A8A196]">
+      <footer className="border-t border-white/[0.08] bg-[#08090B] py-6 text-xs text-[#989BA3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>© {new Date().getFullYear()} WebHunt Delta • Worldwide B2B & Remote Tech Discovery</span>
-          <div className="flex items-center space-x-3 text-xs text-[#A8A196]">
+          <div className="flex items-center space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+            <span>© {new Date().getFullYear()} WebHunt Delta • Worldwide Intelligence Radar</span>
+          </div>
+          <div className="flex items-center space-x-3 text-xs text-[#989BA3]">
             <button
               onClick={() => openLegalModal("privacy")}
-              className="hover:text-[#F8F3F0] transition underline-offset-4 hover:underline focus:outline-none"
+              className="hover:text-[#EEEEEE] transition underline-offset-4 hover:underline focus:outline-none"
             >
               Privacy Policy
             </button>
-            <span className="text-[rgba(248,243,240,0.3)]">•</span>
+            <span className="text-white/20">•</span>
             <button
               onClick={() => openLegalModal("terms")}
-              className="hover:text-[#F8F3F0] transition underline-offset-4 hover:underline focus:outline-none"
+              className="hover:text-[#EEEEEE] transition underline-offset-4 hover:underline focus:outline-none"
             >
               Terms of Service
             </button>

@@ -34,7 +34,7 @@ export default function JobCard({
   const eligibility = checkApplicantEligibility(job);
 
   return (
-    <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] hover:border-[rgba(248,243,240,0.25)] rounded-2xl p-5 shadow-xl transition flex flex-col justify-between space-y-4 group">
+    <div className="bg-[#111214] border border-white/[0.08] hover:border-white/[0.18] rounded-2xl p-5 shadow-xl transition flex flex-col justify-between space-y-4 group">
       <div>
         {/* Top Header: Company + Source Badge */}
         <div className="flex items-start justify-between gap-2">
@@ -43,37 +43,37 @@ export default function JobCard({
               <img
                 src={job.companyLogo}
                 alt={job.company}
-                className="w-9 h-9 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] object-contain p-1 shrink-0"
+                className="w-9 h-9 rounded-xl bg-[#0D0E11] border border-white/[0.1] object-contain p-1 shrink-0"
                 onError={(e) => {
                   // Fallback on error
                   (e.target as HTMLElement).style.display = "none";
                 }}
               />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-[#080808] border border-[rgba(248,243,240,0.12)] flex items-center justify-center text-[#F8F3F0] font-bold text-xs shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[#0D0E11] border border-white/[0.1] flex items-center justify-center text-[#EEEEEE] font-bold text-xs shrink-0">
                 {job.company.slice(0, 2).toUpperCase()}
               </div>
             )}
             <div>
-              <span className="text-xs font-semibold text-[#F8F3F0]">
+              <span className="text-xs font-semibold text-[#EEEEEE]">
                 {job.company}
               </span>
-              <div className="text-[10px] text-[#A8A196] flex items-center space-x-1">
-                <MapPin className="w-3 h-3 text-[#0048BB]" />
+              <div className="text-[10px] text-[#989BA3] flex items-center space-x-1">
+                <MapPin className="w-3 h-3 text-[#989BA3]" />
                 <span>{job.location}</span>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#161616] text-[#A8A196] border border-[rgba(248,243,240,0.12)]">
+            <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#18191D] text-[#989BA3] border border-white/[0.08]">
               {job.source}
             </span>
             <span
               className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
                 eligibility.isEligibleKenya
-                  ? "bg-[#101914] text-[#5EBA8C] border-[rgba(94,186,140,0.3)]"
-                  : "bg-[#10192A] text-[#0048BB] border-[rgba(0,72,187,0.3)]"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                  : "bg-white/[0.06] text-[#EEEEEE] border-white/[0.12]"
               }`}
               title={eligibility.reasons.join(". ")}
             >
@@ -83,13 +83,13 @@ export default function JobCard({
         </div>
 
         {/* Job Title */}
-        <h4 className="font-bold text-[#F8F3F0] text-base mt-3 group-hover:text-[#0048BB] transition leading-snug">
+        <h4 className="font-bold text-[#EEEEEE] text-base mt-3 group-hover:text-white transition leading-snug">
           {job.title}
         </h4>
 
         {/* Snippet */}
         {job.descriptionSnippet && (
-          <p className="text-xs text-[#A8A196] mt-2 line-clamp-3 leading-relaxed">
+          <p className="text-xs text-[#989BA3] mt-2 line-clamp-3 leading-relaxed">
             {job.descriptionSnippet}
           </p>
         )}
@@ -100,7 +100,7 @@ export default function JobCard({
             {job.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-0.5 rounded-md bg-[#080808] text-[10px] text-[#A8A196] border border-[rgba(248,243,240,0.08)]"
+                className="px-2 py-0.5 rounded-md bg-[#0D0E11] text-[10px] text-[#989BA3] border border-white/[0.08]"
               >
                 {tag}
               </span>
@@ -110,10 +110,10 @@ export default function JobCard({
       </div>
 
       {/* Footer Info & Actions */}
-      <div className="pt-3 border-t border-[rgba(248,243,240,0.12)] space-y-3">
-        <div className="flex items-center justify-between text-xs text-[#A8A196]">
-          <span className="text-[#5EBA8C] font-semibold">{job.salary || "Competitive"}</span>
-          <div className="flex items-center space-x-1 text-[11px] text-[#A8A196]">
+      <div className="pt-3 border-t border-white/[0.08] space-y-3">
+        <div className="flex items-center justify-between text-xs text-[#989BA3]">
+          <span className="text-emerald-400 font-semibold">{job.salary || "Competitive"}</span>
+          <div className="flex items-center space-x-1 text-[11px] text-[#989BA3]">
             <Calendar className="w-3 h-3" />
             <span>{formatDate(job.postedDate)}</span>
           </div>
@@ -122,9 +122,9 @@ export default function JobCard({
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => onOpenProposal(job)}
-            className="px-3 py-1.5 rounded-xl bg-[#161616] hover:bg-[#161616]/80 text-[#F8F3F0] border border-[rgba(248,243,240,0.2)] text-xs font-semibold flex items-center space-x-1.5 transition"
+            className="px-3 py-1.5 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] border border-white/[0.1] text-xs font-semibold flex items-center space-x-1.5 transition"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#0048BB]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#989BA3]" />
             <span>Proposal</span>
           </button>
 
@@ -133,7 +133,7 @@ export default function JobCard({
               href={job.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-xl bg-[#080808] hover:bg-[#161616] text-[#A8A196] hover:text-[#F8F3F0] border border-[rgba(248,243,240,0.12)] text-xs font-medium transition"
+              className="p-1.5 rounded-xl bg-[#111214] hover:bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-xs font-medium transition"
               title="Apply on official platform"
             >
               <ExternalLink className="w-4 h-4" />
@@ -144,13 +144,13 @@ export default function JobCard({
               disabled={isSaved}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1 transition ${
                 isSaved
-                  ? "bg-[#161616] text-[#5EBA8C] border border-[rgba(248,243,240,0.12)] cursor-default"
-                  : "bg-[#0048BB] hover:bg-[#00388A] text-white shadow-sm"
+                  ? "bg-white/[0.06] text-[#34D399] border border-white/[0.1] cursor-default"
+                  : "bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold shadow-sm"
               }`}
             >
               {isSaved ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#5EBA8C]" />
+                  <Check className="w-3.5 h-3.5 text-[#34D399]" />
                   <span>Saved</span>
                 </>
               ) : (

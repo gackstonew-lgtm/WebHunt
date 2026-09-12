@@ -9,89 +9,46 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: [
+          "var(--font-sans)",
+          '"Plus Jakarta Sans"',
+          '"Inter"',
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          "sans-serif",
+        ],
+      },
+      borderRadius: {
+        'lg': '10px',
+        'xl': '14px',
+        '2xl': '18px',
+        '3xl': '22px',
+        'pill': '9999px',
       },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          elevated: "var(--surface-elevated)",
+          subtle: "var(--surface-subtle)",
+          secondary: "var(--surface-secondary)",
+        },
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
+          inner: "var(--card-inner)",
         },
         popover: {
           DEFAULT: "var(--popover)",
           foreground: "var(--popover-foreground)",
         },
-        paper: "#F8F3F0",
-        cream: {
-          DEFAULT: "#F8F3F0",
-          50: "#FFFFFF",
-          100: "#FDFBF9",
-          200: "#FAF6F3",
-          300: "#F8F3F0",
-          400: "#E6DFD5",
-          500: "#A8A196",
-          600: "#7E786E",
-          700: "#57524A",
-          800: "#36332E",
-          900: "#0D0D0D",
-        },
-        stone: {
-          DEFAULT: "#E6DFD5",
-          50: "#FAF8F5",
-          100: "#F8F3F0",
-          200: "#E6DFD5",
-          300: "#D2C9B9",
-          400: "#A8A196",
-          500: "#7E786E",
-          600: "#57524A",
-          700: "#36332E",
-          800: "#1E1C19",
-          900: "#0D0D0D",
-        },
-        royal: {
-          DEFAULT: "#0048BB",
-          50: "#EEF4FF",
-          100: "#DCE8FE",
-          200: "#B9D2FD",
-          300: "#86B2FB",
-          400: "#4D8CF7",
-          500: "#0048BB",
-          600: "#00388A",
-          700: "#002C6E",
-          800: "#002052",
-          900: "#001639",
-          950: "#000B1D",
-        },
-        coral: {
-          DEFAULT: "#0048BB",
-          50: "#EEF4FF",
-          100: "#DCE8FE",
-          200: "#B9D2FD",
-          300: "#86B2FB",
-          400: "#4D8CF7",
-          500: "#0048BB",
-          600: "#00388A",
-          700: "#002C6E",
-          800: "#002052",
-          900: "#001639",
-          950: "#000B1D",
-        },
         primary: {
-          DEFAULT: "#0048BB", // Royal Blue
-          foreground: "#FFFFFF",
-          hover: "#00388A",
-          50: "#EEF4FF",
-          100: "#DCE8FE",
-          200: "#B9D2FD",
-          300: "#86B2FB",
-          400: "#4D8CF7",
-          500: "#0048BB",
-          600: "#00388A",
-          700: "#002C6E",
-          800: "#002052",
-          900: "#001639",
-          950: "#000B1D",
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+          hover: "var(--primary-hover)",
         },
         muted: {
           DEFAULT: "var(--muted)",
@@ -105,45 +62,44 @@ const config: Config = {
           DEFAULT: "var(--destructive)",
           foreground: "var(--destructive-foreground)",
         },
-        border: "var(--border)",
+        border: {
+          DEFAULT: "var(--border)",
+          subtle: "var(--border-subtle)",
+          strong: "var(--border-strong)",
+        },
         input: "var(--input)",
         ring: "var(--ring)",
-        // Map slate/neutral classes to WebHunt monochromatic pure dark surfaces
+        // Arcade FX / Phantom Institutional Slate scale
         slate: {
-          50: "#F8F3F0",
-          100: "#E6DFD5",
-          200: "#D2C9B9",
-          300: "#A8A196",
-          400: "#A8A196", // Muted text token (#A8A196)
-          500: "#7E786E",
-          600: "#57524A",
-          700: "#36332E",
-          800: "rgba(248, 243, 240, 0.12)", // Hairline cream border
-          850: "#161616",                   // Elevated hover surface
-          900: "#0D0D0D",                   // Raised dark card
-          950: "#000000",                   // Deep black background
+          50: "#F5F5F7",
+          100: "#E2E8F0",
+          200: "#CBD5E1",
+          300: "#94A3B8",
+          400: "#989BA3",  // Arcade FX dark muted text
+          500: "#7D8EAA",  // Arcade FX dark tertiary text
+          600: "#475569",
+          700: "#334155",
+          800: "#18191D",  // Arcade FX elevated surface
+          850: "#141518",
+          900: "#111214",  // Arcade FX dark surface
+          950: "#08090B",  // Arcade FX dark canvas background
         },
-        // Semantic green for phone / verified status
+        // Subtle restrained status colors
         emerald: {
-          400: "#5EBA8C",
-          500: "#3FA372",
-          600: "#2B7E55",
+          400: "#34D399",
+          500: "#10B981",
+          600: "#059669",
         },
-        // WebHunt specific tokens
-        webhunt: {
-          bg: "#000000",
-          card: "#0D0D0D",
-          surface: "#080808",
-          hover: "#161616",
-          paper: "#F8F3F0",
-          cream: "#F8F3F0",
-          stone: "#E6DFD5",
-          muted: "#A8A196",
-          royal: "#0048BB",
-          royalHover: "#00388A",
-          coral: "#0048BB",
-          coralHover: "#00388A",
-          border: "rgba(248, 243, 240, 0.12)",
+        // Arcade FX Design Tokens
+        arcade: {
+          canvas: "#08090B",
+          surface: "#111214",
+          elevated: "#18191D",
+          platinum: "#EEEEEE",
+          silver: "#989BA3",
+          lightBg: "#F5F5F7",
+          lightSurface: "#FFFFFF",
+          lightSecondary: "#F0F0F3",
         },
       },
       borderColor: {

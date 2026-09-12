@@ -108,14 +108,14 @@ export default function HomePage() {
 
       {/* Authentication Required Notice Banner */}
       {authRequired && (
-        <div className="p-5 rounded-3xl bg-[#10192A] border border-[#0048BB]/50 text-[#F8F3F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl animate-in slide-in-from-top-2">
+        <div className="p-5 rounded-2xl bg-[#111214] border border-white/[0.14] text-[#EEEEEE] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl animate-in slide-in-from-top-2">
           <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#0048BB]/20 text-[#0048BB] border border-[#0048BB]/40 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#18191D] text-[#EEEEEE] border border-white/[0.12] flex items-center justify-center shrink-0">
               <LogIn className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm text-[#F8F3F0]">Sign In Required</div>
-              <p className="text-xs text-[#A8A196] mt-0.5">
+              <div className="font-bold text-sm text-[#EEEEEE]">Sign In Required</div>
+              <p className="text-xs text-[#989BA3] mt-0.5">
                 Please sign in or create an account with your email to launch lead scans and save CRM contacts.
               </p>
             </div>
@@ -124,7 +124,7 @@ export default function HomePage() {
           <div className="flex items-center space-x-2 shrink-0">
             <a
               href={"/auth?mode=signin&returnTo=" + encodeURIComponent("/?mode=" + lastSearchMode)}
-              className="px-4 py-2.5 bg-[#0048BB] hover:bg-[#00388A] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5"
+              className="px-4 py-2 bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold text-xs rounded-lg shadow-sm transition flex items-center space-x-1.5"
             >
               <span>Sign In / Register</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export default function HomePage() {
 
       {/* Standard Error Notice */}
       {errorMessage && !authRequired && (
-        <div className="p-4 rounded-2xl bg-[#0D0D0D] border border-red-500/30 text-red-300 text-xs flex items-center space-x-3">
+        <div className="p-4 rounded-xl bg-[#111214] border border-red-500/25 text-red-300 text-xs flex items-center space-x-3">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
           <span>{errorMessage}</span>
         </div>
@@ -151,34 +151,34 @@ export default function HomePage() {
         />
       ) : (
         /* Feature Highlights Grid */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+          <div className="bg-[#111214] border border-white/[0.08] rounded-2xl p-6 space-y-3 hover:border-white/[0.18] transition duration-150">
+            <div className="w-10 h-10 rounded-xl bg-[#18191D] border border-white/[0.1] text-[#EEEEEE] flex items-center justify-center">
               <Store className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F8F3F0] text-base">Worldwide Physical Radar</h3>
-            <p className="text-xs text-[#A8A196] leading-relaxed">
-              Find local businesses across Kenya and 240+ countries that have an active phone number but zero website on record to pitch custom websites &amp; POS systems.
+            <h3 className="font-bold text-[#EEEEEE] text-base tracking-tight">Worldwide Physical Radar</h3>
+            <p className="text-xs text-[#989BA3] leading-relaxed">
+              Find local businesses across Kenya and 240+ countries that have an active phone number but zero website on record to pitch custom websites and POS systems.
             </p>
           </div>
 
-          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
+          <div className="bg-[#111214] border border-white/[0.08] rounded-2xl p-6 space-y-3 hover:border-white/[0.18] transition duration-150">
+            <div className="w-10 h-10 rounded-xl bg-[#18191D] border border-white/[0.1] text-[#EEEEEE] flex items-center justify-center">
               <Terminal className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F8F3F0] text-base">Remote Opportunities Radar</h3>
-            <p className="text-xs text-[#A8A196] leading-relaxed">
+            <h3 className="font-bold text-[#EEEEEE] text-base tracking-tight">Remote Opportunities Radar</h3>
+            <p className="text-xs text-[#989BA3] leading-relaxed">
               Query official public developer endpoints (Remotive, Arbeitnow, Himalayas, RemoteOK, WWR) for genuine remote software, writing, design, and AI gigs.
             </p>
           </div>
 
-          <div className="bg-[#0D0D0D] border border-[rgba(248,243,240,0.12)] rounded-3xl p-6 space-y-3 hover:border-[rgba(248,243,240,0.22)] transition">
-            <div className="w-10 h-10 rounded-2xl bg-[#161616] border border-[rgba(248,243,240,0.12)] text-[#0048BB] flex items-center justify-center">
+          <div className="bg-[#111214] border border-white/[0.08] rounded-2xl p-6 space-y-3 hover:border-white/[0.18] transition duration-150">
+            <div className="w-10 h-10 rounded-xl bg-[#18191D] border border-white/[0.1] text-[#EEEEEE] flex items-center justify-center">
               <Layers className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#F8F3F0] text-base">In-Session Pipeline CRM</h3>
-            <p className="text-xs text-[#A8A196] leading-relaxed">
-              Track outreach stages (New ➔ Contacted ➔ Interested ➔ Closed), generate customized pitch scripts &amp; job proposals, and export to CSV instantly.
+            <h3 className="font-bold text-[#EEEEEE] text-base tracking-tight">In-Session Pipeline CRM</h3>
+            <p className="text-xs text-[#989BA3] leading-relaxed">
+              Track outreach stages (New to Contacted to Interested to Closed), generate customized pitch scripts and job proposals, and export to CSV instantly.
             </p>
           </div>
         </div>

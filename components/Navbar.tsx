@@ -88,32 +88,30 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-[rgba(248,243,240,0.12)] bg-[#000000]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#08090B]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Brand Logo */}
             <div className="flex items-center space-x-3">
               <Link href="/" className="flex items-center space-x-2.5 group">
-                <div className="w-10 h-10 rounded-xl bg-[#0048BB] p-0.5 shadow-md shadow-[#0048BB]/20 group-hover:bg-[#00388A] transition-colors duration-200">
-                  <div className="w-full h-full bg-[#0D0D0D] rounded-[10px] flex items-center justify-center">
-                    <Radar className="w-5 h-5 text-[#F8F3F0] group-hover:text-[#0048BB] transition-colors" />
-                  </div>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#111214] border border-white/[0.12] flex items-center justify-center text-[#EEEEEE] group-hover:border-white/30 group-hover:bg-[#18191D] transition-colors duration-150">
+                  <Radar className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#EEEEEE]" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="font-bold text-lg text-[#F8F3F0] tracking-tight">WebHunt</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#161616] text-[#A8A196] border border-[rgba(248,243,240,0.12)]">
+                    <span className="font-extrabold text-base sm:text-lg text-[#EEEEEE] tracking-tight">WebHunt</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-[#989BA3] border border-white/[0.08]">
                       Delta
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#A8A196] hidden sm:block">Physical &amp; Online Lead Discovery</p>
+                  <p className="text-[11px] text-[#989BA3] hidden sm:block">Physical &amp; Online Lead Discovery</p>
                 </div>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             {!isAuthRoute && (
-              <nav className="hidden md:flex items-center space-x-1">
+              <nav className="hidden md:flex items-center space-x-1 bg-[#111214]/60 p-1 rounded-xl border border-white/[0.06]">
                 {navLinks.map((link) => {
                   const Icon = link.icon;
                   const isActive = pathname === link.href;
@@ -121,16 +119,16 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={"flex items-center space-x-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all " + (
+                      className={"flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all " + (
                         isActive
-                          ? "bg-[#161616] text-[#F8F3F0] border border-[rgba(0,72,187,0.4)] shadow-sm"
-                          : "text-[#A8A196] hover:text-[#F8F3F0] hover:bg-[#161616]/60"
+                          ? "bg-[#18191D] text-[#EEEEEE] border border-white/[0.14] shadow-sm"
+                          : "text-[#989BA3] hover:text-[#EEEEEE] hover:bg-white/[0.04] border border-transparent"
                       )}
                     >
-                      <Icon className={"w-4 h-4 " + (isActive ? "text-[#0048BB]" : "text-[#A8A196]")} />
+                      <Icon className={"w-3.5 h-3.5 " + (isActive ? "text-[#EEEEEE]" : "text-[#989BA3]")} />
                       <span>{link.label}</span>
                       {link.badge !== undefined && (
-                        <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-[#0048BB] text-white">
+                        <span className="ml-1 px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#EEEEEE] text-[#08090B]">
                           {link.badge}
                         </span>
                       )}
@@ -146,10 +144,10 @@ export default function Navbar() {
                 {/* Profile & Settings Trigger */}
                 <button
                   onClick={() => setShowProfile(true)}
-                  className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F8F3F0] hover:bg-[#161616] border border-[rgba(248,243,240,0.12)] transition shadow-sm"
+                  className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-[#111214] text-[#EEEEEE] hover:bg-[#18191D] border border-white/[0.08] hover:border-white/[0.18] transition shadow-sm"
                   title="Manage Profile, Appearance & Settings"
                 >
-                  <User className="w-3.5 h-3.5 text-[#0048BB]" />
+                  <User className="w-3.5 h-3.5 text-[#989BA3]" />
                   <span className="hidden xs:inline">Profile</span>
                 </button>
 
@@ -157,7 +155,7 @@ export default function Navbar() {
                 {hasActiveSub ? (
                   <Link
                     href="/subscription"
-                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-bold rounded-xl bg-[#10192A] text-emerald-400 border border-emerald-500/30 shadow-sm transition hover:bg-emerald-950/30"
+                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 shadow-sm transition hover:bg-emerald-500/20"
                     title="Active Subscription Managed"
                   >
                     <Crown className="w-3.5 h-3.5 text-emerald-400" />
@@ -166,10 +164,10 @@ export default function Navbar() {
                 ) : (
                   <button
                     onClick={() => setShowKoraCheckout(true)}
-                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#161616] text-[#F8F3F0] hover:bg-[#1C1C1C] border border-[rgba(0,72,187,0.4)] shadow-sm transition"
+                    className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-lg bg-[#18191D] text-[#EEEEEE] hover:bg-[#22242A] border border-white/[0.12] hover:border-white/[0.22] shadow-sm transition"
                     title="Upgrade Subscription (Monthly $50 / Annual $200)"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-[#0048BB]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#989BA3]" />
                     <span>Upgrade</span>
                   </button>
                 )}
@@ -177,7 +175,7 @@ export default function Navbar() {
                 {!userSession && (
                   <Link
                     href="/auth?mode=signin"
-                    className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#0048BB] hover:bg-[#00388A] text-white shadow-sm transition"
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[#EEEEEE] hover:bg-white text-[#08090B] shadow-sm transition"
                     title="Sign In to WebHunt"
                   >
                     <LogIn className="w-3.5 h-3.5" />
@@ -187,10 +185,10 @@ export default function Navbar() {
 
                 <button
                   onClick={handleExportAll}
-                  className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#0D0D0D] text-[#F8F3F0] hover:bg-[#161616] border border-[rgba(248,243,240,0.12)] transition"
+                  className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#111214] text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] border border-white/[0.08] hover:border-white/[0.18] transition"
                   title="Download in-session leads as CSV"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#A8A196]" />
+                  <Download className="w-3.5 h-3.5 text-[#989BA3]" />
                   <span>Export CSV</span>
                 </button>
               </div>
