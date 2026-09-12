@@ -13,6 +13,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/health") ||
     pathname.startsWith("/api/webhooks") ||
+    pathname.startsWith("/api/mobile") ||
+    pathname.startsWith("/api/export") ||
     pathname === "/favicon.ico" ||
     pathname === "/icon.svg" ||
     pathname === "/sw.js" ||

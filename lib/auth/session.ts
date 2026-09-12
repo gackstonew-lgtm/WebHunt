@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 export const SESSION_COOKIE_NAME = 'webhunt_session';
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -166,14 +166,30 @@ export async function setSessionCookie(
 }
 
 /**
- * Retrieves and validates the current session from incoming cookies
+ * Retrieves and validates the current session from incoming cookies or Authorization Bearer header
  */
 export async function getCurrentSession(): Promise<SessionPayload | null> {
   try {
     const cookieStore = cookies();
     const cookie = cookieStore.get(SESSION_COOKIE_NAME);
-    if (!cookie || !cookie.value) return null;
-    return await decryptSessionToken(cookie.value);
+    if (cookie && cookie.value) {
+      const session = await decryptSessionToken(cookie.value);
+      if (session) return session;
+    }
+
+    // Check Authorization: Bearer <token> for mobile / REST API calls
+    try {
+      const headerList = headers();
+      const authHeader = headerList.get("authorization");
+      if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+        const token = authHeader.substring(7).trim();
+        if (token) {
+          return await decryptSessionToken(token);
+        }
+      }
+    } catch (_) {}
+
+    return null;
   } catch {
     return null;
   }
