@@ -17,9 +17,40 @@ export type PipelineStatus =
   | 'WITHDRAWN';
 
 export type PhysicalProviderType = 'osm' | 'google' | 'yelp' | 'foursquare' | 'all';
-export type OnlineProviderType = 'remotive' | 'arbeitnow' | 'himalayas' | 'weworkremotely' | 'jobspresso' | 'remoteok' | 'africa' | 'all';
+export type OnlineProviderType = 
+  | 'remotive' 
+  | 'arbeitnow' 
+  | 'himalayas' 
+  | 'weworkremotely' 
+  | 'jobspresso' 
+  | 'remoteok' 
+  | 'africa' 
+  | 'adzuna' 
+  | 'jooble' 
+  | 'usajobs' 
+  | 'greenhouse' 
+  | 'lever' 
+  | 'ashby' 
+  | 'ats' 
+  | 'all';
 
 export type WebsiteConfidence = 'High' | 'Medium' | 'Verified';
+
+export type WebsiteStatusType = 
+  | 'NO_WEBSITE' 
+  | 'WEBSITE_FOUND' 
+  | 'WEBSITE_UNVERIFIED' 
+  | 'BROKEN_WEBSITE' 
+  | 'SOCIAL_ONLY' 
+  | 'DIRECTORY_ONLY';
+
+export type WebsiteOpportunityType = 
+  | 'NO_WEBSITE' 
+  | 'BROKEN_WEBSITE' 
+  | 'OUTDATED_WEBSITE' 
+  | 'SOCIAL_ONLY' 
+  | 'WEAK_WEB_PRESENCE' 
+  | 'STRONG_WEB_PRESENCE';
 
 export type RemoteType = 'worldwide' | 'regional' | 'country_specific' | 'hybrid' | 'onsite';
 
@@ -117,7 +148,12 @@ export interface PhysicalLead {
   tags?: string | string[] | null;
   relevanceScore?: number | null;
   dataQualityScore?: number | null;
+  contactQualityScore?: number | null;
   verificationStatus?: VerificationStatus;
+  websiteStatus?: WebsiteStatusType;
+  websiteOpportunity?: WebsiteOpportunityType;
+  sources?: string[];
+  provenance?: Array<{ source: string; sourceUrl?: string; retrievedAt?: string | Date }>;
   
   // Enriched Contact Channels
   email?: string | null;
@@ -152,7 +188,9 @@ export interface OnlineJobLead {
   url: string;
   postedDate: string;
   salary?: string | null;
-  source: string; // 'remotive' | 'arbeitnow' | 'himalayas' | 'weworkremotely' | 'jobspresso' | 'remoteok' | 'africa'
+  source: string; // 'remotive' | 'arbeitnow' | 'himalayas' | 'weworkremotely' | 'jobspresso' | 'remoteok' | 'africa' | 'adzuna' | 'jooble' | 'usajobs' | 'greenhouse' | 'lever' | 'ashby'
+  sources?: string[];
+  provenance?: Array<{ source: string; sourceUrl?: string; retrievedAt?: string | Date }>;
   sourceId?: string | null;
   sourceUrl?: string | null;
   sourceType?: string | null;
@@ -212,6 +250,18 @@ export interface OnlineSearchParams {
 
 export type SearchParams = PhysicalSearchParams | OnlineSearchParams;
 
+export interface SearchDiagnostics {
+  sourcesQueried?: string[];
+  sourcesSucceeded?: string[];
+  sourcesFailed?: string[];
+  sourcesSkipped?: string[];
+  totalProvidersQueried?: number;
+  successfulProviders?: number;
+  failedProviders?: number;
+  executionTimeMs?: number;
+  cached?: boolean;
+}
+
 export interface SearchResult {
   mode: LeadMode;
   query: string;
@@ -222,5 +272,6 @@ export interface SearchResult {
   fromCache: boolean;
   sourcesQueried?: string[];
   failedSources?: string[];
+  diagnostics?: SearchDiagnostics;
   leads: LeadItem[];
 }

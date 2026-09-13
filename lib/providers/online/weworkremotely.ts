@@ -10,37 +10,72 @@ export class WeWorkRemotelyJobProvider implements IOnlineJobProvider {
     return true; // Public syndicated RSS feeds
   }
 
+  private selectWwrFeeds(query: string, category?: string): string[] {
+    const q = (query || "").toLowerCase();
+    const cat = (category || "").toLowerCase();
+    const feeds: string[] = [];
+
+    if (q.includes("front") || q.includes("react") || q.includes("vue") || q.includes("angular") || q.includes("next") || q.includes("ui")) {
+      feeds.push("https://weworkremotely.com/categories/remote-front-end-programming-jobs.rss");
+      feeds.push("https://weworkremotely.com/categories/remote-full-stack-programming-jobs.rss");
+    } else if (q.includes("back") || q.includes("node") || q.includes("python") || q.includes("django") || q.includes("golang") || q.includes("java") || q.includes("ruby")) {
+      feeds.push("https://weworkremotely.com/categories/remote-back-end-programming-jobs.rss");
+      feeds.push("https://weworkremotely.com/categories/remote-programming-jobs.rss");
+    } else if (q.includes("devops") || q.includes("cloud") || q.includes("aws") || q.includes("docker") || q.includes("kubernetes") || q.includes("sysadmin")) {
+      feeds.push("https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss");
+    } else if (q.includes("design") || q.includes("ux") || q.includes("product designer") || cat.includes("design")) {
+      feeds.push("https://weworkremotely.com/categories/remote-design-jobs.rss");
+    } else if (q.includes("sales") || q.includes("marketing") || q.includes("seo") || q.includes("growth") || cat.includes("marketing")) {
+      feeds.push("https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss");
+    } else if (q.includes("support") || q.includes("customer") || cat.includes("support")) {
+      feeds.push("https://weworkremotely.com/categories/remote-customer-support-jobs.rss");
+    } else {
+      feeds.push("https://weworkremotely.com/categories/remote-programming-jobs.rss");
+      feeds.push("https://weworkremotely.com/remote-jobs.rss");
+    }
+
+    return Array.from(new Set(feeds));
+  }
+
   async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
     try {
       const query = (params.query || "").trim();
-      const feedUrl = "https://weworkremotely.com/remote-jobs.rss";
+      const targetFeeds = this.selectWwrFeeds(query, params.category);
 
-      console.log(`[WeWorkRemotely] Fetching RSS feed for "${query}"`);
+      console.log(`[WeWorkRemotely] Querying ${targetFeeds.length} targeted RSS feeds for "${query}"`);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6500);
+      const feedPromises = targetFeeds.map(async (feedUrl) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6500);
 
-      const response = await fetch(feedUrl, {
-        headers: {
-          "Accept": "application/rss+xml, application/xml, text/xml",
-          "User-Agent": "WebHunt-Discovery/2.0 (JobDiscovery)",
-        },
-        signal: controller.signal,
+          const response = await fetch(feedUrl, {
+            headers: {
+              "Accept": "application/rss+xml, application/xml, text/xml",
+              "User-Agent": "WebHunt-Discovery/2.0 (JobDiscovery)",
+            },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (!response.ok) return "";
+          return await response.text();
+        } catch {
+          return "";
+        }
       });
-      clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        console.warn(`[WeWorkRemotely] RSS HTTP error: ${response.status}`);
-        return [];
-      }
-
-      const xmlText = await response.text();
-      const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+      const xmlTexts = await Promise.all(feedPromises);
       const items: OnlineJobLead[] = [];
-      let match;
+      const seenLinks = new Set<string>();
 
-      while ((match = itemRegex.exec(xmlText)) !== null) {
-        const itemBlock = match[1];
+      for (const xmlText of xmlTexts) {
+        if (!xmlText) continue;
+        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+        let match;
+
+        while ((match = itemRegex.exec(xmlText)) !== null) {
+          const itemBlock = match[1];
 
         const titleMatch = /<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i.exec(itemBlock) || /<title>([\s\S]*?)<\/title>/i.exec(itemBlock);
         const linkMatch = /<link>([\s\S]*?)<\/link>/i.exec(itemBlock);
@@ -50,6 +85,9 @@ export class WeWorkRemotelyJobProvider implements IOnlineJobProvider {
 
         const fullTitle = titleMatch ? titleMatch[1].trim() : "Remote Role";
         const link = linkMatch ? linkMatch[1].trim() : "https://weworkremotely.com";
+        if (seenLinks.has(link)) continue;
+        seenLinks.add(link);
+
         const rawDesc = descMatch ? descMatch[1] : "";
         const pubDate = pubDateMatch ? new Date(pubDateMatch[1]).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
         const regionText = regionMatch ? regionMatch[1].trim() : "Anywhere in the World";
@@ -91,6 +129,7 @@ export class WeWorkRemotelyJobProvider implements IOnlineJobProvider {
           postedDate: pubDate,
           salary: "Competitive",
           source: "weworkremotely",
+          sources: ["weworkremotely"],
           sourceId: link,
           sourceUrl: link,
           sourceType: "public_feed",
@@ -108,11 +147,13 @@ export class WeWorkRemotelyJobProvider implements IOnlineJobProvider {
 
         if (items.length >= (params.maxResults || 25)) break;
       }
-
-      return items;
-    } catch (err) {
-      console.error("[WeWorkRemotely] RSS parse error:", err);
-      return [];
+      if (items.length >= (params.maxResults || 25)) break;
     }
+
+    return items;
+  } catch (err) {
+    console.error("[WeWorkRemotely] RSS parse error:", err);
+    return [];
   }
+}
 }

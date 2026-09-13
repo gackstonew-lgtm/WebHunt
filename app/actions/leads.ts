@@ -88,86 +88,92 @@ export async function fetchPipelineLeadsAction(userId?: string): Promise<{
         };
         return jobLead;
       } else {
-        const physLead: PhysicalLead = {
-          id: rec.id,
-          type: "physical",
-          businessName: rec.businessName,
-          phone: rec.phone,
-          phoneFormatted: rec.phoneFormatted,
-          phoneStatus: "verified",
-          address: rec.address,
-          city: rec.city,
-          state: rec.state,
-          country: rec.state || "Kenya",
-          postalCode: rec.postalCode,
-          latitude: rec.latitude,
-          longitude: rec.longitude,
-          category: rec.category,
-          rating: rec.rating,
-          reviewCount: rec.reviewCount,
-          hasWebsite: rec.hasWebsite,
-          noWebsiteConfidence: (rec.noWebsiteConfidence as WebsiteConfidence) || "High",
-          sourceProvider: rec.sourceProvider as any,
-          sourceUrl: rec.sourceUrl,
-          sourceType: rec.sourceType,
-          providerPlaceId: rec.providerPlaceId,
-          status: rec.status as PipelineStatus,
-          estimatedValue: rec.estimatedValue,
-          notes: rec.notes,
-          tags: rec.tags ? rec.tags.split(",") : [],
-          verificationStatus: rec.verificationStatus as VerificationStatus,
-          email: rec.email,
-          whatsapp: rec.whatsapp,
-          contactPageUrl: rec.contactPageUrl,
-          bookingUrl: rec.bookingUrl,
-          hasContactForm: rec.hasContactForm || false,
-          socialProfiles,
-          enrichment: parsedEnrichment,
-          createdAt: rec.createdAt,
-          updatedAt: rec.updatedAt,
-        };
-        return physLead;
-      }
-    });
+          const rawPhone = rec.phone || "";
+          const isUnlisted = rawPhone.startsWith("unlisted-");
+          const physLead: PhysicalLead = {
+            id: rec.id,
+            type: "physical",
+            businessName: rec.businessName,
+            phone: isUnlisted ? "" : rec.phone,
+            phoneFormatted: isUnlisted ? (rec.phoneFormatted || "Phone unavailable") : rec.phoneFormatted,
+            phoneStatus: isUnlisted ? "unavailable" : "verified",
+            address: rec.address,
+            city: rec.city,
+            state: rec.state,
+            country: rec.state || "Kenya",
+            postalCode: rec.postalCode,
+            latitude: rec.latitude,
+            longitude: rec.longitude,
+            category: rec.category,
+            rating: rec.rating,
+            reviewCount: rec.reviewCount,
+            hasWebsite: rec.hasWebsite,
+            noWebsiteConfidence: (rec.noWebsiteConfidence as WebsiteConfidence) || "High",
+            sourceProvider: rec.sourceProvider as any,
+            sourceUrl: rec.sourceUrl,
+            sourceType: rec.sourceType,
+            providerPlaceId: rec.providerPlaceId,
+            status: rec.status as PipelineStatus,
+            estimatedValue: rec.estimatedValue,
+            notes: rec.notes,
+            tags: rec.tags ? rec.tags.split(",") : [],
+            verificationStatus: rec.verificationStatus as VerificationStatus,
+            email: rec.email,
+            whatsapp: rec.whatsapp,
+            contactPageUrl: rec.contactPageUrl,
+            bookingUrl: rec.bookingUrl,
+            hasContactForm: rec.hasContactForm || false,
+            socialProfiles,
+            enrichment: parsedEnrichment,
+            createdAt: rec.createdAt,
+            updatedAt: rec.updatedAt,
+          };
+          return physLead;
+        }
+      });
 
-    return { success: true, data: leads };
-  } catch (error: any) {
-    console.error("[LeadsAction] Fetch pipeline leads failed:", error);
-    return { success: false, data: [], error: error.message || "Failed to fetch leads" };
+      return { success: true, data: leads };
+    } catch (error: any) {
+      console.error("[LeadsAction] Fetch pipeline leads failed:", error);
+      return { success: false, data: [], error: error.message || "Failed to fetch leads" };
+    }
   }
-}
 
-export async function saveLeadToPipelineAction(
-  lead: LeadItem,
-  userId?: string
-): Promise<{
-  success: boolean;
-  data?: Lead;
-  error?: string;
-}> {
-  try {
-    const session = await getCurrentSession();
-    const isAdmin = session?.role === "admin" || session?.role === "administrator";
-    const targetUserId = (isAdmin || !session) && userId ? userId : session?.userId;
+  export async function saveLeadToPipelineAction(
+    lead: LeadItem,
+    userId?: string
+  ): Promise<{
+    success: boolean;
+    data?: Lead;
+    error?: string;
+  }> {
+    try {
+      const session = await getCurrentSession();
+      const isAdmin = session?.role === "admin" || session?.role === "administrator";
+      const targetUserId = (isAdmin || !session) && userId ? userId : session?.userId;
 
-    if (!targetUserId) {
-      return { success: false, error: "Authentication required to save leads to pipeline." };
-    }
+      if (!targetUserId) {
+        return { success: false, error: "Authentication required to save leads to pipeline." };
+      }
 
-    const isPhysical = lead.type === "physical";
-    const pLead = isPhysical ? (lead as PhysicalLead) : null;
-    const jLead = !isPhysical ? (lead as OnlineJobLead) : null;
+      const isPhysical = lead.type === "physical";
+      const pLead = isPhysical ? (lead as PhysicalLead) : null;
+      const jLead = !isPhysical ? (lead as OnlineJobLead) : null;
 
-    const businessName = isPhysical
-      ? pLead!.businessName
-      : `${jLead!.title} @ ${jLead!.company}`;
-    const phone = isPhysical ? pLead!.phone : jLead!.url;
-    const phoneFormatted = isPhysical ? pLead!.phoneFormatted : jLead!.url;
-    const pipelineType = isPhysical ? "sales" : "job_application";
+      const businessName = isPhysical
+        ? pLead!.businessName
+        : `${jLead!.title} @ ${jLead!.company}`;
+      const phone = isPhysical 
+        ? (pLead!.phone || `unlisted-${pLead!.id || encodeURIComponent(businessName)}`) 
+        : (jLead!.url || `job-${jLead!.id}`);
+      const phoneFormatted = isPhysical 
+        ? (pLead!.phoneFormatted || "Phone unavailable") 
+        : (jLead!.url || "URL unlisted");
+      const pipelineType = isPhysical ? "sales" : "job_application";
 
-    if (!businessName || !phone) {
-      return { success: false, error: "Identifier and title are required." };
-    }
+      if (!businessName || !phone) {
+        return { success: false, error: "Identifier and title are required." };
+      }
 
     const saved = await prisma.lead.upsert({
       where: {

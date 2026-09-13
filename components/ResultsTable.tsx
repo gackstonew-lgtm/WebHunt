@@ -465,18 +465,44 @@ export default function ResultsTable({
 
                       {/* Website Status Flag */}
                       <td className="p-3.5 whitespace-nowrap">
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                          <span>No Website</span>
-                        </span>
+                        {lead.websiteStatus === "SOCIAL_ONLY" ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                            <Sparkles className="w-3 h-3 text-amber-300" />
+                            <span>Social Only</span>
+                          </span>
+                        ) : lead.websiteStatus === "BROKEN_WEBSITE" ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/20">
+                            <ShieldCheck className="w-3 h-3 text-rose-300" />
+                            <span>Broken Link</span>
+                          </span>
+                        ) : lead.websiteStatus === "WEBSITE_FOUND" ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                            <Globe className="w-3 h-3 text-blue-300" />
+                            <span>Website Found</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            <span>No Website</span>
+                          </span>
+                        )}
                       </td>
 
                       {/* Provider Source & Provenance */}
                       <td className="p-3.5 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
-                          <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#0D0E11] text-[#989BA3] border border-white/[0.08]">
-                            {lead.sourceProvider}
-                          </span>
+                          {lead.sources && lead.sources.length > 1 ? (
+                            <span 
+                              className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/25"
+                              title={`Merged from: ${lead.sources.join(", ")}`}
+                            >
+                              {lead.sources.length} Sources
+                            </span>
+                          ) : (
+                            <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#0D0E11] text-[#989BA3] border border-white/[0.08]">
+                              {lead.sourceProvider}
+                            </span>
+                          )}
                           {lead.sourceUrl && (
                             <a
                               href={lead.sourceUrl}

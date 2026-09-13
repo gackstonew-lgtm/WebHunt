@@ -394,6 +394,69 @@ export const SOURCE_REGISTRY: SourceDefinition[] = [
     websiteUrl: 'https://www.rev.com/freelancers',
     notes: 'Direct verified onboarding catalog link.',
   },
+
+  // =========================================================================
+  // 7. EXPANDED SEARCH & DIRECT ATS INTEGRATIONS
+  // =========================================================================
+  {
+    id: 'adzuna',
+    name: 'Adzuna Global Job Search API',
+    category: 'remote_jobs',
+    integrationMethod: 'REST_API',
+    status: (process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY) ? 'ACTIVE_API' : 'REQUIRES_API_KEY',
+    authRequirement: 'API_KEY',
+    geographicCoverage: 'WORLDWIDE',
+    supportedData: ['Job Title', 'Company Name', 'Salary Min/Max', 'Location', 'Redirect URL', 'Category'],
+    attributionRequirements: 'Powered by Adzuna Job Search API',
+    termsSummary: 'Requires ADZUNA_APP_ID and ADZUNA_APP_KEY in server environment. Gracefully skips when unconfigured.',
+    websiteUrl: 'https://developer.adzuna.com',
+    apiUrl: 'https://api.adzuna.com/v1/api/jobs',
+    notes: 'Global multi-country search index with verified salary estimates and location breakdown.',
+  },
+  {
+    id: 'jooble',
+    name: 'Jooble Search API',
+    category: 'remote_jobs',
+    integrationMethod: 'REST_API',
+    status: process.env.JOOBLE_API_KEY ? 'ACTIVE_API' : 'REQUIRES_API_KEY',
+    authRequirement: 'API_KEY',
+    geographicCoverage: 'WORLDWIDE',
+    supportedData: ['Job Title', 'Company', 'Salary', 'Location', 'Job Snippet', 'Apply Link'],
+    attributionRequirements: 'Jobs from Jooble',
+    termsSummary: 'Requires JOOBLE_API_KEY in server environment. Gracefully skips when unconfigured.',
+    websiteUrl: 'https://jooble.org/api/about',
+    apiUrl: 'https://jooble.org/api/',
+    notes: 'Aggregates millions of jobs globally with keywords, salary filters, and location tags.',
+  },
+  {
+    id: 'usajobs',
+    name: 'USAJobs Official Search API',
+    category: 'remote_jobs',
+    integrationMethod: 'REST_API',
+    status: (process.env.USAJOBS_API_KEY && process.env.USAJOBS_USER_AGENT) ? 'ACTIVE_API' : 'REQUIRES_API_KEY',
+    authRequirement: 'API_KEY',
+    geographicCoverage: 'US_NORTH_AMERICA',
+    supportedData: ['Job Title', 'Department', 'Pay Grade / Salary', 'Remote Status', 'Apply URI'],
+    attributionRequirements: 'Data provided by USAJOBS.gov',
+    termsSummary: 'Requires USAJOBS_API_KEY and USAJOBS_USER_AGENT headers. Public government API with verified salaries.',
+    websiteUrl: 'https://developer.usajobs.gov',
+    apiUrl: 'https://data.usajobs.gov/api/search',
+    notes: 'Verified remote and telework federal postings with strict salary disclosures.',
+  },
+  {
+    id: 'ats_provider',
+    name: 'Direct Employer ATS (Greenhouse, Lever, Ashby)',
+    category: 'tech_development',
+    integrationMethod: 'REST_API',
+    status: 'ACTIVE_API',
+    authRequirement: 'NONE_PUBLIC',
+    geographicCoverage: 'WORLDWIDE',
+    supportedData: ['Direct Job Postings', 'Department', 'Location Restrictions', 'Application URL', 'Company Metadata'],
+    attributionRequirements: 'Direct Employer Career Boards via ATS APIs',
+    termsSummary: 'Direct unauthenticated public job board endpoints from top tech employers (Canonical, Gitlab, Automattic, Spotify, Linear, OpenAI, Ramp).',
+    websiteUrl: 'https://greenhouse.io',
+    notes: 'Zero-intermediary verified listings queried directly from employer ATS job boards with 0 API keys required.',
+  },
 ];
 
 export function getSourcesByCategory(category: string): SourceDefinition[] {
@@ -411,3 +474,4 @@ export function getActiveProvidersSummary() {
     sources: SOURCE_REGISTRY,
   };
 }
+

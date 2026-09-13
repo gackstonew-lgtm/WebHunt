@@ -15,10 +15,23 @@ export class AfricaJobsProvider implements IOnlineJobProvider {
       const query = (params.query || "").trim();
       console.log(`[AfricaJobs] Querying African & Kenya-accessible remote jobs: "${query}"`);
 
-      // Query Remotive and Himalayas with Africa location / global filters
+      // Target real live feeds with query parameters rather than generic static dumps
+      const himalayasUrl = new URL("https://himalayas.app/jobs/api/search");
+      if (query && query !== "all" && query !== "africa") {
+        himalayasUrl.searchParams.set("q", query);
+      }
+      himalayasUrl.searchParams.set("worldwide", "true");
+      himalayasUrl.searchParams.set("sort", "recent");
+
+      const remotiveUrl = new URL("https://remotive.com/api/remote-jobs");
+      if (query && query !== "all" && query !== "africa") {
+        remotiveUrl.searchParams.set("search", query);
+      }
+      remotiveUrl.searchParams.set("limit", "40");
+
       const targetUrls = [
-        "https://remotive.com/api/remote-jobs?limit=40",
-        "https://himalayas.app/jobs/api?limit=40",
+        himalayasUrl.toString(),
+        remotiveUrl.toString(),
       ];
 
       const results: OnlineJobLead[] = [];
@@ -50,7 +63,8 @@ export class AfricaJobsProvider implements IOnlineJobProvider {
               locLower.includes("africa") ||
               locLower.includes("kenya") ||
               locLower.includes("emea") ||
-              locLower.includes("global");
+              locLower.includes("global") ||
+              locStr === "";
 
             if (!isAfricaFriendly) continue;
 

@@ -66,9 +66,18 @@ export default function JobCard({
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#18191D] text-[#989BA3] border border-white/[0.08]">
-              {job.source}
-            </span>
+            {job.sources && job.sources.length > 1 ? (
+              <span
+                className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/25"
+                title={`Discovered across: ${job.sources.join(", ")}`}
+              >
+                {job.sources.length} Sources
+              </span>
+            ) : (
+              <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[#18191D] text-[#989BA3] border border-white/[0.08]">
+                {job.source}
+              </span>
+            )}
             <span
               className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
                 eligibility.isEligibleKenya

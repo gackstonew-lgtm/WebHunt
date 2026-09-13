@@ -13,10 +13,19 @@ export class HimalayasJobProvider implements IOnlineJobProvider {
   async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
     try {
       const query = (params.query || "").trim();
-      const url = new URL("https://himalayas.app/jobs/api");
-      url.searchParams.set("limit", String(Math.min(params.maxResults || 25, 40)));
+      const url = new URL("https://himalayas.app/jobs/api/search");
+      if (query) {
+        url.searchParams.set("q", query);
+      }
+      if (params.country && params.country.toLowerCase() !== "worldwide" && params.country.toLowerCase() !== "global") {
+        url.searchParams.set("country", params.country);
+      } else {
+        url.searchParams.set("worldwide", "true");
+      }
+      url.searchParams.set("sort", "recent");
+      url.searchParams.set("page", "1");
 
-      console.log(`[Himalayas] Querying remote jobs: "${query}"`);
+      console.log(`[Himalayas] Querying targeted remote jobs API: "${url.toString()}"`);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6500);
@@ -30,13 +39,21 @@ export class HimalayasJobProvider implements IOnlineJobProvider {
       });
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        console.warn(`[Himalayas] HTTP ${response.status}: ${response.statusText}`);
-        return [];
+      let jobs: any[] = [];
+      if (response.ok) {
+        const data = await response.json();
+        jobs = data.jobs || [];
+      } else {
+        // Fallback to browse endpoint if search endpoint has issues
+        console.warn(`[Himalayas] Search endpoint returned ${response.status}. Trying browse fallback.`);
+        const fallbackRes = await fetch("https://himalayas.app/jobs/api?limit=20", {
+          headers: { "Accept": "application/json", "User-Agent": "WebHunt-Discovery/2.0" }
+        });
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          jobs = fallbackData.jobs || [];
+        }
       }
-
-      const data = await response.json();
-      const jobs = data.jobs || [];
 
       // Filter locally by keyword if provided
       const filtered = query
