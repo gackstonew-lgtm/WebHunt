@@ -1,8 +1,22 @@
+import { ProviderExecutionResult } from "./online/types";
+
+export type HealthStatus =
+  | "ACTIVE"
+  | "HEALTHY"
+  | "DEGRADED"
+  | "RATE_LIMITED"
+  | "AUTH_REQUIRED"
+  | "REQUIRES_CREDENTIALS"
+  | "UNAVAILABLE"
+  | "DOWN"
+  | "SCHEMA_ERROR"
+  | "DISABLED";
+
 export interface ProviderHealthMetric {
   providerKey: string;
   name: string;
   type: "physical" | "online";
-  status: "HEALTHY" | "DEGRADED" | "DOWN" | "REQUIRES_CREDENTIALS";
+  status: HealthStatus;
   totalRequests: number;
   successfulRequests: number;
   failedRequests: number;
@@ -13,6 +27,8 @@ export interface ProviderHealthMetric {
   lastFailure?: string;
   lastError?: string;
   totalResultsFound: number;
+  lastHttpStatus?: number | null;
+  retryAfterMs?: number | null;
 }
 
 class ProviderHealthMonitor {
@@ -24,7 +40,7 @@ class ProviderHealthMonitor {
         providerKey,
         name,
         type,
-        status: isConfigured ? "HEALTHY" : "REQUIRES_CREDENTIALS",
+        status: isConfigured ? "ACTIVE" : "AUTH_REQUIRED",
         totalRequests: 0,
         successfulRequests: 0,
         failedRequests: 0,
@@ -33,6 +49,47 @@ class ProviderHealthMonitor {
         lastLatencyMs: 0,
         totalResultsFound: 0,
       });
+    }
+  }
+
+  recordExecution(result: ProviderExecutionResult) {
+    const metric = this.metrics.get(result.providerKey);
+    if (!metric) return;
+
+    metric.totalRequests++;
+    metric.lastLatencyMs = Math.round(result.latencyMs);
+    metric.lastHttpStatus = result.httpStatus;
+    metric.retryAfterMs = result.retryAfterMs;
+
+    if (result.status === "success") {
+      metric.successfulRequests++;
+      metric.consecutiveFailures = 0;
+      metric.averageLatencyMs = Math.round(
+        (metric.averageLatencyMs * (metric.successfulRequests - 1) + result.latencyMs) / metric.successfulRequests
+      );
+      metric.lastSuccess = new Date().toISOString();
+      metric.totalResultsFound += result.finalCount;
+      metric.status = "ACTIVE";
+    } else if (result.status === "degraded") {
+      metric.status = "DEGRADED";
+      metric.totalResultsFound += result.finalCount;
+    } else if (result.status === "rate_limited") {
+      metric.failedRequests++;
+      metric.consecutiveFailures++;
+      metric.lastFailure = new Date().toISOString();
+      metric.lastError = result.errorMessage || "Rate limited (HTTP 429)";
+      metric.status = "RATE_LIMITED";
+    } else if (result.status === "auth_required") {
+      metric.status = "AUTH_REQUIRED";
+      metric.lastError = result.errorMessage || "Authentication required / API key missing";
+    } else if (result.status === "disabled") {
+      metric.status = "DISABLED";
+    } else {
+      metric.failedRequests++;
+      metric.consecutiveFailures++;
+      metric.lastFailure = new Date().toISOString();
+      metric.lastError = result.errorMessage || "Provider error";
+      metric.status = result.status === "schema_error" ? "SCHEMA_ERROR" : "UNAVAILABLE";
     }
   }
 
@@ -49,7 +106,7 @@ class ProviderHealthMonitor {
     );
     metric.lastSuccess = new Date().toISOString();
     metric.totalResultsFound += resultCount;
-    metric.status = "HEALTHY";
+    metric.status = "ACTIVE";
   }
 
   recordFailure(providerKey: string, latencyMs: number, error: Error | string) {
@@ -64,7 +121,7 @@ class ProviderHealthMonitor {
     metric.lastError = typeof error === "string" ? error : error.message;
 
     if (metric.consecutiveFailures >= 5) {
-      metric.status = "DOWN";
+      metric.status = "UNAVAILABLE";
     } else if (metric.consecutiveFailures >= 2) {
       metric.status = "DEGRADED";
     }
@@ -81,7 +138,7 @@ class ProviderHealthMonitor {
   isProviderHealthy(providerKey: string): boolean {
     const m = this.metrics.get(providerKey);
     if (!m) return true;
-    return m.status !== "DOWN";
+    return m.status !== "UNAVAILABLE" && m.status !== "DOWN";
   }
 }
 

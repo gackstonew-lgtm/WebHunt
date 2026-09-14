@@ -1,6 +1,7 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
+import { adaptQueryForProvider } from "@/lib/taxonomy/query-adapter";
 
 export class UsaJobsProvider implements IOnlineJobProvider {
   name = "USAJobs Official Public API";
@@ -15,17 +16,31 @@ export class UsaJobsProvider implements IOnlineJobProvider {
     );
   }
 
-  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
     const apiKey = process.env.USAJOBS_API_KEY;
     const userAgent = process.env.USAJOBS_USER_AGENT;
 
     if (!apiKey || !userAgent) {
-      console.warn("[USAJobs] USAJOBS_API_KEY or USAJOBS_USER_AGENT not found. Skipping USAJobs provider.");
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "auth_required",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: "USAJOBS_API_KEY or USAJOBS_USER_AGENT not configured",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
 
     try {
-      const query = (params.query || "").trim();
+      const adapted = adaptQueryForProvider(params);
+      const query = adapted.cleanQuery;
       const url = new URL("https://data.usajobs.gov/api/search");
       if (query) {
         url.searchParams.set("Keyword", query);
@@ -39,10 +54,10 @@ export class UsaJobsProvider implements IOnlineJobProvider {
 
       const response = await fetch(url.toString(), {
         headers: {
-          "Host": "data.usajobs.gov",
+          Host: "data.usajobs.gov",
           "User-Agent": userAgent,
           "Authorization-Key": apiKey,
-          "Accept": "application/json",
+          Accept: "application/json",
         },
         signal: controller.signal,
       });
@@ -50,13 +65,27 @@ export class UsaJobsProvider implements IOnlineJobProvider {
 
       if (!response.ok) {
         console.warn(`[USAJobs] HTTP error ${response.status}: ${response.statusText}`);
-        return [];
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: response.status === 429 ? "rate_limited" : "unavailable",
+          httpStatusCode: response.status,
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: 0,
+          finalCount: 0,
+          latencyMs: Date.now() - startTime,
+          errorMessage: `HTTP ${response.status} ${response.statusText}`,
+          fromCache: false,
+          staleCache: false,
+          jobs: [],
+        };
       }
 
       const data = await response.json();
       const items = data.SearchResult?.SearchResultItems || [];
 
-      return items.map((item: any): OnlineJobLead => {
+      const jobs: OnlineJobLead[] = items.map((item: any): OnlineJobLead => {
         const desc = item.MatchedObjectDescriptor || {};
         const rawSnippet = desc.QualificationSummary || desc.UserArea?.Details?.MajorDuties?.[0] || "";
         const cleanSnippet = rawSnippet.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
@@ -104,9 +133,42 @@ export class UsaJobsProvider implements IOnlineJobProvider {
           updatedAt: new Date(),
         };
       });
-    } catch (err) {
+
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "success",
+        httpStatusCode: 200,
+        fetchedCount: items.length,
+        normalizedCount: jobs.length,
+        filteredCount: jobs.length,
+        finalCount: jobs.length,
+        latencyMs: Date.now() - startTime,
+        fromCache: false,
+        staleCache: false,
+        jobs,
+      };
+    } catch (err: any) {
       console.error("[USAJobs] Search error:", err);
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "unavailable",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: err?.message || "USAJobs search failed",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
+  }
+
+  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+    const res = await this.execute(params);
+    return res.jobs;
   }
 }

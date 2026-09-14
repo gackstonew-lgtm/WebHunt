@@ -1,6 +1,7 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
+import { adaptQueryForProvider } from "@/lib/taxonomy/query-adapter";
 
 export class JoobleJobProvider implements IOnlineJobProvider {
   name = "Jooble Job Board API";
@@ -10,15 +11,29 @@ export class JoobleJobProvider implements IOnlineJobProvider {
     return Boolean(process.env.JOOBLE_API_KEY && process.env.JOOBLE_API_KEY.trim() !== "");
   }
 
-  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
     const apiKey = process.env.JOOBLE_API_KEY;
     if (!apiKey) {
-      console.warn("[Jooble] JOOBLE_API_KEY not found in environment. Skipping Jooble provider.");
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "auth_required",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: "JOOBLE_API_KEY not configured",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
 
     try {
-      const query = (params.query || "").trim();
+      const adapted = adaptQueryForProvider(params);
+      const query = adapted.cleanQuery;
       const location = params.country || "Remote";
 
       console.log(`[Jooble] Querying official API for "${query}" in "${location}"`);
@@ -31,7 +46,7 @@ export class JoobleJobProvider implements IOnlineJobProvider {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "WebHunt-Discovery/2.0",
         },
         body: JSON.stringify({
@@ -46,13 +61,27 @@ export class JoobleJobProvider implements IOnlineJobProvider {
 
       if (!response.ok) {
         console.warn(`[Jooble] HTTP error ${response.status}: ${response.statusText}`);
-        return [];
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: response.status === 429 ? "rate_limited" : "unavailable",
+          httpStatusCode: response.status,
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: 0,
+          finalCount: 0,
+          latencyMs: Date.now() - startTime,
+          errorMessage: `HTTP ${response.status} ${response.statusText}`,
+          fromCache: false,
+          staleCache: false,
+          jobs: [],
+        };
       }
 
       const data = await response.json();
       const jobs = data.jobs || [];
 
-      return jobs.slice(0, params.maxResults || 20).map((job: any): OnlineJobLead => {
+      const normalizedJobs: OnlineJobLead[] = jobs.slice(0, params.maxResults || 20).map((job: any): OnlineJobLead => {
         const rawSnippet = job.snippet || "";
         const cleanSnippet = rawSnippet.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
         const locClassification = classifyLocation(job.location || "Remote", true);
@@ -89,9 +118,42 @@ export class JoobleJobProvider implements IOnlineJobProvider {
           updatedAt: new Date(),
         };
       });
-    } catch (err) {
+
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "success",
+        httpStatusCode: 200,
+        fetchedCount: jobs.length,
+        normalizedCount: normalizedJobs.length,
+        filteredCount: normalizedJobs.length,
+        finalCount: normalizedJobs.length,
+        latencyMs: Date.now() - startTime,
+        fromCache: false,
+        staleCache: false,
+        jobs: normalizedJobs,
+      };
+    } catch (err: any) {
       console.error("[Jooble] Search error:", err);
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "unavailable",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: err?.message || "Jooble search failed",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
+  }
+
+  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+    const res = await this.execute(params);
+    return res.jobs;
   }
 }

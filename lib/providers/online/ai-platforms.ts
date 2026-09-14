@@ -1,8 +1,10 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
 import { classifyAiTask } from "@/lib/taxonomy/ai-classifier";
 import { checkApplicantEligibility } from "@/lib/eligibility/regional-filter";
+import { adaptQueryForProvider, leadMatchesSearchTokens } from "@/lib/taxonomy/query-adapter";
+import { durableCache } from "@/lib/cache/durable-cache";
 
 interface OfficialAtsSource {
   platform: "greenhouse" | "lever";
@@ -175,33 +177,104 @@ export class AiPlatformsProvider implements IOnlineJobProvider {
   }
 
   async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
-    const query = (params.query || "").trim().toLowerCase();
-    console.log(`[AiPlatformsProvider] Discovering verified AI opportunities for query: "${query}"`);
+    const res = await this.execute(params);
+    return res.jobs;
+  }
+
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
+    const adapted = adaptQueryForProvider("ai_platforms", params);
+    const maxResults = Math.min(params.maxResults || 30, 45);
+    const cacheKey = `online:ai_platforms:${adapted.cleanQuery}:${maxResults}`;
+
+    if (!params.forceRefresh) {
+      const cached = await durableCache.get<OnlineJobLead[]>(cacheKey);
+      if (cached && cached.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "success",
+          fetchedCount: cached.length,
+          normalizedCount: cached.length,
+          filteredCount: cached.length,
+          finalCount: cached.length,
+          latencyMs: Date.now() - startTime,
+          fromCache: true,
+          staleCache: false,
+          jobs: cached,
+        };
+      }
+    }
+
+    console.log(`[AiPlatformsProvider] Discovering verified AI opportunities for query: "${adapted.cleanQuery}"`);
 
     // Fetch from live public ATS endpoints concurrently with strict per-request timeouts
     const atsPromises = OFFICIAL_AI_ATS_SOURCES.map((src) =>
-      this.fetchFromAts(src, query, params.maxResults || 25)
+      this.fetchFromAts(src, adapted.tokens, adapted.rawQuery, maxResults)
     );
 
     const settled = await Promise.allSettled(atsPromises);
     const leads: OnlineJobLead[] = [];
+    let successfulEndpoints = 0;
 
     for (const res of settled) {
       if (res.status === "fulfilled" && Array.isArray(res.value)) {
         leads.push(...res.value);
+        successfulEndpoints++;
       }
     }
 
     // Include matching closed-portal discovery items where query is relevant
-    const portalItems = this.getMatchingClosedPortalItems(query);
+    const portalItems = this.getMatchingClosedPortalItems(adapted.tokens, adapted.rawQuery);
     leads.push(...portalItems);
 
-    return leads.slice(0, Math.max(params.maxResults || 30, 40));
+    const finalLeads = leads.slice(0, maxResults);
+
+    // Stale cache fallback if all endpoints failed and 0 results
+    if (finalLeads.length === 0 && successfulEndpoints === 0) {
+      const stale = await durableCache.getWithStale<OnlineJobLead[]>(cacheKey, 86400);
+      if (stale && stale.data.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "degraded",
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: stale.data.length,
+          finalCount: stale.data.length,
+          latencyMs: Date.now() - startTime,
+          errorMessage: "All AI platform endpoints timed out or failed, served stale cache",
+          fromCache: true,
+          staleCache: true,
+          jobs: stale.data,
+        };
+      }
+    }
+
+    if (finalLeads.length > 0) {
+      await durableCache.set(cacheKey, this.providerKey, adapted.cleanQuery, "Worldwide", finalLeads, 3600);
+    }
+
+    const latencyMs = Date.now() - startTime;
+    return {
+      providerKey: this.providerKey,
+      providerName: this.name,
+      status: finalLeads.length > 0 ? "success" : "success",
+      fetchedCount: leads.length,
+      normalizedCount: finalLeads.length,
+      filteredCount: finalLeads.length,
+      finalCount: finalLeads.length,
+      latencyMs,
+      fromCache: false,
+      staleCache: false,
+      jobs: finalLeads,
+    };
   }
 
   private async fetchFromAts(
     src: OfficialAtsSource,
-    query: string,
+    tokens: string[],
+    rawQuery: string,
     limit: number
   ): Promise<OnlineJobLead[]> {
     try {
@@ -240,20 +313,22 @@ export class AiPlatformsProvider implements IOnlineJobProvider {
           const locStr = j.location?.name || "Worldwide Remote";
           const rawContent = j.content || "";
 
-          // Check relevance if query is provided
-          if (query && query !== "all" && query !== "ai") {
-            const matches =
-              title.toLowerCase().includes(query) ||
-              rawContent.toLowerCase().includes(query) ||
-              src.companyName.toLowerCase().includes(query);
-            if (!matches) continue;
-          }
-
           const cleanSnippet = rawContent
             .replace(/<[^>]*>?/gm, " ")
             .replace(/\s+/g, " ")
             .trim()
             .slice(0, 260) + "...";
+
+          // Check relevance if query tokens are provided
+          if (tokens.length > 0) {
+            const matches = leadMatchesSearchTokens(
+              tokens,
+              title,
+              cleanSnippet,
+              [src.companyName, src.sourceKey, "ai"]
+            );
+            if (!matches) continue;
+          }
           const locClassification = classifyLocation(locStr, true);
 
           // Classify AI task category based on concrete evidence
@@ -340,19 +415,21 @@ export class AiPlatformsProvider implements IOnlineJobProvider {
           const locStr = p.categories?.location || "Remote";
           const rawDesc = p.descriptionPlain || p.description || "";
 
-          if (query && query !== "all" && query !== "ai") {
-            const matches =
-              title.toLowerCase().includes(query) ||
-              rawDesc.toLowerCase().includes(query) ||
-              src.companyName.toLowerCase().includes(query);
-            if (!matches) continue;
-          }
-
           const cleanSnippet = rawDesc
             .replace(/<[^>]*>?/gm, " ")
             .replace(/\s+/g, " ")
             .trim()
             .slice(0, 260) + "...";
+
+          if (tokens.length > 0) {
+            const matches = leadMatchesSearchTokens(
+              tokens,
+              title,
+              cleanSnippet,
+              [src.companyName, src.sourceKey, "ai"]
+            );
+            if (!matches) continue;
+          }
           const locClassification = classifyLocation(locStr, true);
 
           const aiClass = classifyAiTask({
@@ -437,14 +514,18 @@ export class AiPlatformsProvider implements IOnlineJobProvider {
     }
   }
 
-  private getMatchingClosedPortalItems(query: string): OnlineJobLead[] {
+  private getMatchingClosedPortalItems(tokens: string[], rawQuery: string): OnlineJobLead[] {
     const matches: OnlineJobLead[] = [];
-    const q = (query || "").toLowerCase();
 
     for (const item of CLOSED_PORTAL_CATALOG) {
-      if (q && q !== "all" && q !== "ai") {
-        const text = `${item.companyName} ${item.title} ${item.aiTaskCategory} ${item.descriptionSnippet} ${item.tags.join(" ")}`.toLowerCase();
-        if (!text.includes(q)) continue;
+      if (tokens.length > 0) {
+        const matchesQuery = leadMatchesSearchTokens(
+          tokens,
+          item.title,
+          item.descriptionSnippet,
+          [item.companyName, item.sourceKey, item.aiTaskCategory, ...item.tags]
+        );
+        if (!matchesQuery) continue;
       }
 
       const eligibility = checkApplicantEligibility({

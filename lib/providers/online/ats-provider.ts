@@ -1,6 +1,8 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
+import { adaptQueryForProvider, leadMatchesSearchTokens } from "@/lib/taxonomy/query-adapter";
+import { durableCache } from "@/lib/cache/durable-cache";
 
 interface AtsEmployerConfig {
   slug: string;
@@ -41,28 +43,98 @@ export class AtsJobProvider implements IOnlineJobProvider {
   }
 
   async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
-    const query = (params.query || "").trim().toLowerCase();
-    console.log(`[AtsProvider] Discovering direct employer vacancies for "${query}" across Greenhouse, Lever, Ashby`);
+    const res = await this.execute(params);
+    return res.jobs;
+  }
 
-    // Pick top relevant employers or query subset concurrently
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
+    const adapted = adaptQueryForProvider("ats", params);
+    const maxResults = Math.min(params.maxResults || 25, 40);
+    const cacheKey = `online:ats:${adapted.cleanQuery}:${maxResults}`;
+
+    // 1. Fresh Cache Check
+    if (!params.forceRefresh) {
+      const cached = await durableCache.get<OnlineJobLead[]>(cacheKey);
+      if (cached && cached.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "success",
+          fetchedCount: cached.length,
+          normalizedCount: cached.length,
+          filteredCount: cached.length,
+          finalCount: cached.length,
+          latencyMs: Date.now() - startTime,
+          fromCache: true,
+          staleCache: false,
+          jobs: cached,
+        };
+      }
+    }
+
+    console.log(`[AtsProvider] Discovering direct employer vacancies for "${adapted.cleanQuery}" across Greenhouse, Lever, Ashby`);
+
     const targetEmployers = REMOTE_ATS_EMPLOYERS.slice(0, 8);
-    const promises = targetEmployers.map(emp => this.fetchEmployerJobs(emp, query, params.maxResults || 25));
+    const promises = targetEmployers.map(emp => this.fetchEmployerJobs(emp, adapted.tokens, maxResults));
 
     const settled = await Promise.allSettled(promises);
     const allJobs: OnlineJobLead[] = [];
+    let successfulEndpoints = 0;
 
     for (const res of settled) {
       if (res.status === "fulfilled" && Array.isArray(res.value)) {
         allJobs.push(...res.value);
+        successfulEndpoints++;
       }
     }
 
-    return allJobs.slice(0, params.maxResults || 30);
+    const finalLeads = allJobs.slice(0, maxResults);
+
+    // Stale cache fallback if all endpoints failed
+    if (finalLeads.length === 0 && successfulEndpoints === 0) {
+      const stale = await durableCache.getWithStale<OnlineJobLead[]>(cacheKey, 86400);
+      if (stale && stale.data.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "degraded",
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: stale.data.length,
+          finalCount: stale.data.length,
+          latencyMs: Date.now() - startTime,
+          errorMessage: "All ATS endpoints timed out or failed, served stale cache",
+          fromCache: true,
+          staleCache: true,
+          jobs: stale.data,
+        };
+      }
+    }
+
+    if (finalLeads.length > 0) {
+      await durableCache.set(cacheKey, this.providerKey, adapted.cleanQuery, "Worldwide", finalLeads, 3600);
+    }
+
+    const latencyMs = Date.now() - startTime;
+    return {
+      providerKey: this.providerKey,
+      providerName: this.name,
+      status: finalLeads.length > 0 ? "success" : "success",
+      fetchedCount: allJobs.length,
+      normalizedCount: finalLeads.length,
+      filteredCount: finalLeads.length,
+      finalCount: finalLeads.length,
+      latencyMs,
+      fromCache: false,
+      staleCache: false,
+      jobs: finalLeads,
+    };
   }
 
   private async fetchEmployerJobs(
     emp: AtsEmployerConfig,
-    query: string,
+    tokens: string[],
     limit: number
   ): Promise<OnlineJobLead[]> {
     try {
@@ -80,7 +152,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
 
       const res = await fetch(url, {
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "WebHunt-Discovery/2.0 (DirectATS)",
         },
         signal: controller.signal,
@@ -88,6 +160,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
       clearTimeout(timeoutId);
 
       if (!res.ok) return [];
+
       const data = await res.json();
       const leads: OnlineJobLead[] = [];
 
@@ -98,13 +171,17 @@ export class AtsJobProvider implements IOnlineJobProvider {
           const title = j.title || "";
           const locStr = j.location?.name || "Worldwide Remote";
           const rawContent = j.content || "";
+          const cleanSnippet = rawContent.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
 
-          if (query) {
-            const matches = title.toLowerCase().includes(query) || rawContent.toLowerCase().includes(query);
+          // Token match filter
+          if (tokens.length > 0) {
+            const matches = leadMatchesSearchTokens(
+              { title, descriptionSnippet: cleanSnippet, tags: ["direct-ats", "greenhouse", emp.name.toLowerCase()], company: emp.name },
+              tokens
+            );
             if (!matches) continue;
           }
 
-          const cleanSnippet = rawContent.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
           const locClassification = classifyLocation(locStr, true);
 
           leads.push({
@@ -127,6 +204,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
             sourceId: String(j.id),
             sourceUrl: j.absolute_url,
             sourceType: "official_api",
+            opportunityType: "full_time",
             descriptionSnippet: cleanSnippet,
             status: "NEW",
             estimatedValue: 5000,
@@ -139,7 +217,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
             updatedAt: new Date(),
           });
 
-          if (leads.length >= 6) break;
+          if (leads.length >= limit) break;
         }
       }
 
@@ -149,14 +227,17 @@ export class AtsJobProvider implements IOnlineJobProvider {
         for (const j of rawJobs) {
           const title = j.text || "";
           const locStr = j.categories?.location || "Remote";
-          const rawDesc = j.description || j.descriptionPlain || "";
+          const desc = j.descriptionPlain || "";
+          const cleanSnippet = desc.slice(0, 260) + "...";
 
-          if (query) {
-            const matches = title.toLowerCase().includes(query) || rawDesc.toLowerCase().includes(query);
+          if (tokens.length > 0) {
+            const matches = leadMatchesSearchTokens(
+              { title, descriptionSnippet: cleanSnippet, tags: ["direct-ats", "lever", emp.name.toLowerCase()], company: emp.name },
+              tokens
+            );
             if (!matches) continue;
           }
 
-          const cleanSnippet = rawDesc.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
           const locClassification = classifyLocation(locStr, true);
 
           leads.push({
@@ -169,7 +250,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
             country: locClassification.country || "Worldwide",
             isRemote: true,
             remoteType: locClassification.remoteType,
-            category: j.categories?.team || "Direct Employer Vacancy",
+            category: j.categories?.team || "Direct Tech Opportunities",
             tags: ["direct-ats", "lever", emp.name.toLowerCase()],
             url: j.hostedUrl || `https://jobs.lever.co/${emp.slug}/${j.id}`,
             postedDate: j.createdAt ? new Date(j.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
@@ -179,10 +260,11 @@ export class AtsJobProvider implements IOnlineJobProvider {
             sourceId: String(j.id),
             sourceUrl: j.hostedUrl,
             sourceType: "official_api",
+            opportunityType: "full_time",
             descriptionSnippet: cleanSnippet,
             status: "NEW",
             estimatedValue: 5000,
-            notes: `Direct vacancy discovered via ${emp.name} Lever board.`,
+            notes: `Direct opportunity discovered via ${emp.name} Lever board.`,
             dataQualityScore: 0.98,
             verificationStatus: "VERIFIED",
             retrievedAt: new Date(),
@@ -191,7 +273,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
             updatedAt: new Date(),
           });
 
-          if (leads.length >= 6) break;
+          if (leads.length >= limit) break;
         }
       }
 
@@ -200,16 +282,19 @@ export class AtsJobProvider implements IOnlineJobProvider {
         const rawJobs = data.jobs || [];
         for (const j of rawJobs) {
           const title = j.title || "";
-          const locStr = j.location || (j.isRemote ? "Worldwide Remote" : "Remote");
-          const rawDesc = j.descriptionHtml || j.descriptionPlain || "";
+          const locStr = j.location || "Remote";
+          const desc = j.descriptionHtml || "";
+          const cleanSnippet = desc.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
 
-          if (query) {
-            const matches = title.toLowerCase().includes(query) || rawDesc.toLowerCase().includes(query);
+          if (tokens.length > 0) {
+            const matches = leadMatchesSearchTokens(
+              { title, descriptionSnippet: cleanSnippet, tags: ["direct-ats", "ashby", emp.name.toLowerCase()], company: emp.name },
+              tokens
+            );
             if (!matches) continue;
           }
 
-          const cleanSnippet = rawDesc.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
-          const locClassification = classifyLocation(locStr, Boolean(j.isRemote));
+          const locClassification = classifyLocation(locStr, true);
 
           leads.push({
             id: `ashby-${emp.slug}-${j.id}`,
@@ -221,7 +306,7 @@ export class AtsJobProvider implements IOnlineJobProvider {
             country: locClassification.country || "Worldwide",
             isRemote: true,
             remoteType: locClassification.remoteType,
-            category: j.department || "Direct Employer Vacancy",
+            category: j.department || "Engineering & Product",
             tags: ["direct-ats", "ashby", emp.name.toLowerCase()],
             url: j.jobUrl || `https://jobs.ashbyhq.com/${emp.slug}/${j.id}`,
             postedDate: j.publishedAt ? j.publishedAt.split("T")[0] : new Date().toISOString().split("T")[0],
@@ -231,10 +316,11 @@ export class AtsJobProvider implements IOnlineJobProvider {
             sourceId: String(j.id),
             sourceUrl: j.jobUrl,
             sourceType: "official_api",
+            opportunityType: "full_time",
             descriptionSnippet: cleanSnippet,
             status: "NEW",
-            estimatedValue: 5500,
-            notes: `Direct vacancy discovered via ${emp.name} Ashby board.`,
+            estimatedValue: 5000,
+            notes: `Direct role discovered via ${emp.name} Ashby board.`,
             dataQualityScore: 0.98,
             verificationStatus: "VERIFIED",
             retrievedAt: new Date(),
@@ -243,12 +329,12 @@ export class AtsJobProvider implements IOnlineJobProvider {
             updatedAt: new Date(),
           });
 
-          if (leads.length >= 6) break;
+          if (leads.length >= limit) break;
         }
       }
 
       return leads;
-    } catch {
+    } catch (err) {
       return [];
     }
   }

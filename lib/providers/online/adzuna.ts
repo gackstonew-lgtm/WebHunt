@@ -1,6 +1,7 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
+import { adaptQueryForProvider } from "@/lib/taxonomy/query-adapter";
 
 export class AdzunaJobProvider implements IOnlineJobProvider {
   name = "Adzuna Job Search API";
@@ -15,17 +16,31 @@ export class AdzunaJobProvider implements IOnlineJobProvider {
     );
   }
 
-  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
     const appId = process.env.ADZUNA_APP_ID;
     const appKey = process.env.ADZUNA_APP_KEY;
 
     if (!appId || !appKey) {
-      console.warn("[Adzuna] ADZUNA_APP_ID or ADZUNA_APP_KEY not configured. Skipping Adzuna provider.");
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "auth_required",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: "ADZUNA_APP_ID or ADZUNA_APP_KEY not configured",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
 
     try {
-      const query = (params.query || "").trim();
+      const adapted = adaptQueryForProvider(params);
+      const query = adapted.cleanQuery;
       const countryCode = (params.country || "gb").toLowerCase().slice(0, 2);
       const page = 1;
       
@@ -45,7 +60,7 @@ export class AdzunaJobProvider implements IOnlineJobProvider {
 
       const response = await fetch(url.toString(), {
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "WebHunt-Discovery/2.0",
         },
         signal: controller.signal,
@@ -54,13 +69,27 @@ export class AdzunaJobProvider implements IOnlineJobProvider {
 
       if (!response.ok) {
         console.warn(`[Adzuna] HTTP error ${response.status}: ${response.statusText}`);
-        return [];
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: response.status === 429 ? "rate_limited" : "unavailable",
+          httpStatusCode: response.status,
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: 0,
+          finalCount: 0,
+          latencyMs: Date.now() - startTime,
+          errorMessage: `HTTP ${response.status} ${response.statusText}`,
+          fromCache: false,
+          staleCache: false,
+          jobs: [],
+        };
       }
 
       const data = await response.json();
       const results = data.results || [];
 
-      return results.map((item: any): OnlineJobLead => {
+      const jobs: OnlineJobLead[] = results.map((item: any): OnlineJobLead => {
         const rawDesc = item.description || "";
         const cleanSnippet = rawDesc.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
         const locName = item.location?.display_name || "Remote / Hybrid";
@@ -107,9 +136,42 @@ export class AdzunaJobProvider implements IOnlineJobProvider {
           updatedAt: new Date(),
         };
       });
-    } catch (err) {
+
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "success",
+        httpStatusCode: 200,
+        fetchedCount: results.length,
+        normalizedCount: jobs.length,
+        filteredCount: jobs.length,
+        finalCount: jobs.length,
+        latencyMs: Date.now() - startTime,
+        fromCache: false,
+        staleCache: false,
+        jobs,
+      };
+    } catch (err: any) {
       console.error("[Adzuna] Search error:", err);
-      return [];
+      return {
+        providerKey: this.providerKey,
+        providerName: this.name,
+        status: "unavailable",
+        fetchedCount: 0,
+        normalizedCount: 0,
+        filteredCount: 0,
+        finalCount: 0,
+        latencyMs: Date.now() - startTime,
+        errorMessage: err?.message || "Adzuna request failed",
+        fromCache: false,
+        staleCache: false,
+        jobs: [],
+      };
     }
+  }
+
+  async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
+    const res = await this.execute(params);
+    return res.jobs;
   }
 }

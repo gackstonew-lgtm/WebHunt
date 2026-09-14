@@ -1,6 +1,8 @@
-import { IOnlineJobProvider } from "./types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./types";
 import { OnlineJobLead, OnlineSearchParams } from "@/lib/types";
 import { classifyLocation } from "@/lib/geo/classifier";
+import { adaptQueryForProvider, leadMatchesSearchTokens } from "@/lib/taxonomy/query-adapter";
+import { durableCache } from "@/lib/cache/durable-cache";
 
 export class JobicyJobProvider implements IOnlineJobProvider {
   name = "Jobicy Remote Jobs API (Free Worldwide)";
@@ -11,82 +13,155 @@ export class JobicyJobProvider implements IOnlineJobProvider {
   }
 
   async fetchJobs(params: OnlineSearchParams): Promise<OnlineJobLead[]> {
-    const query = (params.query || "").trim().toLowerCase();
-    const maxResults = Math.min(params.maxResults || 25, 50);
+    const result = await this.execute(params);
+    return result.jobs;
+  }
 
-    // Primary attempt: Official Jobicy API v2 (JSON)
+  async execute(params: OnlineSearchParams): Promise<ProviderExecutionResult> {
+    const startTime = Date.now();
+    const adapted = adaptQueryForProvider("jobicy", params);
+    const maxResults = Math.min(params.maxResults || 25, 50);
+    const cacheKey = `online:jobicy:${adapted.primaryTag}:${adapted.geo?.jobicyGeo || "all"}:${maxResults}`;
+
+    // 1. Check fresh cache
+    if (!params.forceRefresh) {
+      const cached = await durableCache.get<OnlineJobLead[]>(cacheKey);
+      if (cached && cached.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "success",
+          fetchedCount: cached.length,
+          normalizedCount: cached.length,
+          filteredCount: cached.length,
+          finalCount: cached.length,
+          latencyMs: Date.now() - startTime,
+          fromCache: true,
+          staleCache: false,
+          jobs: cached,
+        };
+      }
+    }
+
+    let httpStatus: number | null = null;
+    let errorMessage: string | null = null;
+    let rawJobs: any[] = [];
+    let usedRssFallback = false;
+
+    // 2. Primary Attempt: Official Jobicy API v2
     try {
       const url = new URL("https://jobicy.com/api/v2/remote-jobs");
       url.searchParams.set("count", String(maxResults));
-
-      if (query) {
-        url.searchParams.set("tag", query);
+      if (adapted.primaryTag) {
+        url.searchParams.set("tag", adapted.primaryTag);
       }
-
-      // Map country/geo where applicable
-      if (params.country) {
-        const c = params.country.toLowerCase();
-        if (c.includes("us") || c.includes("united states") || c.includes("america")) {
-          url.searchParams.set("geo", "usa");
-        } else if (c.includes("uk") || c.includes("united kingdom") || c.includes("england")) {
-          url.searchParams.set("geo", "uk");
-        } else if (c.includes("canada")) {
-          url.searchParams.set("geo", "canada");
-        } else if (c.includes("europe") || c.includes("eu")) {
-          url.searchParams.set("geo", "emea");
-        } else if (c.includes("asia") || c.includes("apac")) {
-          url.searchParams.set("geo", "apac");
-        } else if (c.includes("latam") || c.includes("latin")) {
-          url.searchParams.set("geo", "latam");
-        }
+      if (adapted.geo?.jobicyGeo) {
+        url.searchParams.set("geo", adapted.geo.jobicyGeo);
       }
-
-      console.log(`[Jobicy] Fetching remote jobs via API v2: "${url.toString()}"`);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const response = await fetch(url.toString(), {
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "WebHunt-Discovery/2.0 (JobDiscovery)",
         },
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
+      httpStatus = response.status;
+
       if (response.ok) {
         const data = await response.json();
-        const rawJobs: any[] = Array.isArray(data.jobs) ? data.jobs : [];
-
-        if (rawJobs.length > 0) {
-          return this.normalizeApiJobs(rawJobs, query, maxResults);
-        }
+        rawJobs = Array.isArray(data.jobs) ? data.jobs : [];
       } else {
-        console.warn(`[Jobicy] API returned HTTP ${response.status}: ${response.statusText}. Attempting RSS fallback.`);
+        errorMessage = `API v2 returned HTTP ${response.status}: ${response.statusText}`;
       }
-    } catch (apiErr) {
-      console.warn("[Jobicy] API v2 request failed, falling back to RSS feed:", apiErr);
+    } catch (err: any) {
+      errorMessage = err?.message || "Jobicy API v2 request failed";
     }
 
-    // Fallback attempt: Official Jobicy syndicated RSS feed
-    return this.fetchFromRss(query, maxResults);
+    // 3. Fallback Attempt: Syndicated RSS Feed
+    if (rawJobs.length === 0) {
+      try {
+        const rssJobs = await this.fetchFromRss(adapted.cleanQuery, maxResults);
+        if (rssJobs.length > 0) {
+          rawJobs = rssJobs;
+          usedRssFallback = true;
+        }
+      } catch (rssErr: any) {
+        if (!errorMessage) errorMessage = rssErr?.message || "Jobicy RSS fallback failed";
+      }
+    }
+
+    // 4. Normalization and Token-based filtering
+    let normalizedLeads: OnlineJobLead[] = [];
+    if (rawJobs.length > 0) {
+      if (usedRssFallback) {
+        normalizedLeads = rawJobs as OnlineJobLead[];
+      } else {
+        normalizedLeads = this.normalizeApiJobs(rawJobs, adapted.tokens, maxResults);
+      }
+    }
+
+    const fetchedCount = rawJobs.length;
+    const normalizedCount = normalizedLeads.length;
+
+    // 5. Stale-Cache Fallback if live attempts produced 0 results due to network failure/error
+    if (normalizedLeads.length === 0 && errorMessage) {
+      const stale = await durableCache.getWithStale<OnlineJobLead[]>(cacheKey, 86400);
+      if (stale && stale.data.length > 0) {
+        return {
+          providerKey: this.providerKey,
+          providerName: this.name,
+          status: "degraded",
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: stale.data.length,
+          finalCount: stale.data.length,
+          latencyMs: Date.now() - startTime,
+          httpStatus,
+          errorMessage: `Live query failed (${errorMessage}), served bounded stale cache`,
+          fromCache: true,
+          staleCache: true,
+          jobs: stale.data,
+        };
+      }
+    }
+
+    // 6. Cache successful live results
+    if (normalizedLeads.length > 0) {
+      await durableCache.set(cacheKey, this.providerKey, adapted.cleanQuery, adapted.geo?.countryName || "worldwide", normalizedLeads, 3600);
+    }
+
+    const latencyMs = Date.now() - startTime;
+    const status = normalizedLeads.length > 0
+      ? (usedRssFallback ? "degraded" : "success")
+      : (errorMessage ? "unavailable" : "success");
+
+    return {
+      providerKey: this.providerKey,
+      providerName: this.name,
+      status,
+      fetchedCount,
+      normalizedCount,
+      filteredCount: normalizedCount,
+      finalCount: normalizedCount,
+      latencyMs,
+      httpStatus,
+      errorMessage,
+      fromCache: false,
+      staleCache: false,
+      jobs: normalizedLeads,
+    };
   }
 
-  private normalizeApiJobs(rawJobs: any[], query: string, maxResults: number): OnlineJobLead[] {
-    const filtered = query
-      ? rawJobs.filter((j: any) => {
-          const q = query.toLowerCase();
-          const title = (j.jobTitle || "").toLowerCase();
-          const company = (j.companyName || "").toLowerCase();
-          const excerpt = (j.jobExcerpt || "").toLowerCase();
-          const industry = Array.isArray(j.jobIndustry) ? j.jobIndustry.join(" ").toLowerCase() : "";
-          const level = (j.jobLevel || "").toLowerCase();
-          return title.includes(q) || company.includes(q) || excerpt.includes(q) || industry.includes(q) || level.includes(q);
-        })
-      : rawJobs;
+  private normalizeApiJobs(rawJobs: any[], tokens: string[], maxResults: number): OnlineJobLead[] {
+    const leads: OnlineJobLead[] = [];
 
-    return filtered.slice(0, maxResults).map((job: any): OnlineJobLead => {
+    for (const job of rawJobs) {
       const rawExcerpt = job.jobExcerpt || job.jobDescription || "";
       const cleanSnippet = rawExcerpt
         .replace(/<[^>]*>?/gm, " ")
@@ -128,12 +203,20 @@ export class JobicyJobProvider implements IOnlineJobProvider {
       if (tags.length === 0) tags.push("remote", "tech");
 
       const applyUrl = job.url || `https://jobicy.com/jobs/${job.id}`;
+      const title = job.jobTitle || "Remote Role";
+      const company = job.companyName || "Remote Employer";
 
-      return {
+      // Token match filter
+      if (tokens.length > 0) {
+        const matches = leadMatchesSearchTokens({ title, descriptionSnippet: cleanSnippet, tags, company }, tokens);
+        if (!matches) continue;
+      }
+
+      leads.push({
         id: `jobicy-${job.id || Math.random().toString(36).substring(2, 9)}`,
         type: "online",
-        title: job.jobTitle || "Remote Role",
-        company: job.companyName || "Remote Employer",
+        title,
+        company,
         companyLogo: job.companyLogo || null,
         location: locClassification.displayLocation,
         country: locClassification.country || "Worldwide",
@@ -159,88 +242,76 @@ export class JobicyJobProvider implements IOnlineJobProvider {
         lastVerifiedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
-    });
+      });
+
+      if (leads.length >= maxResults) break;
+    }
+
+    return leads;
   }
 
   private async fetchFromRss(query: string, maxResults: number): Promise<OnlineJobLead[]> {
-    try {
-      console.log("[Jobicy] Querying syndicated RSS fallback feed...");
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6500);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-      const res = await fetch("https://jobicy.com/jobs/feed", {
-        headers: {
-          "Accept": "application/rss+xml, application/xml, text/xml",
-          "User-Agent": "WebHunt-Discovery/2.0 (JobDiscovery)",
-        },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+    const res = await fetch("https://jobicy.com/jobs/feed", {
+      headers: {
+        Accept: "application/rss+xml, application/xml, text/xml",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        console.warn(`[Jobicy RSS] HTTP ${res.status}: ${res.statusText}`);
-        return [];
-      }
-
-      const xml = await res.text();
-      const items = this.parseRssItems(xml);
-
-      const filtered = query
-        ? items.filter(
-            (i) =>
-              i.title.toLowerCase().includes(query) ||
-              i.company.toLowerCase().includes(query) ||
-              i.description.toLowerCase().includes(query)
-          )
-        : items;
-
-      return filtered.slice(0, maxResults).map((item, idx) => {
-        const cleanSnippet = item.description
-          .replace(/<[^>]*>?/gm, " ")
-          .replace(/&[a-z0-9#]+;/gi, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 260) + "...";
-
-        const locClassification = classifyLocation("Worldwide Remote", true);
-
-        return {
-          id: `jobicy-rss-${idx}-${Date.now()}`,
-          type: "online",
-          title: item.title,
-          company: item.company || "Remote Company",
-          companyLogo: null,
-          location: locClassification.displayLocation,
-          country: "Worldwide",
-          isRemote: true,
-          remoteType: "worldwide",
-          category: "Software & Technology",
-          tags: ["remote", "jobicy-feed"],
-          url: item.link,
-          postedDate: item.pubDate ? new Date(item.pubDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-          salary: "Competitive",
-          source: "jobicy",
-          sourceId: item.link,
-          sourceUrl: item.link,
-          sourceType: "job_board",
-          opportunityType: "full_time",
-          descriptionSnippet: cleanSnippet,
-          status: "NEW",
-          estimatedValue: 4000,
-          notes: null,
-          dataQualityScore: 0.90,
-          verificationStatus: "VERIFIED",
-          retrievedAt: new Date(),
-          lastVerifiedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-      });
-    } catch (rssErr) {
-      console.error("[Jobicy] RSS fallback failed:", rssErr);
-      return [];
+    if (!res.ok) {
+      throw new Error(`Jobicy RSS HTTP ${res.status}`);
     }
+
+    const xml = await res.text();
+    const items = this.parseRssItems(xml);
+
+    return items.slice(0, maxResults).map((item, idx) => {
+      const cleanSnippet = item.description
+        .replace(/<[^>]*>?/gm, " ")
+        .replace(/&[a-z0-9#]+;/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 260) + "...";
+
+      const locClassification = classifyLocation("Worldwide Remote", true);
+
+      return {
+        id: `jobicy-rss-${idx}-${Date.now()}`,
+        type: "online",
+        title: item.title,
+        company: item.company || "Remote Company",
+        companyLogo: null,
+        location: locClassification.displayLocation,
+        country: "Worldwide",
+        isRemote: true,
+        remoteType: "worldwide",
+        category: "Software & Technology",
+        tags: ["remote", "jobicy-feed"],
+        url: item.link,
+        postedDate: item.pubDate ? new Date(item.pubDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        salary: "Competitive",
+        source: "jobicy",
+        sourceId: item.link,
+        sourceUrl: item.link,
+        sourceType: "job_board",
+        opportunityType: "full_time",
+        descriptionSnippet: cleanSnippet,
+        status: "NEW",
+        estimatedValue: 4000,
+        notes: null,
+        dataQualityScore: 0.90,
+        verificationStatus: "VERIFIED",
+        retrievedAt: new Date(),
+        lastVerifiedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    });
   }
 
   private parseRssItems(xml: string): Array<{ title: string; link: string; description: string; pubDate: string; company: string }> {
@@ -260,7 +331,6 @@ export class JobicyJobProvider implements IOnlineJobProvider {
       const description = descMatch ? (descMatch[1] || descMatch[2] || "").trim() : "";
       const pubDate = pubDateMatch ? pubDateMatch[1].trim() : "";
 
-      // Parse "Title at Company" or "Company: Title" patterns
       let title = rawTitle;
       let company = "Remote Employer";
       if (rawTitle.includes(" at ")) {

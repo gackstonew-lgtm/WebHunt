@@ -304,6 +304,7 @@ export interface SearchDiagnostics {
   failedProviders?: number;
   executionTimeMs?: number;
   cached?: boolean;
+  providerExecutions?: any[];
 }
 
 export interface SearchResult {

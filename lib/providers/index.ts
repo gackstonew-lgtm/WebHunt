@@ -1,5 +1,5 @@
 import { IPhysicalLeadProvider } from "./types";
-import { IOnlineJobProvider } from "./online/types";
+import { IOnlineJobProvider, ProviderExecutionResult } from "./online/types";
 import { OsmOverpassProvider } from "./osm-overpass";
 import { GooglePlacesProvider } from "./google-places";
 import { YelpFusionProvider } from "./yelp-fusion";
@@ -388,20 +388,60 @@ export class LeadProviderAggregator {
 
     const sourcesQueried: string[] = [];
     const failedSources: string[] = [];
+    const providerExecutions: ProviderExecutionResult[] = [];
 
-    // Parallel fetch from all configured job providers
+    // Parallel fetch from all configured job providers with unified execution envelope
     const promises = targets.map(async (t) => {
       sourcesQueried.push(t.name);
       const reqStart = Date.now();
       try {
-        const res = await t.fetchJobs(params);
-        healthMonitor.recordSuccess(t.providerKey, Date.now() - reqStart, res.length);
-        return res;
-      } catch (err) {
+        let execResult: ProviderExecutionResult;
+        if (typeof t.execute === "function") {
+          execResult = await t.execute(params);
+        } else {
+          const jobs = await t.fetchJobs(params);
+          execResult = {
+            providerKey: t.providerKey,
+            providerName: t.name,
+            status: "success",
+            fetchedCount: jobs.length,
+            normalizedCount: jobs.length,
+            filteredCount: jobs.length,
+            finalCount: jobs.length,
+            latencyMs: Date.now() - reqStart,
+            fromCache: false,
+            staleCache: false,
+            jobs,
+          };
+        }
+        healthMonitor.recordExecution(execResult);
+        providerExecutions.push(execResult);
+
+        if (execResult.status === "unavailable" || execResult.status === "schema_error") {
+          failedSources.push(t.name);
+        }
+
+        return execResult.jobs;
+      } catch (err: any) {
         const latency = Date.now() - reqStart;
         console.warn(`[OnlineJobProvider] ${t.name} failed (${latency}ms):`, err);
-        healthMonitor.recordFailure(t.providerKey, latency, err as Error);
+        const failResult: ProviderExecutionResult = {
+          providerKey: t.providerKey,
+          providerName: t.name,
+          status: "unavailable",
+          fetchedCount: 0,
+          normalizedCount: 0,
+          filteredCount: 0,
+          finalCount: 0,
+          latencyMs: latency,
+          errorMessage: err?.message || String(err),
+          fromCache: false,
+          staleCache: false,
+          jobs: [],
+        };
+        healthMonitor.recordExecution(failResult);
         failedSources.push(t.name);
+        providerExecutions.push(failResult);
         return [] as OnlineJobLead[];
       }
     });
@@ -414,6 +454,19 @@ export class LeadProviderAggregator {
         rawJobs.push(...res.value);
       }
     }
+
+    // Output structured Development Matrix Diagnostic Log
+    console.log(`\n================== [ONLINE RADAR PROVIDER DIAGNOSTICS] ==================`);
+    console.log(`Query: "${params.query || "all"}" | Total Providers: ${targets.length} | Raw Leads: ${rawJobs.length}`);
+    console.log(`ProviderKey    | Status        | Fetched | Normalized | Final | Latency | Cache`);
+    console.log(`---------------|---------------|---------|------------|-------|---------|------`);
+    for (const exec of providerExecutions) {
+      const cacheTag = exec.staleCache ? "STALE" : exec.fromCache ? "HIT" : "LIVE";
+      console.log(
+        `${exec.providerKey.padEnd(14)} | ${exec.status.toUpperCase().padEnd(13)} | ${String(exec.fetchedCount).padStart(7)} | ${String(exec.normalizedCount).padStart(10)} | ${String(exec.finalCount).padStart(5)} | ${String(exec.latencyMs).padStart(5)}ms | ${cacheTag}`
+      );
+    }
+    console.log(`=========================================================================\n`);
 
     // Deduplicate jobs by company + title similarity & canonical URL with multi-source attribution
     const deduplicated = deduplicateOnlineJobs(rawJobs);
@@ -445,8 +498,22 @@ export class LeadProviderAggregator {
       totalProvidersQueried: sourcesQueried.length,
       successfulProviders: sourcesQueried.length - failedSources.length,
       failedProviders: failedSources.length,
+      sourcesQueried,
+      sourcesFailed: failedSources,
+      sourcesSucceeded: sourcesQueried.filter((s) => !failedSources.includes(s)),
       executionTimeMs,
       cached: false,
+      providerExecutions: providerExecutions.map((e) => ({
+        providerKey: e.providerKey,
+        providerName: e.providerName,
+        status: e.status,
+        fetchedCount: e.fetchedCount,
+        finalCount: e.finalCount,
+        latencyMs: e.latencyMs,
+        fromCache: e.fromCache,
+        staleCache: e.staleCache,
+        errorMessage: e.errorMessage,
+      })),
     };
 
     const searchResult: SearchResult = {

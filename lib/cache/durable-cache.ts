@@ -10,6 +10,18 @@ class DurableCache {
   private maxMemoryEntries = 500;
 
   /**
+   * Generates a deterministic cache key from a provider key and query params.
+   */
+  generateKey(providerKey: string, params: Record<string, any>): string {
+    const parts = Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${k}:${v}`)
+      .sort()
+      .join("|");
+    return `${providerKey}:${parts}`;
+  }
+
+  /**
    * Retrieves an entry from Tier 1 (in-memory) or Tier 2 (Prisma ApiCache).
    */
   async get<T>(cacheKey: string): Promise<T | null> {
@@ -48,6 +60,58 @@ class DurableCache {
     } catch (dbErr) {
       // Gracefully handle DB unavailability (e.g. during build or network blips)
       console.warn(`[DurableCache] DB read failed for ${cacheKey}, continuing:`, (dbErr as Error).message);
+    }
+
+    return null;
+  }
+
+  /**
+   * Retrieves an entry supporting bounded stale-cache fallback.
+   * If live provider calls fail, allows serving cached data up to maxStaleSeconds (default: 24 hours).
+   */
+  async getWithStale<T>(
+    cacheKey: string,
+    maxStaleSeconds = 86400
+  ): Promise<{ data: T; isStale: boolean } | null> {
+    const now = Date.now();
+
+    // 1. Tier 1: Check In-Memory Cache
+    const mem = this.memoryCache.get(cacheKey);
+    if (mem) {
+      if (mem.expiresAt > now) {
+        return { data: mem.data as T, isStale: false };
+      }
+      if (mem.expiresAt + maxStaleSeconds * 1000 > now) {
+        return { data: mem.data as T, isStale: true };
+      }
+    }
+
+    // 2. Tier 2: Check Database ApiCache
+    try {
+      const record = await prisma.apiCache.findUnique({
+        where: { cacheKey },
+      });
+
+      if (record) {
+        try {
+          const parsed = JSON.parse(record.payload) as T;
+          const isFresh = record.expiresAt.getTime() > now;
+          const isWithinStaleWindow = record.expiresAt.getTime() + maxStaleSeconds * 1000 > now;
+
+          if (isFresh) {
+            this.setMemory(cacheKey, parsed, Math.floor((record.expiresAt.getTime() - now) / 1000));
+            return { data: parsed, isStale: false };
+          }
+
+          if (isWithinStaleWindow) {
+            return { data: parsed, isStale: true };
+          }
+        } catch (parseErr) {
+          console.warn(`[DurableCache] Failed to parse stale payload for ${cacheKey}:`, parseErr);
+        }
+      }
+    } catch (dbErr) {
+      console.warn(`[DurableCache] DB read stale failed for ${cacheKey}:`, (dbErr as Error).message);
     }
 
     return null;
