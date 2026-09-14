@@ -33,6 +33,9 @@ export type OnlineProviderType =
   | 'ashby' 
   | 'ats' 
   | 'ai_platforms'
+  | 'jobicy'
+  | 'themuse'
+  | 'workingnomads'
   | 'all';
 
 export type WebsiteConfidence = 'High' | 'Medium' | 'Verified';
@@ -202,6 +205,17 @@ export interface OnlineJobLead {
   relevanceScore?: number | null;
   dataQualityScore?: number | null;
   verificationStatus?: VerificationStatus;
+  opportunityType?: 
+    | 'full_time' 
+    | 'part_time' 
+    | 'contract' 
+    | 'freelance' 
+    | 'internship' 
+    | 'hackathon' 
+    | 'bounty' 
+    | 'ai_task' 
+    | 'other' 
+    | null;
 
   // AI Opportunity Model Fields (Section 20)
   aiTaskType?: string | null;

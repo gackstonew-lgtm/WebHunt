@@ -110,6 +110,9 @@ export class HimalayasJobProvider implements IOnlineJobProvider {
           sourceId: String(job.id || job.slug),
           sourceUrl: applyUrl,
           sourceType: "job_board",
+          opportunityType: tags.some((t: string) => t.toLowerCase().includes("contract")) ? "contract" :
+                           tags.some((t: string) => t.toLowerCase().includes("freelance")) ? "freelance" :
+                           tags.some((t: string) => t.toLowerCase().includes("intern")) ? "internship" : "full_time",
           descriptionSnippet: cleanSnippet,
           status: "NEW",
           estimatedValue: 4500,

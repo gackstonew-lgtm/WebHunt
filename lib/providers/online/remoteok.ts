@@ -32,6 +32,11 @@ export class RemoteOkJobProvider implements IOnlineJobProvider {
       });
       clearTimeout(timeoutId);
 
+      if (response.status === 429) {
+        console.warn("[RemoteOK] Rate limited (HTTP 429). Using cache or fallback gracefully.");
+        return [];
+      }
+
       if (!response.ok) {
         console.warn(`[RemoteOK] HTTP ${response.status}: ${response.statusText}`);
         return [];
@@ -80,6 +85,9 @@ export class RemoteOkJobProvider implements IOnlineJobProvider {
           sourceId: String(job.id),
           sourceUrl: applyUrl,
           sourceType: "job_board",
+          opportunityType: tags.some((t: string) => t.toLowerCase().includes("contract")) ? "contract" :
+                           tags.some((t: string) => t.toLowerCase().includes("freelance")) ? "freelance" :
+                           tags.some((t: string) => t.toLowerCase().includes("intern")) ? "internship" : "full_time",
           descriptionSnippet: cleanSnippet,
           status: "NEW",
           estimatedValue: 4000,

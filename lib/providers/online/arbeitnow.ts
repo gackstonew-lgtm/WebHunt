@@ -64,6 +64,10 @@ export class ArbeitnowJobProvider implements IOnlineJobProvider {
           sourceId: item.slug || item.id,
           sourceUrl: item.url,
           sourceType: "job_board",
+          opportunityType: Array.isArray(item.job_types) && item.job_types.includes("part_time") ? "part_time" :
+                           (Array.isArray(item.tags) && item.tags.some((t: string) => t.toLowerCase().includes("contract"))) ? "contract" :
+                           (Array.isArray(item.tags) && item.tags.some((t: string) => t.toLowerCase().includes("freelance"))) ? "freelance" :
+                           (Array.isArray(item.tags) && item.tags.some((t: string) => t.toLowerCase().includes("intern"))) ? "internship" : "full_time",
           descriptionSnippet: cleanSnippet,
           status: "NEW",
           estimatedValue: 4000,

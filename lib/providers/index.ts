@@ -17,6 +17,8 @@ import { JoobleJobProvider } from "./online/jooble";
 import { UsaJobsProvider } from "./online/usajobs";
 import { AtsJobProvider } from "./online/ats-provider";
 import { AiPlatformsProvider } from "./online/ai-platforms";
+import { JobicyJobProvider } from "./online/jobicy";
+import { TheMuseJobProvider } from "./online/themuse";
 
 import { 
   LeadItem, 
@@ -66,6 +68,8 @@ export class LeadProviderAggregator {
     const usajobs = new UsaJobsProvider();
     const ats = new AtsJobProvider();
     const aiPlatforms = new AiPlatformsProvider();
+    const jobicy = new JobicyJobProvider();
+    const themuse = new TheMuseJobProvider();
 
     this.registerOnline(remotive);
     this.registerOnline(arbeitnow);
@@ -79,6 +83,8 @@ export class LeadProviderAggregator {
     this.registerOnline(usajobs);
     this.registerOnline(ats);
     this.registerOnline(aiPlatforms);
+    this.registerOnline(jobicy);
+    this.registerOnline(themuse);
   }
 
   registerPhysical(provider: IPhysicalLeadProvider) {
@@ -183,6 +189,18 @@ export class LeadProviderAggregator {
       {
         key: "jobspresso",
         name: "Jobspresso Remote Feed (Free)",
+        configured: true,
+        isFree: true,
+      },
+      {
+        key: "jobicy",
+        name: "Jobicy Remote Jobs API (Free Worldwide)",
+        configured: true,
+        isFree: true,
+      },
+      {
+        key: "themuse",
+        name: "The Muse Jobs API (Curated Opportunities)",
         configured: true,
         isFree: true,
       },

@@ -52,6 +52,7 @@ export class RemotiveJobProvider implements IOnlineJobProvider {
         const rawDesc = job.description || "";
         const cleanSnippet = rawDesc.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim().slice(0, 260) + "...";
         const locClassification = classifyLocation(job.candidate_required_location, true);
+        const tags = Array.isArray(job.tags) ? job.tags.slice(0, 6) : ["remote", "tech"];
 
         return {
           id: `remotive-${job.id}`,
@@ -64,7 +65,7 @@ export class RemotiveJobProvider implements IOnlineJobProvider {
           isRemote: true,
           remoteType: locClassification.remoteType,
           category: job.category || "Software Development",
-          tags: Array.isArray(job.tags) ? job.tags.slice(0, 6) : ["remote", "tech"],
+          tags,
           url: job.url,
           postedDate: job.publication_date ? job.publication_date.split("T")[0] : new Date().toISOString().split("T")[0],
           salary: job.salary || "Competitive",
@@ -72,6 +73,9 @@ export class RemotiveJobProvider implements IOnlineJobProvider {
           sourceId: String(job.id),
           sourceUrl: job.url,
           sourceType: "job_board",
+          opportunityType: (job.job_type === "contract" || tags.some((t: string) => t.toLowerCase().includes("contract"))) ? "contract" :
+                           (job.job_type === "freelance" || tags.some((t: string) => t.toLowerCase().includes("freelance"))) ? "freelance" :
+                           (job.job_type === "internship" || tags.some((t: string) => t.toLowerCase().includes("intern"))) ? "internship" : "full_time",
           descriptionSnippet: cleanSnippet,
           status: "NEW",
           estimatedValue: 3500,
