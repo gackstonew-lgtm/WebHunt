@@ -57,6 +57,51 @@ const SKILL_EXPANSION_TAXONOMY: Record<string, Array<{ term: string; weight: num
     { term: "Figma", weight: 0.85 },
     { term: "Design System", weight: 0.75 },
   ],
+  ai: [
+    { term: "AI Training", weight: 1.0 },
+    { term: "Generative AI Evaluation", weight: 0.90 },
+    { term: "Human Feedback", weight: 0.85 },
+    { term: "Data Annotation", weight: 0.80 },
+    { term: "Prompt Engineering", weight: 0.75 },
+    { term: "Machine Learning", weight: 0.70 },
+  ],
+  annotation: [
+    { term: "Data Annotation", weight: 1.0 },
+    { term: "Computer Vision", weight: 0.90 },
+    { term: "Image Labeling", weight: 0.85 },
+    { term: "Data Collection", weight: 0.80 },
+    { term: "LiDAR Annotation", weight: 0.75 },
+  ],
+  labeling: [
+    { term: "Data Annotation", weight: 1.0 },
+    { term: "Image Labeling", weight: 0.90 },
+    { term: "Computer Vision", weight: 0.85 },
+    { term: "Data Collection", weight: 0.80 },
+  ],
+  rlhf: [
+    { term: "RLHF", weight: 1.0 },
+    { term: "AI Training", weight: 0.95 },
+    { term: "Human Feedback for AI", weight: 0.90 },
+    { term: "Model Quality Evaluation", weight: 0.85 },
+  ],
+  rater: [
+    { term: "Search Evaluation", weight: 1.0 },
+    { term: "Search Quality Rater", weight: 0.95 },
+    { term: "Search Relevance Rating", weight: 0.90 },
+    { term: "Internet Assessor", weight: 0.80 },
+  ],
+  speech: [
+    { term: "Language and Speech Tasks", weight: 1.0 },
+    { term: "Data Collection", weight: 0.90 },
+    { term: "Voice Recording", weight: 0.85 },
+    { term: "Transcription", weight: 0.80 },
+  ],
+  coding: [
+    { term: "AI Coding Tasks", weight: 1.0 },
+    { term: "Code Evaluation", weight: 0.90 },
+    { term: "Programming Benchmarks", weight: 0.85 },
+    { term: "Expert AI Training", weight: 0.80 },
+  ],
 };
 
 /**

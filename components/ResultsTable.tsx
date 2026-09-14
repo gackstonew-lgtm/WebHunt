@@ -67,7 +67,12 @@ export default function ResultsTable({
         return (l.rating || 0) >= minRating;
       }
       if (l.type === "online" && tagFilter !== "ALL") {
-        return l.tags?.some((t) => t.toLowerCase().includes(tagFilter.toLowerCase()));
+        const filter = tagFilter.toLowerCase();
+        const hasTag = l.tags?.some((t) => t.toLowerCase().includes(filter));
+        const hasAiCat = (l.aiTaskCategory || "").toLowerCase().includes(filter);
+        const hasCat = (l.category || "").toLowerCase().includes(filter);
+        const hasTitle = (l.title || "").toLowerCase().includes(filter);
+        return hasTag || hasAiCat || hasCat || hasTitle;
       }
       return true;
     })
@@ -171,6 +176,26 @@ export default function ResultsTable({
                 <option value="0" className="bg-[#111214]">All Ratings</option>
                 <option value="4.0" className="bg-[#111214]">4.0+ Stars</option>
                 <option value="4.5" className="bg-[#111214]">4.5+ Stars</option>
+              </select>
+            </div>
+          )}
+
+          {/* Online Category / AI Filter */}
+          {searchResult.mode === "online" && (
+            <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
+              <Filter className="w-3.5 h-3.5 text-[#989BA3]" />
+              <select
+                value={tagFilter}
+                onChange={(e) => setTagFilter(e.target.value)}
+                className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
+              >
+                <option value="ALL" className="bg-[#111214]">All Categories</option>
+                <option value="ai" className="bg-[#111214]">AI Opportunities</option>
+                <option value="training" className="bg-[#111214]">AI Training &amp; RLHF</option>
+                <option value="annotation" className="bg-[#111214]">Data Annotation</option>
+                <option value="search" className="bg-[#111214]">Search Evaluation</option>
+                <option value="coding" className="bg-[#111214]">AI Coding Tasks</option>
+                <option value="speech" className="bg-[#111214]">Language &amp; Speech</option>
               </select>
             </div>
           )}

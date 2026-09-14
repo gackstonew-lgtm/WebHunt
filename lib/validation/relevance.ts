@@ -234,8 +234,25 @@ export function scoreOnlineJobRelevance(
   // 5. Source Quality & Verification Tier (0 - 10 points)
   let sourcePoints = 6;
   const src = (job.source || "").toLowerCase();
-  if (src === "greenhouse" || src === "lever" || src === "ashby" || src === "ats") {
-    sourcePoints = 10; // Direct Employer ATS
+  if (
+    src === "greenhouse" || 
+    src === "lever" || 
+    src === "ashby" || 
+    src === "ats" ||
+    src === "ai_platforms" ||
+    src === "outlier_ai" ||
+    src === "crowdgen_appen" ||
+    src === "welocalize" ||
+    src === "rws_trainai" ||
+    src === "toloka_ai" ||
+    src === "alignerr" ||
+    src === "remotasks" ||
+    src === "clickworker" ||
+    src === "telus_digital_ai" ||
+    src === "oneforma" ||
+    src === "dataannotation_tech"
+  ) {
+    sourcePoints = 10; // Direct Employer ATS & Verified AI Work Platforms
   } else if (src === "himalayas" || src === "weworkremotely" || src === "remotive" || src === "arbeitnow") {
     sourcePoints = 8; // Verified Direct Remote Boards
   } else {

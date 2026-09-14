@@ -16,6 +16,7 @@ import { AdzunaJobProvider } from "./online/adzuna";
 import { JoobleJobProvider } from "./online/jooble";
 import { UsaJobsProvider } from "./online/usajobs";
 import { AtsJobProvider } from "./online/ats-provider";
+import { AiPlatformsProvider } from "./online/ai-platforms";
 
 import { 
   LeadItem, 
@@ -64,6 +65,7 @@ export class LeadProviderAggregator {
     const jooble = new JoobleJobProvider();
     const usajobs = new UsaJobsProvider();
     const ats = new AtsJobProvider();
+    const aiPlatforms = new AiPlatformsProvider();
 
     this.registerOnline(remotive);
     this.registerOnline(arbeitnow);
@@ -76,6 +78,7 @@ export class LeadProviderAggregator {
     this.registerOnline(jooble);
     this.registerOnline(usajobs);
     this.registerOnline(ats);
+    this.registerOnline(aiPlatforms);
   }
 
   registerPhysical(provider: IPhysicalLeadProvider) {
@@ -129,6 +132,12 @@ export class LeadProviderAggregator {
 
   getOnlineProvidersStatus() {
     return [
+      {
+        key: "ai_platforms",
+        name: "AI Training & Annotation Platforms (11 Verified Sources)",
+        configured: true,
+        isFree: true,
+      },
       {
         key: "ats",
         name: "Direct Employer ATS (Greenhouse/Lever/Ashby)",

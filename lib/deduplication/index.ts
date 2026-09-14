@@ -46,10 +46,12 @@ export function deduplicateOnlineJobs(jobs: OnlineJobLead[]): OnlineJobLead[] {
   for (const job of jobs) {
     const normCompany = normalizeBusinessName(job.company || '');
     const normTitle = (job.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const signature = `${normCompany}::${normTitle}`;
+    const normLoc = (job.location || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normCategory = (job.aiTaskCategory || job.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const signature = `${normCompany}::${normTitle}::${normLoc}::${normCategory}`;
     const canonicalUrl = (job.url || '').split('?')[0].toLowerCase().trim();
 
-    // Check if we've seen this exact URL or company+title signature
+    // Check if we've seen this exact canonical URL or company+title+location signature
     const existingSig = canonicalUrl ? urlMap.get(canonicalUrl) : undefined;
     const targetSig = existingSig || (jobMap.has(signature) ? signature : undefined);
 

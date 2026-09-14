@@ -32,6 +32,7 @@ export type OnlineProviderType =
   | 'lever' 
   | 'ashby' 
   | 'ats' 
+  | 'ai_platforms'
   | 'all';
 
 export type WebsiteConfidence = 'High' | 'Medium' | 'Verified';
@@ -201,6 +202,35 @@ export interface OnlineJobLead {
   relevanceScore?: number | null;
   dataQualityScore?: number | null;
   verificationStatus?: VerificationStatus;
+
+  // AI Opportunity Model Fields (Section 20)
+  aiTaskType?: string | null;
+  aiTaskCategory?: string | null;
+  requiredSkills?: string[] | null;
+  requiredLanguages?: string[] | null;
+  requiredExpertise?: string[] | null;
+  qualificationRequired?: boolean | null;
+  assessmentRequired?: boolean | null;
+  trainingProvided?: boolean | null;
+  experienceLevel?: string | null;
+  taskCompensationType?: 
+    | 'per_task' 
+    | 'per_hour' 
+    | 'per_project' 
+    | 'per_annotation' 
+    | 'per_assessment' 
+    | 'per_word' 
+    | 'per_audio_minute' 
+    | 'per_completed_evaluation' 
+    | 'not_specified' 
+    | null;
+  taskCompensationAmount?: number | string | null;
+  taskCompensationCurrency?: string | null;
+  estimatedTaskDuration?: string | null;
+  countryEligibility?: string | null;
+  projectAvailability?: string | null;
+  contractorStatus?: string | null;
+  sourceVerificationStatus?: string | null;
 
   // Enriched Contact Channels
   email?: string | null;
