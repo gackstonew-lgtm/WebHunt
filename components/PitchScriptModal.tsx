@@ -14,7 +14,9 @@ import {
   Save, 
   ExternalLink,
   Coins,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { PhysicalLead } from "@/lib/types";
 import { generateTruthfulPhysicalPitch } from "@/lib/proposals/truthful-generator";
@@ -22,6 +24,8 @@ import { getUserProfileAction, UserProfileData } from "@/app/actions/profile";
 import { generateWhatsAppChatLink, createQuickWhatsAppLeadMessage } from "@/lib/outreach/whatsapp";
 import { generateMailtoLink } from "@/lib/outreach/gmail";
 import { saveProposalDraftAction, checkDuplicateOutreachAction, recordOutreachMessageAction } from "@/app/actions/outreach";
+import { AIAssistPanel } from "@/components/ai/AIAssistPanel";
+import { GeneratedAIProposal } from "@/lib/ai/types";
 
 interface PitchScriptModalProps {
   lead: PhysicalLead;
@@ -36,6 +40,8 @@ export default function PitchScriptModal({ lead, onClose }: PitchScriptModalProp
   const [copied, setCopied] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  // AI panel toggle — opt-in only, does not affect existing template workflow
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -281,6 +287,34 @@ ${body}`;
               </p>
             </div>
           </div>
+        </div>
+
+        {/* ✦ AI Enhance — Additive section, completely opt-in */}
+        <div className="px-6 pb-0">
+          <button
+            onClick={() => setShowAIPanel(!showAIPanel)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#0D0E11] hover:bg-[#18191D] border border-white/[0.06] text-xs text-[#989BA3] hover:text-[#EEEEEE] transition"
+          >
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="font-semibold">AI Enhance</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#18191D] border border-white/[0.06]">Optional</span>
+            </div>
+            {showAIPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+
+          {showAIPanel && lead.id && (
+            <div className="mt-2">
+              <AIAssistPanel
+                leadId={lead.id}
+                currentProposalText={`SUBJECT: ${subject}\n\n${body}`}
+                onProposalGenerated={(aiProposal: GeneratedAIProposal) => {
+                  setSubject(aiProposal.subject);
+                  setBody(`${aiProposal.greeting}\n\n${aiProposal.body}\n\n${aiProposal.callToAction}`);
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer */}

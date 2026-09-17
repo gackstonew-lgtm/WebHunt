@@ -144,8 +144,12 @@ export class HimalayasJobProvider implements IOnlineJobProvider {
         if (!matches) continue;
       }
 
+      const fallbackGuid = job.guid || job.applicationLink || `${company}-${title}`;
+      const slugCandidate = job.slug || (typeof fallbackGuid === "string" ? fallbackGuid.split("/").filter(Boolean).pop() : null) || Math.random().toString(36).substring(2, 9);
+      const cleanJobId = String(job.id || slugCandidate).replace(/[^a-zA-Z0-9_-]/g, "_");
+
       leads.push({
-        id: `himalayas-${job.id || job.slug}`,
+        id: `himalayas-${cleanJobId}`,
         type: "online",
         title,
         company,

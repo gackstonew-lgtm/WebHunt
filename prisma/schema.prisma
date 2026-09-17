@@ -200,26 +200,55 @@ model Lead {
 }
 
 model ProposalDraft {
-  id            String   @id @default(uuid())
-  leadId        String?
-  userId        String?
-  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  lead          Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  title         String
-  templateType  String   // "technical_pitch" | "comprehensive_cover" | "local_website_pitch" | "agency_modernization"
-  subject       String
-  greeting      String
-  body          String   @db.Text
-  callToAction  String   @db.Text
-  fullText      String   @db.Text
-  variablesJson String?  @db.Text
-  version       Int      @default(1)
-  status        String   @default("DRAFT") // "DRAFT" | "READY" | "SENT" | "ARCHIVED"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                      String   @id @default(uuid())
+  leadId                  String?
+  userId                  String?
+  user                    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lead                    Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  title                   String
+  templateType            String   // "technical_pitch" | "comprehensive_cover" | "local_website_pitch" | "agency_modernization"
+  subject                 String
+  greeting                String
+  body                    String   @db.Text
+  callToAction            String   @db.Text
+  fullText                String   @db.Text
+  variablesJson           String?  @db.Text
+  version                 Int      @default(1)
+  status                  String   @default("DRAFT") // "DRAFT" | "READY" | "SENT" | "ARCHIVED"
+  // AI-generated proposal fields (additive — all optional for backward compatibility)
+  aiGenerated             Boolean  @default(false)
+  aiModel                 String?
+  aiProvider              String?
+  aiReviewJson            String?  @db.Text // Serialized ReviewResult
+  opportunityAnalysisJson String?  @db.Text // Serialized OpportunityAnalysis
+  proposalStrategyJson    String?  @db.Text // Serialized ProposalStrategy
+  aiLifecycleStatus       String?  // "ANALYZED" | "AI_DRAFT" | "AI_REVIEW" | "USER_REVIEW" | "APPROVED" | "READY_TO_SUBMIT" | "SUBMITTED" | "FOLLOW_UP"
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   @@index([leadId])
   @@index([userId])
+  @@index([aiGenerated])
+}
+
+model AIExecution {
+  id               String   @id @default(uuid())
+  userId           String
+  leadId           String?
+  agent            String   // "opportunity_analyst" | "research_agent" | "proposal_strategist" | "proposal_writer" | "proposal_reviewer" | "application_assistant" | "follow_up_agent" | "lead_prioritizer"
+  model            String
+  provider         String?
+  status           String   @default("success") // "success" | "error" | "rate_limited" | "fallback_used"
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  estimatedCostUsd Float    @default(0)
+  latencyMs        Int      @default(0)
+  errorMessage     String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([agent])
 }
 
 model Application {
