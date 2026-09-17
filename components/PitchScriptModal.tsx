@@ -22,6 +22,7 @@ import { getUserProfileAction, UserProfileData } from "@/app/actions/profile";
 import { fetchProposalDraftsAction, generatePhysicalPitchAction } from "@/app/actions/outreach";
 import { generateWhatsAppChatLink, createQuickWhatsAppLeadMessage } from "@/lib/outreach/whatsapp";
 import { generateMailtoLink } from "@/lib/outreach/gmail";
+import { saveLeadToPipelineAction } from "@/app/actions/leads";
 import { saveProposalDraftAction, checkDuplicateOutreachAction, recordOutreachMessageAction } from "@/app/actions/outreach";
 
 interface PitchScriptModalProps {
@@ -38,10 +39,17 @@ export default function PitchScriptModal({ lead, onClose }: PitchScriptModalProp
   const [draftSaved, setDraftSaved] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [activeLeadId, setActiveLeadId] = useState<string>(lead.id);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function load() {
+      const saveRes = await saveLeadToPipelineAction(lead);
+      let realId = lead.id;
+      if (saveRes.success && saveRes.data) {
+        realId = saveRes.data.id;
+        setActiveLeadId(realId);
+      }
       const res = await getUserProfileAction();
       if (res.success && res.data) {
         setProfile(res.data);
@@ -66,9 +74,22 @@ export default function PitchScriptModal({ lead, onClose }: PitchScriptModalProp
     setTemplateType(type);
   };
 
+
+  const resolveLeadId = async () => {
+    if (activeLeadId !== lead.id) return activeLeadId;
+    const { saveLeadToPipelineAction } = await import("@/app/actions/leads");
+    const saveRes = await saveLeadToPipelineAction(lead);
+    if (saveRes.success && saveRes.data) {
+      setActiveLeadId(saveRes.data.id);
+      return saveRes.data.id;
+    }
+    return activeLeadId;
+  };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
-    const res = await generatePhysicalPitchAction(lead.id, templateType);
+    const resolvedId = await resolveLeadId();
+    const res = await generatePhysicalPitchAction(resolvedId, templateType);
     if (res.success && res.data) {
       setSubject(res.data.subject);
       setBody(`${res.data.greeting}\n\n${res.data.body}\n\n${res.data.callToAction}`);
@@ -94,6 +115,7 @@ ${body}`;
   };
 
   const handleOpenWhatsApp = async () => {
+    const resolvedId = await resolveLeadId();
     const senderName = profile?.fullName || "Your Name";
     const message = createQuickWhatsAppLeadMessage({
       businessName: lead.businessName,
@@ -107,7 +129,7 @@ ${body}`;
 
     if (waLink.isValid) {
       await recordOutreachMessageAction({
-        leadId: lead.id,
+        leadId: resolvedId,
         channel: "whatsapp",
         recipient: targetPhone,
         messageBody: message,
@@ -120,9 +142,10 @@ ${body}`;
   };
 
   const handleSendEmail = async () => {
+    const resolvedId = await resolveLeadId();
     if (!lead.email) return;
     await recordOutreachMessageAction({
-      leadId: lead.id,
+      leadId: resolvedId,
       channel: "email",
       recipient: lead.email,
       subject,
@@ -135,9 +158,10 @@ ${body}`;
 
   const handleSaveDraft = async () => {
     if (!profile) return;
+    const resolvedId = await resolveLeadId();
     const res = await saveProposalDraftAction({
       draftId: draftId || undefined,
-      leadId: lead.id,
+      leadId: resolvedId,
       title: `Website Pitch - ${lead.businessName}`,
       templateType,
       subject,

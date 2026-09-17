@@ -20,6 +20,7 @@ import { OnlineJobLead } from "@/lib/types";
 import { generateTruthfulJobProposal, ProposalTemplateType } from "@/lib/proposals/truthful-generator";
 import { getUserProfileAction, UserProfileData } from "@/app/actions/profile";
 import { fetchProposalDraftsAction, generateProposalAction } from "@/app/actions/outreach";
+import { saveLeadToPipelineAction } from "@/app/actions/leads";
 import { saveProposalDraftAction, checkDuplicateOutreachAction, recordOutreachMessageAction } from "@/app/actions/outreach";
 import { generateMailtoLink } from "@/lib/outreach/gmail";
 
@@ -40,17 +41,24 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [activeLeadId, setActiveLeadId] = useState<string>(job.id);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function load() {
+      const saveRes = await saveLeadToPipelineAction(job);
+      let realId = job.id;
+      if (saveRes.success && saveRes.data) {
+        realId = saveRes.data.id;
+        setActiveLeadId(realId);
+      }
       const res = await getUserProfileAction();
       if (res.success && res.data) {
         setProfile(res.data);
       }
 
       // Load draft if it exists
-      const draftsRes = await fetchProposalDraftsAction(job.id);
+      const draftsRes = await fetchProposalDraftsAction(realId);
       if (draftsRes.success && draftsRes.data && draftsRes.data.length > 0) {
         // Find a draft matching this templateType, or just take the first one
         const draft = draftsRes.data.find(d => d.templateType === templateType) || draftsRes.data[0];
@@ -75,9 +83,22 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
     setTemplateType(type);
   };
 
+
+  const resolveLeadId = async () => {
+    if (activeLeadId !== job.id) return activeLeadId;
+    const { saveLeadToPipelineAction } = await import("@/app/actions/leads");
+    const saveRes = await saveLeadToPipelineAction(job);
+    if (saveRes.success && saveRes.data) {
+      setActiveLeadId(saveRes.data.id);
+      return saveRes.data.id;
+    }
+    return activeLeadId;
+  };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
-    const res = await generateProposalAction(job.id, templateType);
+    const resolvedId = await resolveLeadId();
+    const res = await generateProposalAction(resolvedId, templateType);
     if (res.success && res.data) {
       setSubject(res.data.subject);
       setBody(`${res.data.greeting}\n\n${res.data.body}\n\n${res.data.callToAction}`);
@@ -97,9 +118,10 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
   const handleSaveDraft = async () => {
     if (!profile) return;
     setIsSavingDraft(true);
+    const resolvedId = await resolveLeadId();
     const res = await saveProposalDraftAction({
       draftId: draftId || undefined,
-      leadId: job.id,
+      leadId: resolvedId,
       title: `${job.title} @ ${job.company}`,
       templateType,
       subject,
@@ -118,11 +140,12 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
   };
 
   const handleSendEmail = async () => {
+    const resolvedId = await resolveLeadId();
     const targetEmail = job.email || "hiring@" + (job.company.toLowerCase().replace(/\s+/g, "") + ".com");
     
     // Log outreach message
     await recordOutreachMessageAction({
-      leadId: job.id,
+      leadId: resolvedId,
       channel: "email",
       recipient: targetEmail,
       subject,
