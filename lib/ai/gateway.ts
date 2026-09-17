@@ -1,75 +1,136 @@
 /**
  * WebHunt AI Gateway — Multi-Provider Gateway
- * 
  * SERVER-SIDE ONLY. Never import this from client components.
  */
 
-import OpenAI from "openai";
-import Anthropic from "@anthropic-ai/sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIExecutionMetadata } from "./types";
+import { AIProvider, AIModel, AIRequest, AIResponse, AIRoutingStrategy, AIGatewayError } from "./core/types";
+import { ModelRegistry } from "./core/registry";
+import { HealthTracker } from "./core/health";
+import { Router } from "./core/router";
+import { OpenAIProvider } from "./providers/openai";
+import { AnthropicProvider } from "./providers/anthropic";
+import { GeminiProvider } from "./providers/gemini";
+import { OpenRouterProvider } from "./providers/openrouter";
+export { AIGatewayError } from "./core/types";
 
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
+class AIGateway {
+  public registry = new ModelRegistry();
+  public health = new HealthTracker();
+  public router = new Router(this.registry, this.health);
+  private providers: Map<string, AIProvider> = new Map();
 
-export function getGatewayConfig() {
-  const isLiteLLM = !!process.env.LITELLM_BASE_URL;
-  
-  const openaiKey = process.env.OPENAI_API_KEY;
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const openrouterKey = process.env.OPENROUTER_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const litellmKey = process.env.LITELLM_API_KEY;
+  constructor() {
+    [
+      new OpenAIProvider(),
+      new AnthropicProvider(),
+      new GeminiProvider(),
+      new OpenRouterProvider()
+    ].forEach(p => {
+      if (p.isConfigured()) {
+        this.providers.set(p.id, p);
+      }
+    });
+  }
 
-  return {
-    isConfigured: !!(openaiKey || anthropicKey || openrouterKey || geminiKey || isLiteLLM),
-    openaiKey,
-    anthropicKey,
-    openrouterKey,
-    geminiKey,
-    litellmKey,
-    litellmBaseUrl: process.env.LITELLM_BASE_URL,
-    defaultModel: process.env.AI_DEFAULT_MODEL || "gpt-4o",
-    fastModel: process.env.AI_FAST_MODEL || "gpt-4o-mini",
-    reasoningModel: process.env.AI_REASONING_MODEL || "gpt-4o",
-    maxTokens: parseInt(process.env.AI_MAX_TOKENS || "4096", 10),
-  };
-}
+  isAIConfigured(): boolean {
+    return this.providers.size > 0;
+  }
 
-export type ModelTier = "fast" | "default" | "reasoning";
+  private calculateCost(model: AIModel, inputTokens: number, outputTokens: number): number {
+    return (inputTokens / 1_000_000) * model.inputCostPer1M + (outputTokens / 1_000_000) * model.outputCostPer1M;
+  }
 
-export function selectModel(tier: ModelTier): string {
-  const config = getGatewayConfig();
-  switch (tier) {
-    case "fast":
-      return config.fastModel;
-    case "reasoning":
-      return config.reasoningModel;
-    default:
-      return config.defaultModel;
+  async generate(request: AIRequest, strategy: AIRoutingStrategy = "AUTO"): Promise<AIResponse> {
+    if (!this.isAIConfigured()) throw new AIGatewayError("AI gateway is not configured.", "NOT_CONFIGURED" as any);
+
+    const candidateModels = this.router.selectModels(request, strategy);
+    if (candidateModels.length === 0) {
+      throw new AIGatewayError("No eligible models found.", "MODEL_NOT_FOUND");
+    }
+
+    let lastError: any = null;
+    let fallbackUsed = false;
+
+    for (let i = 0; i < Math.min(candidateModels.length, 3); i++) {
+      const model = candidateModels[i];
+      const provider = this.providers.get(model.providerId);
+      
+      if (!provider) continue;
+      if (i > 0) fallbackUsed = true;
+
+      try {
+        const response = await provider.generate(request, model);
+        this.health.recordSuccess(model.providerId, model.id);
+        
+        response.usage.estimatedCostUsd = this.calculateCost(model, response.usage.inputTokens, response.usage.outputTokens);
+        response.fallbackUsed = fallbackUsed;
+        
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        const isPermanent = err instanceof AIGatewayError && (err.category === "MODEL_NOT_FOUND" || err.category === "AUTHENTICATION_ERROR");
+        this.health.recordFailure(model.providerId, model.id, isPermanent);
+        
+        if (err instanceof AIGatewayError && err.category === "AUTHENTICATION_ERROR") continue;
+      }
+    }
+
+    throw lastError || new Error(`All configured AI providers failed.`);
+  }
+
+  async stream(request: AIRequest, onChunk: (chunk: string) => void, strategy: AIRoutingStrategy = "AUTO"): Promise<Omit<AIResponse, "content">> {
+    if (!this.isAIConfigured()) throw new AIGatewayError("AI gateway is not configured.", "NOT_CONFIGURED" as any);
+
+    const candidateModels = this.router.selectModels(request, strategy);
+    if (candidateModels.length === 0) {
+      throw new AIGatewayError("No eligible models found.", "MODEL_NOT_FOUND");
+    }
+
+    let lastError: any = null;
+    let fallbackUsed = false;
+
+    for (let i = 0; i < Math.min(candidateModels.length, 3); i++) {
+      const model = candidateModels[i];
+      const provider = this.providers.get(model.providerId);
+      
+      if (!provider) continue;
+      if (i > 0) fallbackUsed = true;
+
+      try {
+        const response = await provider.stream(request, model, onChunk);
+        this.health.recordSuccess(model.providerId, model.id);
+        
+        response.usage.estimatedCostUsd = this.calculateCost(model, response.usage.inputTokens, response.usage.outputTokens);
+        response.fallbackUsed = fallbackUsed;
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        const isPermanent = err instanceof AIGatewayError && (err.category === "MODEL_NOT_FOUND" || err.category === "AUTHENTICATION_ERROR");
+        this.health.recordFailure(model.providerId, model.id, isPermanent);
+      }
+    }
+
+    throw lastError || new Error(`Streaming failed across all eligible providers.`);
   }
 }
 
-function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing: Record<string, { input: number; output: number }> = {
-    "gpt-4o": { input: 5.0, output: 15.0 },
-    "gpt-4o-mini": { input: 0.15, output: 0.6 },
-    "claude-3-5-sonnet-20241022": { input: 3.0, output: 15.0 },
-    "claude-3-haiku-20240307": { input: 0.25, output: 1.25 },
-    "gemini-1.5-pro": { input: 3.5, output: 10.5 },
-    "gemini-1.5-flash": { input: 0.075, output: 0.3 },
-  };
+export const gateway = new AIGateway();
 
-  const rates = pricing[model] || { input: 5.0, output: 15.0 };
-  return (inputTokens / 1_000_000) * rates.input + (outputTokens / 1_000_000) * rates.output;
+// Backward compatibility layers
+export function isAIConfigured() {
+  return gateway.isAIConfigured();
+}
+
+export function selectModel(tier: "fast" | "default" | "reasoning") {
+  // Mock function, routing is dynamically chosen
+  return tier === "fast" ? "gpt-4o-mini" : "gpt-4o";
 }
 
 export interface CompletionOptions {
   system: string;
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   model?: string;
-  tier?: ModelTier;
+  tier?: "fast" | "default" | "reasoning";
   maxTokens?: number;
   jsonMode?: boolean;
   temperature?: number;
@@ -88,195 +149,43 @@ export interface CompletionResult {
   fallbackUsed: boolean;
 }
 
-export type AIGatewayErrorCode =
-  | "NOT_CONFIGURED"
-  | "PROVIDER_ERROR"
-  | "RATE_LIMITED"
-  | "CONTEXT_TOO_LONG"
-  | "INVALID_RESPONSE"
-  | "TIMEOUT";
-
-export class AIGatewayError extends Error {
-  readonly code: AIGatewayErrorCode;
-  readonly cause?: Error;
-
-  constructor(message: string, code: AIGatewayErrorCode, cause?: Error) {
-    super(message);
-    this.name = "AIGatewayError";
-    this.code = code;
-    this.cause = cause;
-  }
-
-  isRetryable(): boolean {
-    return this.code === "PROVIDER_ERROR" || this.code === "TIMEOUT";
-  }
-}
-
-// Internal provider logic
-
-async function runOpenAI(options: CompletionOptions, config: any): Promise<any> {
-  const client = new OpenAI({ apiKey: config.openaiKey, maxRetries: 1, timeout: 60000 });
-  const model = options.tier === "fast" ? "gpt-4o-mini" : "gpt-4o";
-  const start = Date.now();
-  const res = await client.chat.completions.create({
-    model,
-    messages: [{ role: "system", content: options.system }, ...options.messages],
-    max_tokens: options.maxTokens || config.maxTokens,
-    temperature: options.temperature ?? 0.3,
-    response_format: options.jsonMode ? { type: "json_object" } : undefined,
-  });
-  const iT = res.usage?.prompt_tokens || 0;
-  const oT = res.usage?.completion_tokens || 0;
-  return {
-    content: res.choices[0]?.message?.content || "",
-    usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-    model, latencyMs: Date.now() - start
-  };
-}
-
-async function runAnthropic(options: CompletionOptions, config: any): Promise<any> {
-  const client = new Anthropic({ apiKey: config.anthropicKey, maxRetries: 1, timeout: 60000 });
-  const model = options.tier === "fast" ? "claude-3-haiku-20240307" : "claude-3-5-sonnet-20241022";
-  const start = Date.now();
-  
-  let sys = options.system;
-  if (options.jsonMode) {
-    sys += "\n\nCRITICAL: Respond ONLY with valid JSON. Do not include markdown code blocks or explanatory text.";
-  }
-
-  const res = await client.messages.create({
-    model,
-    system: sys,
-    messages: options.messages.map(m => ({ role: m.role, content: m.content })) as any,
-    max_tokens: options.maxTokens || config.maxTokens,
-    temperature: options.temperature ?? 0.3,
-  });
-  const iT = res.usage?.input_tokens || 0;
-  const oT = res.usage?.output_tokens || 0;
-  const contentBlock = res.content.find((c: any) => c.type === "text") as any;
-  let content = contentBlock?.text || "";
-  
-  if (options.jsonMode) {
-    if (content.startsWith("```json")) content = content.replace(/^```json\n/, "").replace(/\n```$/, "");
-  }
-
-  return {
-    content,
-    usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-    model, latencyMs: Date.now() - start
-  };
-}
-
-async function runOpenRouter(options: CompletionOptions, config: any): Promise<any> {
-  const client = new OpenAI({ baseURL: "https://openrouter.ai/api/v1", apiKey: config.openrouterKey, maxRetries: 1, timeout: 60000 });
-  const model = options.tier === "fast" ? "anthropic/claude-3-haiku" : "openai/gpt-4o";
-  const start = Date.now();
-  const res = await client.chat.completions.create({
-    model,
-    messages: [{ role: "system", content: options.system }, ...options.messages],
-    max_tokens: options.maxTokens || config.maxTokens,
-    temperature: options.temperature ?? 0.3,
-    response_format: options.jsonMode ? { type: "json_object" } : undefined,
-  });
-  const iT = res.usage?.prompt_tokens || 0;
-  const oT = res.usage?.completion_tokens || 0;
-  return {
-    content: res.choices[0]?.message?.content || "",
-    usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-    model, latencyMs: Date.now() - start
-  };
-}
-
-async function runGemini(options: CompletionOptions, config: any): Promise<any> {
-  const client = new GoogleGenerativeAI(config.geminiKey);
-  const modelName = options.tier === "fast" ? "gemini-1.5-flash" : "gemini-1.5-pro";
-  const model = client.getGenerativeModel({
-    model: modelName,
-    systemInstruction: options.system,
-    generationConfig: {
-      temperature: options.temperature ?? 0.3,
-      maxOutputTokens: options.maxTokens || config.maxTokens,
-      responseMimeType: options.jsonMode ? "application/json" : "text/plain",
-    }
-  });
-  const start = Date.now();
-  const history = options.messages.slice(0, -1).map(m => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }]
-  }));
-  const chat = model.startChat({ history });
-  const lastUserMsg = options.messages[options.messages.length - 1];
-  const res = await chat.sendMessage(lastUserMsg ? lastUserMsg.content : "");
-  const iT = res.response.usageMetadata?.promptTokenCount || 0;
-  const oT = res.response.usageMetadata?.candidatesTokenCount || 0;
-  return {
-    content: res.response.text(),
-    usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-    model: modelName, latencyMs: Date.now() - start
-  };
-}
-
-async function runLiteLLM(options: CompletionOptions, config: any): Promise<any> {
-  const client = new OpenAI({ baseURL: config.litellmBaseUrl, apiKey: config.litellmKey || config.openaiKey || "sk-dummy", maxRetries: 1, timeout: 60000 });
-  const model = options.model || selectModel(options.tier || "default");
-  const start = Date.now();
-  const res = await client.chat.completions.create({
-    model,
-    messages: [{ role: "system", content: options.system }, ...options.messages],
-    max_tokens: options.maxTokens || config.maxTokens,
-    temperature: options.temperature ?? 0.3,
-    response_format: options.jsonMode ? { type: "json_object" } : undefined,
-  });
-  const iT = res.usage?.prompt_tokens || 0;
-  const oT = res.usage?.completion_tokens || 0;
-  return {
-    content: res.choices[0]?.message?.content || "",
-    usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-    model, latencyMs: Date.now() - start
-  };
-}
-
 export async function completion(options: CompletionOptions): Promise<CompletionResult> {
-  const config = getGatewayConfig();
-  if (!config.isConfigured) {
-    throw new AIGatewayError("AI gateway is not configured.", "NOT_CONFIGURED");
-  }
+  const req: AIRequest = {
+    system: options.system,
+    messages: options.messages as any,
+    jsonMode: options.jsonMode,
+    maxTokens: options.maxTokens,
+    temperature: options.temperature,
+    // Add capabilities request based on flags
+    requiredCapabilities: options.jsonMode ? ["JSON" as any] : []
+  };
 
-  const providers = [];
-  if (config.litellmBaseUrl) providers.push({ name: "litellm", run: runLiteLLM });
-  if (config.openaiKey) providers.push({ name: "openai", run: runOpenAI });
-  if (config.anthropicKey) providers.push({ name: "anthropic", run: runAnthropic });
-  if (config.openrouterKey) providers.push({ name: "openrouter", run: runOpenRouter });
-  if (config.geminiKey) providers.push({ name: "gemini", run: runGemini });
-
-  if (providers.length === 0) {
-    throw new AIGatewayError("No providers available", "NOT_CONFIGURED");
-  }
-
-  let lastError: any = null;
-  for (let i = 0; i < providers.length; i++) {
-    const p = providers[i];
-    try {
-      if (i > 0) {
-        console.warn(`[AI] Fallback triggered. Using provider: ${p.name}`);
-      }
-      const res = await p.run(options, config);
-      return {
-        ...res,
-        estimatedCostUsd: estimateCost(res.model, res.usage.inputTokens, res.usage.outputTokens),
-        fallbackUsed: i > 0,
-      };
-    } catch (e: any) {
-      console.warn(`[AI] Provider ${p.name} failed:`, e?.message);
-      lastError = e;
+  let strategy: AIRoutingStrategy = "AUTO";
+  if (options.tier === "fast") strategy = "FASTEST";
+  
+  if (options.model) {
+    strategy = "MANUAL";
+    // Assuming standard format provider:model for manual
+    const parts = options.model.split("/");
+    if (parts.length === 2) {
+      req.targetProvider = parts[0] as any;
+      req.targetModel = parts[1];
+    } else {
+      // Just fallback to OpenAI manual if provider not specified explicitly
+      req.targetProvider = "openai";
+      req.targetModel = options.model;
     }
   }
 
-  throw new AIGatewayError(
-    `All configured AI providers failed. Last error: ${lastError?.message}`,
-    "PROVIDER_ERROR",
-    lastError
-  );
+  const res = await gateway.generate(req, strategy);
+  return {
+    content: res.content,
+    usage: res.usage,
+    model: res.model,
+    estimatedCostUsd: res.usage.estimatedCostUsd,
+    latencyMs: res.latencyMs,
+    fallbackUsed: res.fallbackUsed,
+  };
 }
 
 export interface StreamingOptions extends Omit<CompletionOptions, "jsonMode"> {
@@ -285,84 +194,36 @@ export interface StreamingOptions extends Omit<CompletionOptions, "jsonMode"> {
 }
 
 export async function streamCompletion(options: StreamingOptions): Promise<void> {
-  const config = getGatewayConfig();
-  if (!config.isConfigured) {
-    throw new AIGatewayError("AI gateway is not configured.", "NOT_CONFIGURED");
-  }
-
-  let activeProvider = "";
-  let streamRes: any;
-
-  // We'll use OpenAI SDK for streaming if litellm, openai, or openrouter is available
-  const attemptOpenAIStream = async (baseURL?: string, apiKey?: string, modelOverride?: string) => {
-    const client = new OpenAI({ baseURL, apiKey: apiKey || "sk-dummy", timeout: 60000, maxRetries: 0 });
-    const model = modelOverride || options.model || selectModel(options.tier || "default");
-    return {
-       client,
-       model,
-       stream: await client.chat.completions.create({
-         model,
-         messages: [{ role: "system", content: options.system }, ...options.messages],
-         max_tokens: options.maxTokens || config.maxTokens,
-         temperature: options.temperature ?? 0.3,
-         stream: true,
-       })
-    };
+  const req: AIRequest = {
+    system: options.system,
+    messages: options.messages as any,
+    maxTokens: options.maxTokens,
+    temperature: options.temperature,
+    stream: true,
   };
 
-  let model = "";
-  let start = Date.now();
+  let strategy: AIRoutingStrategy = "AUTO";
+  if (options.tier === "fast") strategy = "FASTEST";
 
-  try {
-    if (config.litellmBaseUrl) {
-      const s = await attemptOpenAIStream(config.litellmBaseUrl, config.litellmKey || config.openaiKey);
-      streamRes = s.stream; model = s.model; activeProvider = "litellm";
-    } else if (config.openaiKey) {
-      const s = await attemptOpenAIStream(undefined, config.openaiKey, options.tier === "fast" ? "gpt-4o-mini" : "gpt-4o");
-      streamRes = s.stream; model = s.model; activeProvider = "openai";
-    } else if (config.openrouterKey) {
-      const s = await attemptOpenAIStream("https://openrouter.ai/api/v1", config.openrouterKey, options.tier === "fast" ? "anthropic/claude-3-haiku" : "openai/gpt-4o");
-      streamRes = s.stream; model = s.model; activeProvider = "openrouter";
-    } else {
-      throw new Error("No provider available for streaming");
-    }
-  } catch (e: any) {
-    console.warn(`[AI] Streaming failed for ${activeProvider}:`, e.message);
-    throw new AIGatewayError(`Streaming failed: ${e.message}`, "PROVIDER_ERROR", e);
-  }
-
-  let iT = 0;
-  let oT = 0;
-  for await (const chunk of streamRes) {
-    const delta = chunk.choices?.[0]?.delta?.content;
-    if (delta) {
-      options.onChunk(delta);
-      oT++;
-    }
-  }
-
+  const res = await gateway.stream(req, options.onChunk, strategy);
+  
   if (options.onDone) {
     options.onDone({
-      usage: { inputTokens: iT, outputTokens: oT, totalTokens: iT + oT },
-      model,
-      estimatedCostUsd: estimateCost(model, iT, oT),
-      latencyMs: Date.now() - start,
-      fallbackUsed: false,
+      usage: res.usage,
+      model: res.model,
+      estimatedCostUsd: res.usage.estimatedCostUsd,
+      latencyMs: res.latencyMs,
+      fallbackUsed: res.fallbackUsed,
     });
   }
 }
 
-export function isAIConfigured(): boolean {
-  return getGatewayConfig().isConfigured;
-}
-
 export function getAIConfig() {
-  const c = getGatewayConfig();
   return {
-    isConfigured: c.isConfigured,
-    defaultModel: c.defaultModel,
-    fastModel: c.fastModel,
-    reasoningModel: c.reasoningModel,
-    hasLiteLLM: !!c.litellmBaseUrl,
+    isConfigured: gateway.isAIConfigured(),
+    defaultModel: "gpt-4o",
+    fastModel: "gpt-4o-mini",
+    reasoningModel: "gpt-4o",
+    hasLiteLLM: false, // Legacy flag
   };
 }
