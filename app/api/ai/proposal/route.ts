@@ -23,6 +23,7 @@ const requestSchema = z.object({
   leadId: z.string().min(1).max(100),
   stream: z.boolean().optional().default(false),
   existingAnalysisJson: z.string().max(50000).optional(),
+  currentProposalText: z.string().max(15000).optional(),
   model: z.string().optional(),
   provider: z.string().optional(),
 });
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
 
   // 7. Generate proposal
   const orchestrator = new AIOrchestrator(contextResult.context);
-  const result = await orchestrator.generateProposal(priorAnalysis);
+  const result = await orchestrator.generateProposal(priorAnalysis, parsed.data.currentProposalText);
 
   if (!result.success) {
     return NextResponse.json({

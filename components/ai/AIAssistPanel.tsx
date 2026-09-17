@@ -61,6 +61,8 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
   const [state, setState] = useState<AIState>({ phase: "idle" });
   const [showReview, setShowReview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [overrideProvider, setOverrideProvider] = useState("auto");
+  const [overrideModel, setOverrideModel] = useState("auto");
 
   const phaseLabel: Record<AIPhase, string> = {
     idle: "Ready",
@@ -82,7 +84,11 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
       const analyzeRes = await fetch("/api/ai/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leadId }),
+        body: JSON.stringify({ 
+          leadId,
+          provider: overrideProvider !== "auto" ? overrideProvider : undefined,
+          model: overrideModel !== "auto" ? overrideModel : undefined
+        }),
       });
       const analyzeData = await analyzeRes.json();
 
@@ -108,6 +114,9 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
           existingAnalysisJson: analyzeData.opportunityAnalysis
             ? JSON.stringify(analyzeData.opportunityAnalysis)
             : undefined,
+          currentProposalText,
+          provider: overrideProvider !== "auto" ? overrideProvider : undefined,
+          model: overrideModel !== "auto" ? overrideModel : undefined
         }),
       });
 
@@ -131,15 +140,12 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
         draftId: proposalData.draftId,
         estimatedCost: proposalData.execution?.estimatedCostUsd,
       });
-
-      // Inject into the parent proposal modal
-      if (proposalData.proposal) {
-        onProposalGenerated(proposalData.proposal);
-      }
+      // Do NOT automatically inject into the editor anymore.
+      // User must explicitly click 'Accept' to apply changes.
     } catch (err: any) {
       setState({ phase: "error", error: err.message || "Network error. Please try again." });
     }
-  }, [leadId, onProposalGenerated]);
+  }, [leadId, onProposalGenerated, currentProposalText, overrideProvider, overrideModel]);
 
   const handleReviewCurrent = useCallback(async () => {
     if (!currentProposalText || currentProposalText.length < 50) return;
@@ -149,7 +155,12 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
       const res = await fetch("/api/ai/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proposalText: currentProposalText, leadId }),
+        body: JSON.stringify({ 
+          proposalText: currentProposalText, 
+          leadId,
+          provider: overrideProvider !== "auto" ? overrideProvider : undefined,
+          model: overrideModel !== "auto" ? overrideModel : undefined 
+        }),
       });
       const data = await res.json();
 
@@ -235,26 +246,44 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
 
         {/* Done — proposal is ready */}
         {state.phase === "done" && state.proposal && (
-          <div className="space-y-2">
-            <div className="p-3 rounded-xl bg-[#18191D] border border-emerald-500/20 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-xs font-semibold text-[#EEEEEE]">Proposal injected into editor</span>
+          <div className="space-y-3">
+            <div className="p-3 rounded-xl bg-[#18191D] border border-emerald-500/20 flex flex-col space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs font-semibold text-[#EEEEEE]">AI Proposal Ready</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <button
+                    onClick={handleCopyProposal}
+                    className="px-2.5 py-1 rounded-lg bg-[#111214] hover:bg-[#22242A] text-[#989BA3] hover:text-[#EEEEEE] text-[10px] border border-white/[0.06] transition flex items-center space-x-1"
+                  >
+                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copied ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center space-x-1.5">
-                <button
-                  onClick={handleCopyProposal}
-                  className="px-2.5 py-1 rounded-lg bg-[#111214] hover:bg-[#22242A] text-[#989BA3] hover:text-[#EEEEEE] text-[10px] border border-white/[0.06] transition flex items-center space-x-1"
-                >
-                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
+              
+              <div className="text-xs text-[#989BA3] bg-[#0D0E11] p-3 rounded-lg max-h-48 overflow-y-auto whitespace-pre-wrap border border-white/[0.04]">
+                {state.proposal.fullText}
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-1">
                 <button
                   onClick={handleReset}
-                  className="p-1 rounded-lg text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#22242A] transition"
-                  title="Regenerate"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#22242A] transition"
                 >
-                  <RefreshCw className="w-3 h-3" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => {
+                    if (state.proposal) onProposalGenerated(state.proposal);
+                    setState({ phase: "idle" });
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 transition flex items-center space-x-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Accept & Apply</span>
                 </button>
               </div>
             </div>
@@ -293,26 +322,77 @@ export function AIAssistPanel({ leadId, onProposalGenerated, onClose, currentPro
 
         {/* Idle state — action buttons */}
         {(state.phase === "idle" || state.phase === "error" || state.phase === "not_configured") && (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={handleGenerate}
-              disabled={state.phase === "not_configured"}
-              className="flex-1 px-3.5 py-2 rounded-xl bg-[#18191D] hover:bg-[#22242A] disabled:opacity-40 disabled:cursor-not-allowed text-[#EEEEEE] text-xs font-semibold border border-white/[0.08] transition flex items-center justify-center space-x-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Generate AI Proposal</span>
-            </button>
-
-            {currentProposalText && currentProposalText.length >= 50 && (
-              <button
-                onClick={handleReviewCurrent}
-                disabled={state.phase === "not_configured"}
-                className="flex-1 px-3.5 py-2 rounded-xl bg-[#0D0E11] hover:bg-[#18191D] disabled:opacity-40 disabled:cursor-not-allowed text-[#989BA3] hover:text-[#EEEEEE] text-xs font-medium border border-white/[0.06] transition flex items-center justify-center space-x-1.5"
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <select
+                value={overrideProvider}
+                onChange={(e) => {
+                  setOverrideProvider(e.target.value);
+                  setOverrideModel("auto");
+                }}
+                className="flex-1 bg-[#18191D] border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-[#EEEEEE] outline-none focus:ring-1 focus:ring-emerald-500/50"
               >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Review Current Proposal</span>
+                <option value="auto">Provider: Auto (Profile)</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="openrouter">OpenRouter</option>
+              </select>
+              <select
+                value={overrideModel}
+                onChange={(e) => setOverrideModel(e.target.value)}
+                className="flex-1 bg-[#18191D] border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-[#EEEEEE] outline-none focus:ring-1 focus:ring-emerald-500/50"
+              >
+                <option value="auto">Model: Auto (Profile)</option>
+                {overrideProvider === "openai" && (
+                  <>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                  </>
+                )}
+                {overrideProvider === "anthropic" && (
+                  <>
+                    <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+                    <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                  </>
+                )}
+                {overrideProvider === "gemini" && (
+                  <>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  </>
+                )}
+                {overrideProvider === "openrouter" && (
+                  <>
+                    <option value="anthropic/claude-3.5-sonnet">OR: Claude 3.5 Sonnet</option>
+                    <option value="openai/gpt-4o">OR: GPT-4o</option>
+                    <option value="google/gemini-pro-1.5">OR: Gemini 1.5 Pro</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleGenerate}
+                disabled={state.phase === "not_configured"}
+                className="flex-1 px-3.5 py-2 rounded-xl bg-[#18191D] hover:bg-[#22242A] disabled:opacity-40 disabled:cursor-not-allowed text-[#EEEEEE] text-xs font-semibold border border-white/[0.08] transition flex items-center justify-center space-x-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Enhance Proposal</span>
               </button>
-            )}
+
+              {currentProposalText && currentProposalText.length >= 50 && (
+                <button
+                  onClick={handleReviewCurrent}
+                  disabled={state.phase === "not_configured"}
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-[#0D0E11] hover:bg-[#18191D] disabled:opacity-40 disabled:cursor-not-allowed text-[#989BA3] hover:text-[#EEEEEE] text-xs font-medium border border-white/[0.06] transition flex items-center justify-center space-x-1.5"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Review Current Proposal</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
 

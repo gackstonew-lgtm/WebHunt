@@ -162,7 +162,8 @@ export class AIOrchestrator {
    * Uses reasoning models — more expensive, should be user-triggered
    */
   async generateProposal(
-    priorAnalysis?: { opportunityAnalysis?: OpportunityAnalysis; researchFindings?: ResearchFindings }
+    priorAnalysis?: { opportunityAnalysis?: OpportunityAnalysis; researchFindings?: ResearchFindings },
+    currentProposalText?: string
   ): Promise<ProposalResult> {
     if (!isAIConfigured()) {
       return { success: false, notConfigured: true, error: "AI gateway is not configured" };
@@ -204,7 +205,7 @@ export class AIOrchestrator {
       await trackAIExecution({ userId: this.context.userId, leadId: this.context.lead?.id, metadata: strategistResult.execution });
 
       // Step 3: Write proposal (Agent 4)
-      const writerResult = await runProposalWriter(this.context, strategistResult.strategy);
+      const writerResult = await runProposalWriter(this.context, strategistResult.strategy, currentProposalText);
       totalInputTokens += writerResult.execution.inputTokens;
       totalOutputTokens += writerResult.execution.outputTokens;
       totalCost += writerResult.execution.estimatedCostUsd;

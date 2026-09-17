@@ -25,7 +25,8 @@ export interface ProposalWriterResult {
 
 export async function runProposalWriter(
   context: AgentContext,
-  strategy: ProposalStrategy
+  strategy: ProposalStrategy,
+  currentProposalText?: string
 ): Promise<ProposalWriterResult> {
   const startTime = Date.now();
 
@@ -85,7 +86,7 @@ Do NOT claim: ${strategy.avoidClaiming.join("; ")}
     messages: [
       {
         role: "user",
-        content: `Write a proposal for this opportunity using the provided strategy:\n\n${leadContextMessage}\n\n${profileMessage}\n\n${strategySection}`,
+        content: `Write a proposal for this opportunity using the provided strategy:\n\n${leadContextMessage}\n\n${profileMessage}\n\n${strategySection}${currentProposalText ? `\n\n[EXISTING PROPOSAL TEXT TO ENHANCE]\n${currentProposalText}\n[END EXISTING PROPOSAL TEXT]` : ""}`,
       },
     ],
     jsonMode: true,
