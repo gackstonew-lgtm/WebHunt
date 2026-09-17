@@ -130,6 +130,8 @@ export interface CompletionOptions {
   system: string;
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   model?: string;
+  provider?: string;
+  routingStrategy?: string;
   tier?: "fast" | "default" | "reasoning";
   maxTokens?: number;
   jsonMode?: boolean;
@@ -160,19 +162,17 @@ export async function completion(options: CompletionOptions): Promise<Completion
     requiredCapabilities: options.jsonMode ? ["JSON" as any] : []
   };
 
-  let strategy: AIRoutingStrategy = "AUTO";
-  if (options.tier === "fast") strategy = "FASTEST";
+  let strategy: AIRoutingStrategy = (options.routingStrategy as AIRoutingStrategy) || "AUTO";
+  if (!options.routingStrategy && options.tier === "fast") strategy = "FASTEST";
   
-  if (options.model) {
+  if (options.model && options.model !== "auto") {
     strategy = "MANUAL";
-    // Assuming standard format provider:model for manual
     const parts = options.model.split("/");
     if (parts.length === 2) {
       req.targetProvider = parts[0] as any;
       req.targetModel = parts[1];
     } else {
-      // Just fallback to OpenAI manual if provider not specified explicitly
-      req.targetProvider = "openai";
+      req.targetProvider = (options.provider as any) || "openai";
       req.targetModel = options.model;
     }
   }
@@ -202,8 +202,20 @@ export async function streamCompletion(options: StreamingOptions): Promise<void>
     stream: true,
   };
 
-  let strategy: AIRoutingStrategy = "AUTO";
-  if (options.tier === "fast") strategy = "FASTEST";
+  let strategy: AIRoutingStrategy = (options.routingStrategy as AIRoutingStrategy) || "AUTO";
+  if (!options.routingStrategy && options.tier === "fast") strategy = "FASTEST";
+
+  if (options.model && options.model !== "auto") {
+    strategy = "MANUAL";
+    const parts = options.model.split("/");
+    if (parts.length === 2) {
+      req.targetProvider = parts[0] as any;
+      req.targetModel = parts[1];
+    } else {
+      req.targetProvider = (options.provider as any) || "openai";
+      req.targetModel = options.model;
+    }
+  }
 
   const res = await gateway.stream(req, options.onChunk, strategy);
   
@@ -226,4 +238,68 @@ export function getAIConfig() {
     reasoningModel: "gpt-4o",
     hasLiteLLM: false, // Legacy flag
   };
+}
+
+/**
+ * Robustly parses JSON from an AI response, stripping markdown blocks
+ * and aggressively handling control characters that break JSON.parse().
+ */
+export function safeParseAIJson<T>(rawContent: string): T {
+  let content = rawContent.trim();
+  
+  // 1. Strip markdown fences if present
+  const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    content = jsonMatch[1];
+  } else {
+    // Or just code fences
+    const anyMatch = content.match(/```\w*\s*([\s\S]*?)\s*```/);
+    if (anyMatch) {
+      content = anyMatch[1];
+    }
+  }
+
+  // 2. Strip leading/trailing non-bracket characters just in case it added text
+  const firstBrace = content.indexOf('{');
+  const firstBracket = content.indexOf('[');
+  const lastBrace = content.lastIndexOf('}');
+  const lastBracket = content.lastIndexOf(']');
+
+  if (firstBrace !== -1 && lastBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    content = content.substring(firstBrace, lastBrace + 1);
+  } else if (firstBracket !== -1 && lastBracket !== -1) {
+    content = content.substring(firstBracket, lastBracket + 1);
+  }
+
+  // 3. Fix unescaped control characters in JSON strings.
+  try {
+    return JSON.parse(content) as T;
+  } catch (e: any) {
+    // Aggressive cleaning of control characters
+    let sanitized = "";
+    let inString = false;
+    for (let i = 0; i < content.length; i++) {
+      const c = content[i];
+      if (c === '"' && content[i-1] !== '\\') {
+        inString = !inString;
+        sanitized += c;
+      } else if (inString) {
+        if (c === '\n') sanitized += '\\n';
+        else if (c === '\r') sanitized += '\\r';
+        else if (c === '\t') sanitized += '\\t';
+        else if (c.charCodeAt(0) < 32) {
+          // Ignore other bad control chars
+        } else {
+          sanitized += c;
+        }
+      } else {
+        // Outside string, just keep it. We can strip actual control chars here too.
+        if (c.charCodeAt(0) >= 32 || c === '\n' || c === '\r' || c === '\t') {
+          sanitized += c;
+        }
+      }
+    }
+    
+    return JSON.parse(sanitized) as T;
+  }
 }

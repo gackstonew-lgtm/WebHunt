@@ -7,7 +7,7 @@
  * Model tier: FAST (systematic review task)
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getProposalReviewerSystemPrompt,
   buildLeadContextMessage,
@@ -63,6 +63,9 @@ export async function runProposalReviewer(
   const proposalMessage = buildProposalContextMessage(proposalText);
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "fast",
     system: getProposalReviewerSystemPrompt(),
     messages: [
@@ -79,7 +82,7 @@ export async function runProposalReviewer(
 
   let review: ReviewResult;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     review = validateReviewResult(parsed);
   } catch (err) {
     throw new Error(`ProposalReviewer returned invalid JSON: ${err}`);

@@ -7,7 +7,7 @@
  * Model tier: FAST (cheap, quick classification task)
  */
 
-import { completion, AIGatewayError } from "@/lib/ai/gateway";
+import { completion, AIGatewayError, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getOpportunityAnalystSystemPrompt,
   buildLeadContextMessage,
@@ -71,6 +71,9 @@ export async function runOpportunityAnalyst(
     : "[TRUSTED USER PROFILE DATA]\nNo profile data available.\n[END TRUSTED USER PROFILE DATA]";
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "fast",
     system: getOpportunityAnalystSystemPrompt(),
     messages: [
@@ -88,7 +91,7 @@ export async function runOpportunityAnalyst(
   // Parse and validate response
   let analysis: OpportunityAnalysis;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     analysis = validateOpportunityAnalysis(parsed);
   } catch (err) {
     throw new Error(`OpportunityAnalyst returned invalid JSON: ${err}`);

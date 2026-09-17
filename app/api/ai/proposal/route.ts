@@ -23,6 +23,8 @@ const requestSchema = z.object({
   leadId: z.string().min(1).max(100),
   stream: z.boolean().optional().default(false),
   existingAnalysisJson: z.string().max(50000).optional(),
+  model: z.string().optional(),
+  provider: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -84,6 +86,15 @@ export async function POST(req: NextRequest) {
       success: false,
       error: "Please complete your professional profile before generating AI proposals.",
     }, { status: 422 });
+  }
+
+  // Inject task-level overrides
+  if (parsed.data.model || parsed.data.provider) {
+    contextResult.context.profile.aiPreferences = {
+      ...(contextResult.context.profile.aiPreferences || { provider: 'auto', model: 'auto', routingStrategy: 'AUTO', automaticFailover: true }),
+      model: parsed.data.model || contextResult.context.profile.aiPreferences?.model || 'auto',
+      provider: parsed.data.provider || contextResult.context.profile.aiPreferences?.provider || 'auto',
+    };
   }
 
   // 6. Parse optional prior analysis

@@ -304,6 +304,114 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
             </div>
           </div>
 
+          {/* GROUP: AI SETTINGS */}
+          <div className="space-y-2">
+            <div className="px-1 text-[11px] font-bold text-[#989BA3] uppercase tracking-wider flex items-center space-x-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#989BA3]" />
+              <span>AI Model Configuration</span>
+            </div>
+
+            <div className="bg-[#0D0E11] border border-white/[0.08] rounded-2xl p-4 divide-y divide-white/[0.06]">
+              {/* Provider & Model Row */}
+              <div className="pb-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-xl bg-[#18191D] border border-white/[0.08] flex items-center justify-center text-[#EEEEEE]">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-[#EEEEEE] text-xs block">AI Provider &amp; Model</span>
+                      <span className="text-[11px] text-[#989BA3] block">Select the AI engine for tasks</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <select
+                      value={profile.aiPreferences?.provider || "auto"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        aiPreferences: { ...(profile.aiPreferences || { model: 'auto', routingStrategy: 'BALANCED', automaticFailover: true }), provider: e.target.value, model: 'auto' }
+                      })}
+                      className="px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] font-semibold focus:outline-none focus:ring-1 focus:ring-white/20"
+                    >
+                      <option value="auto" className="bg-[#111214]">Auto</option>
+                      <option value="openai" className="bg-[#111214]">OpenAI</option>
+                      <option value="anthropic" className="bg-[#111214]">Anthropic</option>
+                      <option value="gemini" className="bg-[#111214]">Google Gemini</option>
+                      <option value="openrouter" className="bg-[#111214]">OpenRouter</option>
+                    </select>
+
+                    <select
+                      value={profile.aiPreferences?.model || "auto"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        aiPreferences: { ...(profile.aiPreferences || { provider: 'auto', routingStrategy: 'BALANCED', automaticFailover: true }), model: e.target.value }
+                      })}
+                      className="px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] font-semibold focus:outline-none focus:ring-1 focus:ring-white/20"
+                    >
+                      <option value="auto" className="bg-[#111214]">Auto-Select Model</option>
+                      {profile.aiPreferences?.provider === 'openai' && (
+                        <>
+                          <option value="gpt-4o" className="bg-[#111214]">GPT-4o</option>
+                          <option value="gpt-4o-mini" className="bg-[#111214]">GPT-4o Mini</option>
+                        </>
+                      )}
+                      {profile.aiPreferences?.provider === 'anthropic' && (
+                        <>
+                          <option value="claude-3-5-sonnet-20241022" className="bg-[#111214]">Claude 3.5 Sonnet</option>
+                          <option value="claude-3-haiku-20240307" className="bg-[#111214]">Claude 3 Haiku</option>
+                        </>
+                      )}
+                      {profile.aiPreferences?.provider === 'gemini' && (
+                        <>
+                          <option value="gemini-1.5-pro" className="bg-[#111214]">Gemini 1.5 Pro</option>
+                          <option value="gemini-1.5-flash" className="bg-[#111214]">Gemini 1.5 Flash</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Routing & Failover */}
+              <div className="pt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[11px] text-[#989BA3] font-medium">Routing:</label>
+                    <select
+                      value={profile.aiPreferences?.routingStrategy || "BALANCED"}
+                      onChange={(e) => setProfile({
+                        ...profile,
+                        aiPreferences: { ...(profile.aiPreferences || { provider: 'auto', model: 'auto', automaticFailover: true }), routingStrategy: e.target.value }
+                      })}
+                      className="px-2 py-1 rounded-lg bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none"
+                    >
+                      <option value="AUTO">Auto</option>
+                      <option value="BALANCED">Balanced</option>
+                      <option value="PERFORMANCE">Performance</option>
+                      <option value="FASTEST">Fastest</option>
+                      <option value="COST_OPTIMIZED">Cost Optimized</option>
+                      <option value="MANUAL">Manual</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={profile.aiPreferences?.automaticFailover ?? true}
+                    onChange={(e) => setProfile({
+                      ...profile,
+                      aiPreferences: { ...(profile.aiPreferences || { provider: 'auto', model: 'auto', routingStrategy: 'BALANCED' }), automaticFailover: e.target.checked }
+                    })}
+                    className="rounded border-white/[0.1] bg-[#18191D] text-emerald-500 focus:ring-0"
+                  />
+                  <span className="text-[11px] font-medium text-[#EEEEEE]">Automatic Failover</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* GROUP 2: PROFESSIONAL IDENTITY */}
           <div className="space-y-2">
             <div className="px-1 text-[11px] font-bold text-[#989BA3] uppercase tracking-wider flex items-center space-x-1.5">

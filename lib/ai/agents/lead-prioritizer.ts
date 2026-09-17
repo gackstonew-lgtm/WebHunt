@@ -7,7 +7,7 @@
  * Model tier: FAST (batch processing)
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getLeadPrioritizerSystemPrompt,
   buildLeadContextMessage,
@@ -87,6 +87,9 @@ Notes (sanitized): ${sanitizeUntrustedText(lead.notes || "").substring(0, 200)}
   }).join("\n\n");
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "fast",
     system: getLeadPrioritizerSystemPrompt(),
     messages: [
@@ -103,7 +106,7 @@ Notes (sanitized): ${sanitizeUntrustedText(lead.notes || "").substring(0, 200)}
 
   let recommendations: LeadPriorityRecommendation[];
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     recommendations = validateRecommendations(parsed, batchLeads.map((l) => l.id));
   } catch (err) {
     throw new Error(`LeadPrioritizer returned invalid JSON: ${err}`);

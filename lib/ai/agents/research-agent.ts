@@ -8,7 +8,7 @@
  * Model tier: FAST
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getResearchAgentSystemPrompt,
   buildLeadContextMessage,
@@ -62,6 +62,9 @@ export async function runResearchAgent(
   });
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "fast",
     system: getResearchAgentSystemPrompt(),
     messages: [
@@ -78,7 +81,7 @@ export async function runResearchAgent(
 
   let findings: ResearchFindings;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     findings = validateResearchFindings(parsed);
   } catch (err) {
     throw new Error(`ResearchAgent returned invalid JSON: ${err}`);

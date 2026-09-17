@@ -7,7 +7,7 @@
  * Model tier: FAST
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getFollowUpAgentSystemPrompt,
   buildLeadContextMessage,
@@ -70,6 +70,9 @@ export async function runFollowUpAgent(
     : "";
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "fast",
     system: getFollowUpAgentSystemPrompt(),
     messages: [
@@ -86,7 +89,7 @@ export async function runFollowUpAgent(
 
   let followUp: FollowUpDraft;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     followUp = validateFollowUpDraft(parsed, channel);
   } catch (err) {
     throw new Error(`FollowUpAgent returned invalid JSON: ${err}`);

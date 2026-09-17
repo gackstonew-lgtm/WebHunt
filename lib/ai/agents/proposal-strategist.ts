@@ -7,7 +7,7 @@
  * Model tier: REASONING (complex matching task)
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getProposalStrategistSystemPrompt,
   buildLeadContextMessage,
@@ -72,6 +72,9 @@ export async function runProposalStrategist(
     : "";
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "reasoning",
     system: getProposalStrategistSystemPrompt(),
     messages: [
@@ -88,7 +91,7 @@ export async function runProposalStrategist(
 
   let strategy: ProposalStrategy;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     strategy = validateProposalStrategy(parsed, context.profile.skills || []);
   } catch (err) {
     throw new Error(`ProposalStrategist returned invalid JSON: ${err}`);

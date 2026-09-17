@@ -12,6 +12,13 @@ function safeRevalidatePath(path: string) {
   }
 }
 
+export interface AIPreferences {
+  provider: string;
+  model: string;
+  routingStrategy: string;
+  automaticFailover: boolean;
+}
+
 export interface UserProfileData {
   id?: string;
   userId?: string;
@@ -38,6 +45,7 @@ export interface UserProfileData {
   country?: string;
   mpesaTillNumber?: string;
   mpesaPaybillNumber?: string;
+  aiPreferences?: AIPreferences;
 }
 
 const DEFAULT_PROFILE: UserProfileData = {
@@ -77,6 +85,12 @@ const DEFAULT_PROFILE: UserProfileData = {
   country: "Kenya",
   mpesaTillNumber: "987654",
   mpesaPaybillNumber: "400200",
+  aiPreferences: {
+    provider: "auto",
+    model: "auto",
+    routingStrategy: "BALANCED",
+    automaticFailover: true,
+  },
 };
 
 export async function getUserProfileAction(userId?: string): Promise<{
@@ -158,6 +172,13 @@ export async function getUserProfileAction(userId?: string): Promise<{
       languages = DEFAULT_PROFILE.languages || [];
     }
 
+    let aiPreferences: AIPreferences | undefined;
+    try {
+      aiPreferences = profile.aiPreferencesJson ? JSON.parse(profile.aiPreferencesJson) : DEFAULT_PROFILE.aiPreferences;
+    } catch (_) {
+      aiPreferences = DEFAULT_PROFILE.aiPreferences;
+    }
+
     return {
       success: true,
       data: {
@@ -186,6 +207,7 @@ export async function getUserProfileAction(userId?: string): Promise<{
         country: profile.country || "Kenya",
         mpesaTillNumber: profile.mpesaTillNumber || "",
         mpesaPaybillNumber: profile.mpesaPaybillNumber || "",
+        aiPreferences,
       },
     };
   } catch (error: any) {
@@ -252,6 +274,7 @@ export async function saveUserProfileAction(
         country: data.country || "Kenya",
         mpesaTillNumber: data.mpesaTillNumber || null,
         mpesaPaybillNumber: data.mpesaPaybillNumber || null,
+        aiPreferencesJson: data.aiPreferences ? JSON.stringify(data.aiPreferences) : null,
       },
       update: {
         fullName: data.fullName,
@@ -277,6 +300,7 @@ export async function saveUserProfileAction(
         country: data.country || "Kenya",
         mpesaTillNumber: data.mpesaTillNumber || null,
         mpesaPaybillNumber: data.mpesaPaybillNumber || null,
+        aiPreferencesJson: data.aiPreferences ? JSON.stringify(data.aiPreferences) : null,
       },
     });
 

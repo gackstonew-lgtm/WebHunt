@@ -19,6 +19,8 @@ import { isAIConfigured } from "@/lib/ai/gateway";
 
 const requestSchema = z.object({
   leadId: z.string().min(1).max(100),
+  model: z.string().optional(),
+  provider: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
   if (!isAIConfigured()) {
     return NextResponse.json({
       success: false,
-      error: "AI gateway is not configured. Set LITELLM_BASE_URL or OPENAI_API_KEY environment variables.",
+      error: "AI gateway is not configured. Set API keys.",
       notConfigured: true,
     }, { status: 503 });
   }
@@ -73,6 +75,17 @@ export async function POST(req: NextRequest) {
 
   if (!contextResult.context.lead) {
     return NextResponse.json({ success: false, error: "Lead not found" }, { status: 404 });
+  }
+
+  // Inject task-level overrides
+  if (parsed.data.model || parsed.data.provider) {
+    if (contextResult.context.profile) {
+      contextResult.context.profile.aiPreferences = {
+        ...(contextResult.context.profile.aiPreferences || { provider: 'auto', model: 'auto', routingStrategy: 'AUTO', automaticFailover: true }),
+        model: parsed.data.model || contextResult.context.profile.aiPreferences?.model || 'auto',
+        provider: parsed.data.provider || contextResult.context.profile.aiPreferences?.provider || 'auto',
+      };
+    }
   }
 
   // 6. Run analysis

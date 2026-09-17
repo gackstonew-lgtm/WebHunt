@@ -8,7 +8,7 @@
  * Model tier: REASONING
  */
 
-import { completion } from "@/lib/ai/gateway";
+import { completion, safeParseAIJson } from "@/lib/ai/gateway";
 import {
   getApplicationAssistantSystemPrompt,
   buildLeadContextMessage,
@@ -65,6 +65,9 @@ export async function runApplicationAssistant(
     : "";
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "reasoning",
     system: getApplicationAssistantSystemPrompt(),
     messages: [
@@ -81,7 +84,7 @@ export async function runApplicationAssistant(
 
   let applicationPackage: ApplicationPackage;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     applicationPackage = validateApplicationPackage(parsed, lead.title, lead.company);
   } catch (err) {
     throw new Error(`ApplicationAssistant returned invalid JSON: ${err}`);

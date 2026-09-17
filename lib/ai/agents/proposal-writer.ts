@@ -8,7 +8,7 @@
  * Model tier: REASONING
  */
 
-import { completion, streamCompletion, CompletionResult } from "@/lib/ai/gateway";
+import { completion, streamCompletion, safeParseAIJson, CompletionResult } from "@/lib/ai/gateway";
 import {
   getProposalWriterSystemPrompt,
   buildLeadContextMessage,
@@ -77,6 +77,9 @@ Do NOT claim: ${strategy.avoidClaiming.join("; ")}
 [END TRUSTED STRATEGY DATA]`.trim();
 
   const result = await completion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
     tier: "reasoning",
     system: getProposalWriterSystemPrompt(),
     messages: [
@@ -93,7 +96,7 @@ Do NOT claim: ${strategy.avoidClaiming.join("; ")}
 
   let proposal: GeneratedAIProposal;
   try {
-    const parsed = JSON.parse(result.content);
+    const parsed = safeParseAIJson<any>(result.content);
     proposal = validateGeneratedProposal(parsed);
   } catch (err) {
     throw new Error(`ProposalWriter returned invalid JSON: ${err}`);
@@ -172,6 +175,9 @@ Capabilities: ${strategy.matchedUserCapabilities.join(", ")}
 
   try {
     await streamCompletion({
+    model: context.profile?.aiPreferences?.model,
+    provider: context.profile?.aiPreferences?.provider,
+    routingStrategy: context.profile?.aiPreferences?.routingStrategy,
       tier: "reasoning",
       system: streamSystemPrompt,
       messages: [
