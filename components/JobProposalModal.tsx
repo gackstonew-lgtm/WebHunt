@@ -14,17 +14,14 @@ import {
   AlertTriangle,
   Layers,
   Send,
-  UserCheck,
-  ChevronDown,
-  ChevronUp,
+  UserCheck
 } from "lucide-react";
 import { OnlineJobLead } from "@/lib/types";
 import { generateTruthfulJobProposal, ProposalTemplateType } from "@/lib/proposals/truthful-generator";
 import { getUserProfileAction, UserProfileData } from "@/app/actions/profile";
+import { fetchProposalDraftsAction, generateProposalAction } from "@/app/actions/outreach";
 import { saveProposalDraftAction, checkDuplicateOutreachAction, recordOutreachMessageAction } from "@/app/actions/outreach";
 import { generateMailtoLink } from "@/lib/outreach/gmail";
-import { AIAssistPanel } from "@/components/ai/AIAssistPanel";
-import { GeneratedAIProposal } from "@/lib/ai/types";
 
 
 interface JobProposalModalProps {
@@ -42,17 +39,24 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
   const [draftSaved, setDraftSaved] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  // AI panel toggle — opt-in only, does not affect existing template workflow
-  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function load() {
       const res = await getUserProfileAction();
       if (res.success && res.data) {
         setProfile(res.data);
-        const proposal = generateTruthfulJobProposal(job, res.data, templateType);
-        setSubject(proposal.subject);
-        setBody(`${proposal.greeting}\n\n${proposal.body}\n\n${proposal.callToAction}`);
+      }
+
+      // Load draft if it exists
+      const draftsRes = await fetchProposalDraftsAction(job.id);
+      if (draftsRes.success && draftsRes.data && draftsRes.data.length > 0) {
+        // Find a draft matching this templateType, or just take the first one
+        const draft = draftsRes.data.find(d => d.templateType === templateType) || draftsRes.data[0];
+        setDraftId(draft.id);
+        setSubject(draft.subject);
+        setBody(draft.body);
       }
 
       // Check if candidate reached out recently
@@ -64,15 +68,23 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
       }
     }
     load();
-  }, [job, templateType]);
+  }, [job]); // Only run on mount or job change, NOT on templateType change to preserve edits
+
 
   const handleTemplateChange = (type: ProposalTemplateType) => {
     setTemplateType(type);
-    if (profile) {
-      const proposal = generateTruthfulJobProposal(job, profile, type);
-      setSubject(proposal.subject);
-      setBody(`${proposal.greeting}\n\n${proposal.body}\n\n${proposal.callToAction}`);
+  };
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    const res = await generateProposalAction(job.id, templateType);
+    if (res.success && res.data) {
+      setSubject(res.data.subject);
+      setBody(`${res.data.greeting}\n\n${res.data.body}\n\n${res.data.callToAction}`);
+    } else {
+      alert("Failed to generate proposal: " + (res.error || "Unknown error"));
     }
+    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -85,7 +97,8 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
   const handleSaveDraft = async () => {
     if (!profile) return;
     setIsSavingDraft(true);
-    await saveProposalDraftAction({
+    const res = await saveProposalDraftAction({
+      draftId: draftId || undefined,
       leadId: job.id,
       title: `${job.title} @ ${job.company}`,
       templateType,
@@ -94,6 +107,11 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
       callToAction: "",
       fullText: `SUBJECT: ${subject}\n\n${body}`,
     });
+    
+    if (res.success && res.data) {
+      setDraftId(res.data.id);
+    }
+    
     setIsSavingDraft(false);
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 2500);
@@ -205,6 +223,18 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
             </div>
           </div>
 
+          {/* Generate Action */}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="px-4 py-2 rounded-xl bg-[#EEEEEE] hover:bg-white text-black font-semibold text-xs shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isGenerating ? "Generating proposal..." : "Generate Proposal"}</span>
+            </button>
+          </div>
+
           {/* Subject Line */}
           <div className="space-y-1.5">
             <span className="text-xs font-semibold text-[#989BA3] uppercase tracking-wider">
@@ -249,34 +279,6 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
                   {skill}
                 </span>
               ))}
-            </div>
-          )}
-        </div>
-
-        {/* ✦ AI Enhance — Additive section, completely opt-in */}
-        <div className="px-6 pb-0">
-          <button
-            onClick={() => setShowAIPanel(!showAIPanel)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#0D0E11] hover:bg-[#18191D] border border-white/[0.06] text-xs text-[#989BA3] hover:text-[#EEEEEE] transition"
-          >
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="font-semibold">AI Enhance</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#18191D] border border-white/[0.06]">Optional</span>
-            </div>
-            {showAIPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-
-          {showAIPanel && job.id && (
-            <div className="mt-2">
-              <AIAssistPanel
-                leadId={job.id}
-                currentProposalText={`SUBJECT: ${subject}\n\n${body}`}
-                onProposalGenerated={(aiProposal: GeneratedAIProposal) => {
-                  setSubject(aiProposal.subject);
-                  setBody(`${aiProposal.greeting}\n\n${aiProposal.body}\n\n${aiProposal.callToAction}`);
-                }}
-              />
             </div>
           )}
         </div>

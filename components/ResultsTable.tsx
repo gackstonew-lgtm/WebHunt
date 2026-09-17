@@ -268,7 +268,7 @@ export default function ResultsTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06] text-[#EEEEEE]">
-                {filteredLeads.map((item) => {
+                {filteredLeads.map((item, i) => {
                   const lead = item as PhysicalLead;
                   const isSelected = selectedLeadIds.has(lead.id);
                   const isSaved = savedLeadIds.has(lead.id);
@@ -276,7 +276,7 @@ export default function ResultsTable({
 
                   return (
                     <tr
-                      key={lead.id}
+                      key={`${lead.id}-${lead.sourceProvider || "prov"}-${i}`}
                       className={`hover:bg-white/[0.03] transition group ${
                         isSelected ? "bg-white/[0.05]" : ""
                       }`}
@@ -598,12 +598,12 @@ export default function ResultsTable({
       ) : (
         /* ================= ONLINE JOBS CARD GRID ================= */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredLeads.map((item) => {
+          {filteredLeads.map((item, i) => {
             const job = item as OnlineJobLead;
             const isSaved = savedLeadIds.has(job.id);
             return (
               <JobCard
-                key={job.id}
+                key={`${job.id}-${job.source || "prov"}-${i}`}
                 job={job}
                 isSaved={isSaved}
                 onSave={onSaveLead}

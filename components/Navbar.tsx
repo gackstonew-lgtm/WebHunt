@@ -21,6 +21,7 @@ import { exportLeadsToCsv } from "@/lib/export";
 import { syncLocalStorageWithDatabase } from "@/lib/sync-bridge";
 import { getAuthStatusAction, logoutAction } from "@/app/actions/auth";
 import { getUserSubscriptionAction } from "@/app/actions/payments";
+import { NotificationCenter } from "./NotificationCenter";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -141,6 +142,7 @@ export default function Navbar() {
             {/* Right Action buttons */}
             {!isAuthRoute && (
               <div className="flex items-center space-x-2">
+                <NotificationCenter />
                 {/* Profile & Settings Trigger */}
                 <button
                   onClick={() => setShowProfile(true)}

@@ -39,6 +39,7 @@ model User {
   followUpTasks           FollowUpTask[]
   accounts                Account[]
   subscriptions           Subscription[]
+  notifications           Notification[]
 
   @@index([email])
   @@index([verificationToken])
@@ -111,6 +112,7 @@ model UserProfile {
   mpesaTillNumber    String?
   mpesaPaybillNumber String?
   aiPreferencesJson  String?  @db.Text
+  monitoringPreferencesJson String? @db.Text
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -184,10 +186,20 @@ model Lead {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
+  // Opportunity Monitoring Fields
+  publishedAt         DateTime?
+  discoveredAt        DateTime?         @default(now())
+  lastSeenAt          DateTime?
+  classificationStatus String?          // "pending" | "completed" | "failed"
+  classificationJson  String?           @db.Text
+  isRelevant          Boolean?
+  relevanceReasonsJson String?          @db.Text
+
   proposals           ProposalDraft[]
   applications        Application[]
   outreachMessages    OutreachMessage[]
   followUpTasks       FollowUpTask[]
+  notifications       Notification[]
 
   @@unique([userId, phone, businessName])
   @@index([status])
@@ -216,20 +228,11 @@ model ProposalDraft {
   variablesJson           String?  @db.Text
   version                 Int      @default(1)
   status                  String   @default("DRAFT") // "DRAFT" | "READY" | "SENT" | "ARCHIVED"
-  // AI-generated proposal fields (additive — all optional for backward compatibility)
-  aiGenerated             Boolean  @default(false)
-  aiModel                 String?
-  aiProvider              String?
-  aiReviewJson            String?  @db.Text // Serialized ReviewResult
-  opportunityAnalysisJson String?  @db.Text // Serialized OpportunityAnalysis
-  proposalStrategyJson    String?  @db.Text // Serialized ProposalStrategy
-  aiLifecycleStatus       String?  // "ANALYZED" | "AI_DRAFT" | "AI_REVIEW" | "USER_REVIEW" | "APPROVED" | "READY_TO_SUBMIT" | "SUBMITTED" | "FOLLOW_UP"
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
   @@index([leadId])
   @@index([userId])
-  @@index([aiGenerated])
 }
 
 model AIExecution {
@@ -397,4 +400,40 @@ model Subscription {
   @@index([userId])
   @@index([status])
   @@index([endDate])
+}
+
+model Notification {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  type String
+  title String
+  message String @db.Text
+  opportunityId String?
+  opportunity Lead? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  read Boolean @default(false)
+  createdAt DateTime @default(now())
+  readAt DateTime?
+  metadataJson String? @db.Text
+
+  @@index([userId])
+  @@index([userId, read])
+}
+
+model MonitoringRun {
+  id String @id @default(uuid())
+  userId String?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  provider String
+  itemsFetched Int @default(0)
+  itemsNew Int @default(0)
+  itemsUpdated Int @default(0)
+  itemsDuplicate Int @default(0)
+  status String @default("running")
+  error String? @db.Text
+
+  @@index([userId])
+  @@index([startedAt])
 }

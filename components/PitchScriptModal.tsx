@@ -14,18 +14,15 @@ import {
   Save, 
   ExternalLink,
   Coins,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
+  AlertTriangle
 } from "lucide-react";
 import { PhysicalLead } from "@/lib/types";
 import { generateTruthfulPhysicalPitch } from "@/lib/proposals/truthful-generator";
 import { getUserProfileAction, UserProfileData } from "@/app/actions/profile";
+import { fetchProposalDraftsAction, generatePhysicalPitchAction } from "@/app/actions/outreach";
 import { generateWhatsAppChatLink, createQuickWhatsAppLeadMessage } from "@/lib/outreach/whatsapp";
 import { generateMailtoLink } from "@/lib/outreach/gmail";
 import { saveProposalDraftAction, checkDuplicateOutreachAction, recordOutreachMessageAction } from "@/app/actions/outreach";
-import { AIAssistPanel } from "@/components/ai/AIAssistPanel";
-import { GeneratedAIProposal } from "@/lib/ai/types";
 
 interface PitchScriptModalProps {
   lead: PhysicalLead;
@@ -40,8 +37,8 @@ export default function PitchScriptModal({ lead, onClose }: PitchScriptModalProp
   const [copied, setCopied] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
-  // AI panel toggle — opt-in only, does not affect existing template workflow
-  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -67,11 +64,18 @@ export default function PitchScriptModal({ lead, onClose }: PitchScriptModalProp
 
   const handleTemplateChange = (type: "local_website_pitch" | "agency_modernization") => {
     setTemplateType(type);
-    if (profile) {
-      const pitch = generateTruthfulPhysicalPitch(lead, profile, type);
-      setSubject(pitch.subject);
-      setBody(`${pitch.greeting}\n\n${pitch.body}\n\n${pitch.callToAction}`);
+  };
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    const res = await generatePhysicalPitchAction(lead.id, templateType);
+    if (res.success && res.data) {
+      setSubject(res.data.subject);
+      setBody(`${res.data.greeting}\n\n${res.data.body}\n\n${res.data.callToAction}`);
+    } else {
+      alert("Failed to generate pitch: " + (res.error || "Unknown error"));
     }
+    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
@@ -131,7 +135,8 @@ ${body}`;
 
   const handleSaveDraft = async () => {
     if (!profile) return;
-    await saveProposalDraftAction({
+    const res = await saveProposalDraftAction({
+      draftId: draftId || undefined,
       leadId: lead.id,
       title: `Website Pitch - ${lead.businessName}`,
       templateType,
@@ -140,6 +145,10 @@ ${body}`;
       callToAction: "",
       fullText: `SUBJECT: ${subject}\n\n${body}`,
     });
+    
+    if (res.success && res.data) {
+      setDraftId(res.data.id);
+    }
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 2000);
   };
@@ -247,6 +256,18 @@ ${body}`;
             </div>
           </div>
 
+          {/* Generate Action */}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="px-4 py-2 rounded-xl bg-[#EEEEEE] hover:bg-white text-black font-semibold text-xs shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isGenerating ? "Generating pitch..." : "Generate Pitch"}</span>
+            </button>
+          </div>
+
           {/* Editable Subject & Body */}
           <div className="space-y-3">
             <div>
@@ -287,34 +308,6 @@ ${body}`;
               </p>
             </div>
           </div>
-        </div>
-
-        {/* ✦ AI Enhance — Additive section, completely opt-in */}
-        <div className="px-6 pb-0">
-          <button
-            onClick={() => setShowAIPanel(!showAIPanel)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#0D0E11] hover:bg-[#18191D] border border-white/[0.06] text-xs text-[#989BA3] hover:text-[#EEEEEE] transition"
-          >
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="font-semibold">AI Enhance</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#18191D] border border-white/[0.06]">Optional</span>
-            </div>
-            {showAIPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-
-          {showAIPanel && lead.id && (
-            <div className="mt-2">
-              <AIAssistPanel
-                leadId={lead.id}
-                currentProposalText={`SUBJECT: ${subject}\n\n${body}`}
-                onProposalGenerated={(aiProposal: GeneratedAIProposal) => {
-                  setSubject(aiProposal.subject);
-                  setBody(`${aiProposal.greeting}\n\n${aiProposal.body}\n\n${aiProposal.callToAction}`);
-                }}
-              />
-            </div>
-          )}
         </div>
 
         {/* Footer */}

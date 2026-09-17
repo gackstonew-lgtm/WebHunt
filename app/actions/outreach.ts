@@ -13,6 +13,7 @@ function safeRevalidatePath(path: string) {
 }
 
 export async function saveProposalDraftAction(params: {
+  draftId?: string;
   leadId?: string;
   userId?: string;
   title: string;
@@ -39,6 +40,27 @@ export async function saveProposalDraftAction(params: {
       });
       if (lead && lead.userId && lead.userId !== effectiveUserId && session.role !== "admin") {
         return { success: false, error: "Forbidden: You cannot modify proposal drafts for another user's lead" };
+      }
+    }
+
+    if (params.draftId) {
+      const existing = await prisma.proposalDraft.findUnique({ where: { id: params.draftId } });
+      if (existing && (existing.userId === effectiveUserId || session.role === "admin")) {
+        const draft = await prisma.proposalDraft.update({
+          where: { id: params.draftId },
+          data: {
+            title: params.title,
+            templateType: params.templateType,
+            subject: params.subject,
+            greeting: params.greeting || "Hi,",
+            body: params.body,
+            callToAction: params.callToAction,
+            fullText: params.fullText,
+            variablesJson: params.variablesJson || null,
+          }
+        });
+        safeRevalidatePath("/pipeline");
+        return { success: true, data: draft };
       }
     }
 
@@ -237,5 +259,91 @@ export async function fetchLeadOutreachHistoryAction(leadId: string): Promise<{
   } catch (error: any) {
     console.error("[OutreachAction] Fetch history failed:", error);
     return { success: false, data: [], error: error.message };
+  }
+}
+
+import { getUserProfileAction } from "./profile";
+import { generateTruthfulJobProposal, generateTruthfulPhysicalPitch, ProposalTemplateType } from "@/lib/proposals/truthful-generator";
+
+export async function generateProposalAction(leadId: string, templateType: ProposalTemplateType) {
+  try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, error: "Authentication required to generate proposal" };
+    }
+
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!lead) {
+      return { success: false, error: "Lead not found" };
+    }
+
+    if (lead.userId && lead.userId !== session.userId && session.role !== "admin") {
+      return { success: false, error: "Forbidden: You cannot generate proposals for another user's lead" };
+    }
+
+    const profileRes = await getUserProfileAction(session.userId);
+    if (!profileRes.success || !profileRes.data) {
+      return { success: false, error: "Failed to load user profile" };
+    }
+
+    // Convert Prisma Lead to OnlineJobLead partial
+    const job = {
+      title: lead.businessName?.includes(" @ ") ? lead.businessName.split(" @ ")[0] : lead.businessName,
+      company: lead.businessName?.includes(" @ ") ? lead.businessName.split(" @ ")[1] : "Company",
+      tags: lead.category ? [lead.category] : [],
+      location: lead.city ? `${lead.city}` : "Remote"
+    };
+
+    const proposal = generateTruthfulJobProposal(job, profileRes.data, templateType);
+
+    return { success: true, data: proposal };
+  } catch (error: any) {
+    console.error("[OutreachAction] Generation failed:", error);
+    return { success: false, error: error.message || "Failed to generate proposal" };
+  }
+}
+
+export async function generatePhysicalPitchAction(leadId: string, templateType: "local_website_pitch" | "agency_modernization") {
+  try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { success: false, error: "Authentication required to generate proposal" };
+    }
+
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!lead) {
+      return { success: false, error: "Lead not found" };
+    }
+
+    if (lead.userId && lead.userId !== session.userId && session.role !== "admin") {
+      return { success: false, error: "Forbidden: You cannot generate proposals for another user's lead" };
+    }
+
+    const profileRes = await getUserProfileAction(session.userId);
+    if (!profileRes.success || !profileRes.data) {
+      return { success: false, error: "Failed to load user profile" };
+    }
+
+    // Convert Prisma Lead to PhysicalLead partial
+    const physicalLead = {
+      businessName: lead.businessName || "Local Business",
+      category: lead.category || "services",
+      city: lead.city || "",
+      country: "",
+      phone: lead.phone || ""
+    };
+
+    const pitch = generateTruthfulPhysicalPitch(physicalLead, profileRes.data, templateType);
+
+    return { success: true, data: pitch };
+  } catch (error: any) {
+    console.error("[OutreachAction] Generation failed:", error);
+    return { success: false, error: error.message || "Failed to generate pitch" };
   }
 }
