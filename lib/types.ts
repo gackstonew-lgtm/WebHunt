@@ -278,6 +278,13 @@ export interface PhysicalSearchParams {
   selectedIndustries?: Array<{ id: string; name: string }>;
   maxResults?: number;
   forceRefresh?: boolean;
+  filters?: {
+    website?: 'exists' | 'missing' | 'weak';
+    hasSocial?: boolean;
+    hasWhatsapp?: boolean;
+    hasEmail?: boolean;
+    recentlyDiscovered?: boolean;
+  };
 }
 
 export interface OnlineSearchParams {
@@ -290,6 +297,12 @@ export interface OnlineSearchParams {
   selectedIndustries?: Array<{ id: string; name: string }>;
   maxResults?: number;
   forceRefresh?: boolean;
+  filters?: {
+    salaryMin?: number;
+    experienceLevel?: string;
+    remoteType?: RemoteType;
+    employmentType?: string;
+  };
 }
 
 export type SearchParams = PhysicalSearchParams | OnlineSearchParams;

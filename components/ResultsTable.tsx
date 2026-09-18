@@ -32,6 +32,8 @@ import JobProposalModal from "./JobProposalModal";
 import LeadNotesModal from "./LeadNotesModal";
 import JobCard from "./JobCard";
 import { exportLeadsToCsv } from "@/lib/export";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import MapResultsView from "./MapResultsView";
 
 interface ResultsTableProps {
   searchResult: SearchResult;
@@ -136,25 +138,25 @@ export default function ResultsTable({
   return (
     <div className="space-y-4">
       {/* Metrics Banner */}
-      <div className="bg-[#111214] border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xl">
+      <div className="bg-surface border border-subtle/50 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xl">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-[#18191D] border border-white/[0.1] text-[#EEEEEE]">
-            {searchResult.mode === "physical" ? <Store className="w-4 h-4 text-[#EEEEEE]" /> : <Terminal className="w-4 h-4 text-[#EEEEEE]" />}
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-surface-elevated border border-subtle/50 text-foreground">
+            {searchResult.mode === "physical" ? <Store className="w-4 h-4 text-foreground" /> : <Terminal className="w-4 h-4 text-foreground" />}
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-extrabold text-[#EEEEEE] text-sm sm:text-base tracking-tight">
+              <h3 className="font-extrabold text-foreground text-sm sm:text-base tracking-tight">
                 {searchResult.mode === "physical"
                   ? `Found ${leads.length} Verified Local Businesses Without Websites`
                   : `Found ${leads.length} Live Remote Opportunities (100% Real Data)`}
               </h3>
               {searchResult.fromCache && (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#18191D] text-[#989BA3] border border-white/[0.08]">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-elevated text-muted-foreground border border-subtle/50">
                   Cached
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#989BA3] mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {searchResult.mode === "physical"
                 ? `Scanned ${searchResult.totalFetched} live records in ${searchResult.location} for "${searchResult.query}"`
                 : `Queried official public developer endpoints for "${searchResult.query}"`}
@@ -166,62 +168,62 @@ export default function ResultsTable({
         <div className="flex flex-wrap items-center gap-2">
           {/* Physical Rating Filter */}
           {searchResult.mode === "physical" && (
-            <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
-              <Filter className="w-3.5 h-3.5 text-[#989BA3]" />
+            <div className="flex items-center space-x-1.5 bg-surface-subtle border border-subtle/50 px-2.5 py-1.5 rounded-xl text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(parseFloat(e.target.value))}
-                className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
+                className="bg-transparent text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="0" className="bg-[#111214]">All Ratings</option>
-                <option value="4.0" className="bg-[#111214]">4.0+ Stars</option>
-                <option value="4.5" className="bg-[#111214]">4.5+ Stars</option>
+                <option value="0" className="bg-surface">All Ratings</option>
+                <option value="4.0" className="bg-surface">4.0+ Stars</option>
+                <option value="4.5" className="bg-surface">4.5+ Stars</option>
               </select>
             </div>
           )}
 
           {/* Online Category / AI Filter */}
           {searchResult.mode === "online" && (
-            <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
-              <Filter className="w-3.5 h-3.5 text-[#989BA3]" />
+            <div className="flex items-center space-x-1.5 bg-surface-subtle border border-subtle/50 px-2.5 py-1.5 rounded-xl text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
               <select
                 value={tagFilter}
                 onChange={(e) => setTagFilter(e.target.value)}
-                className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
+                className="bg-transparent text-foreground focus:outline-none cursor-pointer"
               >
-                <option value="ALL" className="bg-[#111214]">All Categories</option>
-                <option value="ai" className="bg-[#111214]">AI Opportunities</option>
-                <option value="training" className="bg-[#111214]">AI Training &amp; RLHF</option>
-                <option value="annotation" className="bg-[#111214]">Data Annotation</option>
-                <option value="search" className="bg-[#111214]">Search Evaluation</option>
-                <option value="coding" className="bg-[#111214]">AI Coding Tasks</option>
-                <option value="speech" className="bg-[#111214]">Language &amp; Speech</option>
+                <option value="ALL" className="bg-surface">All Categories</option>
+                <option value="ai" className="bg-surface">AI Opportunities</option>
+                <option value="training" className="bg-surface">AI Training &amp; RLHF</option>
+                <option value="annotation" className="bg-surface">Data Annotation</option>
+                <option value="search" className="bg-surface">Search Evaluation</option>
+                <option value="coding" className="bg-surface">AI Coding Tasks</option>
+                <option value="speech" className="bg-surface">Language &amp; Speech</option>
               </select>
             </div>
           )}
 
           {/* Sort Selector */}
-          <div className="flex items-center space-x-1.5 bg-[#0D0E11] border border-white/[0.1] px-2.5 py-1.5 rounded-lg text-xs text-[#989BA3]">
-            <ArrowUpDown className="w-3.5 h-3.5 text-[#989BA3]" />
+          <div className="flex items-center space-x-1.5 bg-surface-subtle border border-subtle/50 px-2.5 py-1.5 rounded-xl text-xs text-muted-foreground">
+            <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-[#EEEEEE] focus:outline-none cursor-pointer"
+              className="bg-transparent text-foreground focus:outline-none cursor-pointer"
             >
-              <option value="default" className="bg-[#111214]">Default Order</option>
+              <option value="default" className="bg-surface">Default Order</option>
               {searchResult.mode === "physical" && (
-                <option value="rating" className="bg-[#111214]">Highest Rating</option>
+                <option value="rating" className="bg-surface">Highest Rating</option>
               )}
-              <option value="name" className="bg-[#111214]">Alphabetical</option>
+              <option value="name" className="bg-surface">Alphabetical</option>
             </select>
           </div>
 
           {/* Export CSV */}
           <button
             onClick={handleExport}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#111214] hover:bg-[#18191D] text-[#EEEEEE] border border-white/[0.08] hover:border-white/[0.18] text-xs font-semibold transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-foreground border border-subtle/50 hover:border-strong/60 text-xs font-semibold transition"
           >
-            <Download className="w-3.5 h-3.5 text-[#989BA3]" />
+            <Download className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Export CSV</span>
           </button>
 
@@ -229,7 +231,7 @@ export default function ResultsTable({
           <button
             onClick={handleSaveAll}
             disabled={filteredLeads.length === 0}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold text-xs shadow-sm disabled:opacity-50 transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs shadow-sm disabled:opacity-50 transition"
           >
             <BookmarkCheck className="w-3.5 h-3.5" />
             <span>
@@ -243,16 +245,18 @@ export default function ResultsTable({
 
       {/* Results Content */}
       {searchResult.mode === "physical" ? (
-        /* ================= PHYSICAL TABLE ================= */
-        <div className="bg-[#111214] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+        /* ================= PHYSICAL TABLE & MAP ================= */
+        <div className="space-y-5">
+          <MapResultsView leads={filteredLeads as any} location={searchResult.location} />
+          <div className="bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-white/[0.08] bg-[#0D0E11]/90 text-[#989BA3] font-semibold uppercase tracking-wider text-[11px]">
+                <tr className="border-b border-subtle/50 bg-surface-subtle/90 text-muted-foreground font-semibold uppercase tracking-wider text-[11px]">
                   <th className="p-3.5 w-10 text-center">
-                    <button onClick={toggleSelectAll} className="text-[#989BA3] hover:text-[#EEEEEE]">
+                    <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground">
                       {selectedLeadIds.size === filteredLeads.length && filteredLeads.length > 0 ? (
-                        <CheckSquare className="w-4 h-4 text-[#EEEEEE]" />
+                        <CheckSquare className="w-4 h-4 text-foreground" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -267,7 +271,7 @@ export default function ResultsTable({
                   <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06] text-[#EEEEEE]">
+              <tbody className="divide-y divide-white/[0.06] text-foreground">
                 {filteredLeads.map((item, i) => {
                   const lead = item as PhysicalLead;
                   const isSelected = selectedLeadIds.has(lead.id);
@@ -277,18 +281,18 @@ export default function ResultsTable({
                   return (
                     <tr
                       key={`${lead.id}-${lead.sourceProvider || "prov"}-${i}`}
-                      className={`hover:bg-white/[0.03] transition group ${
-                        isSelected ? "bg-white/[0.05]" : ""
+                      className={`hover:bg-surface-elevated/30 transition group ${
+                        isSelected ? "bg-surface-elevated/50" : ""
                       }`}
                     >
                       {/* Checkbox */}
                       <td className="p-3.5 text-center">
                         <button
                           onClick={() => toggleSelect(lead.id)}
-                          className="text-[#989BA3] hover:text-[#EEEEEE] transition"
+                          className="text-muted-foreground hover:text-foreground transition"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-[#EEEEEE]" />
+                            <CheckSquare className="w-4 h-4 text-foreground" />
                           ) : (
                             <Square className="w-4 h-4" />
                           )}
@@ -297,11 +301,25 @@ export default function ResultsTable({
 
                       {/* Business Name & Niche */}
                       <td className="p-3.5">
-                        <div className="font-bold text-[#EEEEEE] text-sm group-hover:text-white transition">
-                          {lead.businessName}
+                        <div className="font-bold text-foreground text-sm group-hover:text-white transition flex items-center space-x-2">
+                          <span>{lead.businessName}</span>
+                          {lead.relevanceScore !== undefined && lead.relevanceScore !== null && (
+                            <span 
+                              className={`text-[9px] px-1.5 py-0.5 rounded-full border font-bold ${
+                                lead.relevanceScore > 0.7 
+                                  ? 'bg-emerald-500/10 text-success border-emerald-500/20' 
+                                  : lead.relevanceScore > 0.4 
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              }`}
+                              title="Opportunity Score based on digital presence indicators"
+                            >
+                              Match: {Math.round(lead.relevanceScore * 100)}/100
+                            </span>
+                          )}
                         </div>
-                        <div className="text-[#989BA3] mt-0.5 inline-flex items-center space-x-1">
-                          <span className="px-2 py-0.5 rounded-md bg-[#0D0E11] text-[10px] text-[#989BA3] border border-white/[0.08]">
+                        <div className="text-muted-foreground mt-0.5 flex flex-wrap gap-1 items-center">
+                          <span className="px-2 py-0.5 rounded-md bg-surface-subtle text-[10px] text-muted-foreground border border-subtle/50">
                             {lead.category || "Local Business"}
                           </span>
                         </div>
@@ -312,29 +330,29 @@ export default function ResultsTable({
                         <div className="space-y-1.5 min-w-[200px]">
                           {/* Phone */}
                           {hasValidPhone ? (
-                            <div className="flex items-center justify-between bg-[#0D0E11] px-2.5 py-1 rounded-lg border border-white/[0.08]">
+                            <div className="flex items-center justify-between bg-surface-subtle px-2.5 py-1 rounded-xl border border-subtle/50">
                               <a
                                 href={`tel:${lead.phone}`}
-                                className="font-mono text-[#EEEEEE] hover:underline flex items-center space-x-1.5 text-xs"
+                                className="font-mono text-foreground hover:underline flex items-center space-x-1.5 text-xs"
                                 title="Click to call"
                               >
-                                <Phone className="w-3 h-3 text-[#989BA3] shrink-0" />
+                                <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
                                 <span>{lead.phoneFormatted || lead.phone}</span>
                               </a>
                               <button
                                 onClick={(e) => handleCopyPhone(lead.phone, e)}
-                                className="p-1 rounded text-[#989BA3] hover:text-[#EEEEEE] hover:bg-white/[0.06] transition"
+                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-surface-elevated/60 transition"
                                 title="Copy phone number"
                               >
                                 {copiedPhone === lead.phone ? (
-                                  <Check className="w-3 h-3 text-[#34D399]" />
+                                  <Check className="w-3 h-3 text-success" />
                                 ) : (
                                   <Copy className="w-3 h-3" />
                                 )}
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[#989BA3]/60 italic font-mono text-[11px]">
+                            <span className="text-muted-foreground/60 italic font-mono text-[11px]">
                               Phone unavailable
                             </span>
                           )}
@@ -344,22 +362,22 @@ export default function ResultsTable({
                             <div className="flex flex-wrap items-center gap-1 pt-0.5">
                               {/* Email */}
                               {lead.email && (
-                                <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#EEEEEE] border border-white/[0.1] text-[10px] font-medium">
+                                <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium">
                                   <a
                                     href={`mailto:${lead.email}`}
                                     className="hover:text-white flex items-center space-x-1"
                                     title={`Email: ${lead.email}`}
                                   >
-                                    <Mail className="w-3 h-3 text-[#989BA3] shrink-0" />
+                                    <Mail className="w-3 h-3 text-muted-foreground shrink-0" />
                                     <span className="max-w-[120px] truncate">{lead.email}</span>
                                   </a>
                                   <button
                                     onClick={(e) => handleCopyEmail(lead.email!, e)}
-                                    className="text-[#989BA3] hover:text-[#EEEEEE] p-0.5 ml-0.5"
+                                    className="text-muted-foreground hover:text-foreground p-0.5 ml-0.5"
                                     title="Copy email"
                                   >
                                     {copiedEmail === lead.email ? (
-                                      <Check className="w-2.5 h-2.5 text-[#34D399]" />
+                                      <Check className="w-2.5 h-2.5 text-success" />
                                     ) : (
                                       <Copy className="w-2.5 h-2.5" />
                                     )}
@@ -377,10 +395,10 @@ export default function ResultsTable({
                                   }
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-success hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-medium transition"
                                   title="Open Direct WhatsApp Chat"
                                 >
-                                  <MessageCircle className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  <MessageCircle className="w-3 h-3 text-success shrink-0" />
                                   <span>WhatsApp</span>
                                 </a>
                               )}
@@ -391,10 +409,10 @@ export default function ResultsTable({
                                   href={lead.bookingUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#EEEEEE] hover:text-white border border-white/[0.1] text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-elevated text-foreground hover:text-white border border-subtle/50 text-[10px] font-medium transition"
                                   title="Book Appointment"
                                 >
-                                  <Calendar className="w-3 h-3 text-[#989BA3] shrink-0" />
+                                  <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span>Book</span>
                                 </a>
                               )}
@@ -405,10 +423,10 @@ export default function ResultsTable({
                                   href={lead.contactPageUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-medium transition"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-medium transition"
                                   title="Contact Page"
                                 >
-                                  <Globe className="w-3 h-3 text-[#989BA3] shrink-0" />
+                                  <Globe className="w-3 h-3 text-muted-foreground shrink-0" />
                                   <span>Contact Page</span>
                                 </a>
                               )}
@@ -419,7 +437,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.facebook}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
                                   title="Facebook Page"
                                 >
                                   fb
@@ -430,7 +448,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.instagram}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
                                   title="Instagram Profile"
                                 >
                                   ig
@@ -441,7 +459,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.linkedin}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
                                   title="LinkedIn Profile"
                                 >
                                   in
@@ -452,7 +470,7 @@ export default function ResultsTable({
                                   href={lead.socialProfiles.twitter}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] text-[10px] font-bold transition"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
                                   title="X / Twitter"
                                 >
                                   X
@@ -465,8 +483,8 @@ export default function ResultsTable({
 
                       {/* Location & Country */}
                       <td className="p-3.5 max-w-[200px] truncate">
-                        <div className="flex items-center space-x-1 text-[#989BA3] truncate">
-                          <MapPin className="w-3.5 h-3.5 text-[#989BA3] shrink-0" />
+                        <div className="flex items-center space-x-1 text-muted-foreground truncate">
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="truncate">{lead.address || `${lead.city}, ${lead.country}`}</span>
                         </div>
                       </td>
@@ -479,12 +497,12 @@ export default function ResultsTable({
                               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                               <span>{lead.rating.toFixed(1)}</span>
                             </div>
-                            <span className="text-[#989BA3] text-[11px]">
+                            <span className="text-muted-foreground text-[11px]">
                               ({lead.reviewCount || 0})
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[#989BA3]/60 italic">No reviews</span>
+                          <span className="text-muted-foreground/60 italic">No reviews</span>
                         )}
                       </td>
 
@@ -506,8 +524,8 @@ export default function ResultsTable({
                             <span>Website Found</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-success border border-emerald-500/20">
+                            <ShieldCheck className="w-3 h-3 text-success" />
                             <span>No Website</span>
                           </span>
                         )}
@@ -524,7 +542,7 @@ export default function ResultsTable({
                               {lead.sources.length} Sources
                             </span>
                           ) : (
-                            <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-[#0D0E11] text-[#989BA3] border border-white/[0.08]">
+                            <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-surface-subtle text-muted-foreground border border-subtle/50">
                               {lead.sourceProvider}
                             </span>
                           )}
@@ -533,7 +551,7 @@ export default function ResultsTable({
                               href={lead.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[#989BA3] hover:text-[#EEEEEE] p-0.5"
+                              className="text-muted-foreground hover:text-foreground p-0.5"
                               title="View original source record"
                             >
                               <ExternalLink className="w-3 h-3" />
@@ -548,17 +566,17 @@ export default function ResultsTable({
                           {/* Pitch script button */}
                           <button
                             onClick={() => setPitchLead(lead)}
-                            className="px-2.5 py-1 rounded-lg bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] border border-white/[0.1] font-medium transition flex items-center space-x-1"
+                            className="px-2.5 py-1 rounded-xl bg-surface-elevated hover:bg-surface-elevated/80 text-foreground border border-subtle/50 font-medium transition flex items-center space-x-1"
                             title="Generate cold call pitch script"
                           >
-                            <MessageSquareQuote className="w-3.5 h-3.5 text-[#989BA3]" />
+                            <MessageSquareQuote className="w-3.5 h-3.5 text-muted-foreground" />
                             <span>Pitch</span>
                           </button>
 
                           {/* Notes */}
                           <button
                             onClick={() => setNotesLead(lead)}
-                            className="p-1.5 rounded-lg bg-[#111214] hover:bg-[#18191D] text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.08] transition"
+                            className="p-1.5 rounded-xl bg-surface hover:bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 transition"
                             title="Add notes"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -568,15 +586,15 @@ export default function ResultsTable({
                           <button
                             onClick={() => onSaveLead(lead)}
                             disabled={isSaved}
-                            className={`px-3 py-1 rounded-lg font-medium transition flex items-center space-x-1 ${
+                            className={`px-3 py-1 rounded-xl font-medium transition flex items-center space-x-1 ${
                               isSaved
-                                ? "bg-white/[0.06] text-[#34D399] border border-white/[0.1] cursor-default"
-                                : "bg-[#EEEEEE] hover:bg-white text-[#08090B] font-bold shadow-sm"
+                                ? "bg-surface-elevated/60 text-success border border-subtle/50 cursor-default"
+                                : "bg-primary hover:bg-primary-hover text-primary-foreground font-bold shadow-sm"
                             }`}
                           >
                             {isSaved ? (
                               <>
-                                <Check className="w-3.5 h-3.5 text-[#34D399]" />
+                                <Check className="w-3.5 h-3.5 text-success" />
                                 <span>Saved</span>
                               </>
                             ) : (
@@ -594,6 +612,7 @@ export default function ResultsTable({
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       ) : (
         /* ================= ONLINE JOBS CARD GRID ================= */

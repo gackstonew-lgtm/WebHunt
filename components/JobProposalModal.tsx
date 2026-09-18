@@ -159,25 +159,25 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-[#111214] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden text-[#EEEEEE] max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden text-foreground max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#0D0E11]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-subtle/50 bg-surface-subtle">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-[#18191D] text-[#EEEEEE] border border-white/[0.08]">
+            <div className="p-2.5 rounded-xl bg-surface-elevated text-foreground border border-subtle/50">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-[#EEEEEE] text-base truncate max-w-sm sm:max-w-md">
+              <h3 className="font-bold text-foreground text-base truncate max-w-sm sm:max-w-md">
                 {job.title}
               </h3>
-              <p className="text-xs text-[#989BA3]">
-                Truthful Grounded Proposal for <span className="text-[#EEEEEE] font-semibold">{job.company}</span>
+              <p className="text-xs text-muted-foreground">
+                Truthful Grounded Proposal for <span className="text-foreground font-semibold">{job.company}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] transition"
+            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -187,16 +187,16 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
         <div className="p-6 overflow-y-auto space-y-5 text-sm">
           {/* Duplicate Outreach Warning */}
           {duplicateWarning && (
-            <div className="p-3 rounded-xl bg-[#18191D] border border-white/20 flex items-center space-x-2 text-xs text-[#EEEEEE]">
+            <div className="p-3 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center space-x-2 text-xs text-foreground">
               <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
               <span>{duplicateWarning}</span>
             </div>
           )}
 
           {/* Quick Info Strip */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-[#0D0E11] border border-white/[0.08] gap-3">
-            <div className="flex items-center space-x-2 text-xs text-[#989BA3]">
-              <Briefcase className="w-4 h-4 text-[#EEEEEE] shrink-0" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-surface-subtle border border-subtle/50 gap-3">
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+              <Briefcase className="w-4 h-4 text-foreground shrink-0" />
               <span>{job.location} • {job.salary || "Competitive"}</span>
             </div>
             <div className="flex items-center space-x-2 shrink-0">
@@ -211,7 +211,7 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
               </a>
               <button
                 onClick={handleCopy}
-                className="px-3 py-1.5 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] text-xs font-medium border border-white/[0.08] transition flex items-center space-x-1.5"
+                className="px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-secondary text-foreground text-xs font-medium border border-subtle/50 transition flex items-center space-x-1.5"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? "Copied!" : "Copy Proposal"}</span>
@@ -221,7 +221,7 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
 
           {/* Template Style Selector */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Proposal Strategy / Template
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -235,12 +235,12 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
                   onClick={() => handleTemplateChange(tmpl.type as ProposalTemplateType)}
                   className={`p-2.5 rounded-xl text-left border transition text-xs ${
                     templateType === tmpl.type
-                      ? "bg-[#18191D] border-white/20 text-[#EEEEEE]"
-                      : "bg-[#0D0E11] border-white/[0.06] text-[#989BA3] hover:text-[#EEEEEE]"
+                      ? "bg-surface-elevated border-subtle/50 text-foreground"
+                      : "bg-surface-subtle border-subtle text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <div className="font-bold">{tmpl.label}</div>
-                  <div className="text-[10px] text-[#989BA3] mt-0.5">{tmpl.desc}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{tmpl.desc}</div>
                 </button>
               ))}
             </div>
@@ -251,7 +251,7 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
             <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="px-4 py-2 rounded-xl bg-[#EEEEEE] hover:bg-white text-black font-semibold text-xs shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-4 py-2 rounded-xl bg-primary hover:bg-white text-black font-semibold text-xs shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{isGenerating ? "Generating proposal..." : "Generate Proposal"}</span>
@@ -260,21 +260,21 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
 
           {/* Subject Line */}
           <div className="space-y-1.5">
-            <span className="text-xs font-semibold text-[#989BA3] uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Subject Line
             </span>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full p-3 rounded-xl bg-[#0D0E11] border border-white/[0.08] font-mono text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+              className="w-full p-3 rounded-xl bg-surface-subtle border border-subtle/50 font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
 
           {/* Proposal Body */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#989BA3] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Tailored Message (Strictly Grounded in Profile Facts)
               </span>
               <span className="text-[10px] text-emerald-400 flex items-center space-x-1">
@@ -286,18 +286,18 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
               rows={9}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="w-full p-4 rounded-2xl bg-[#0D0E11] border border-white/[0.08] text-xs text-[#EEEEEE] leading-relaxed focus:outline-none focus:ring-1 focus:ring-white/20"
+              className="w-full p-4 rounded-2xl bg-surface-subtle border border-subtle/50 text-xs text-foreground leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
 
           {/* Candidate Profile Skills Cited */}
           {profile?.skills && (
             <div className="flex flex-wrap gap-1.5 items-center pt-1">
-              <span className="text-xs text-[#989BA3] mr-1">Verified Profile Stack:</span>
+              <span className="text-xs text-muted-foreground mr-1">Verified Profile Stack:</span>
               {profile.skills.slice(0, 6).map((skill) => (
                 <span
                   key={skill}
-                  className="px-2 py-0.5 rounded-md bg-[#18191D] text-[#989BA3] border border-white/[0.08] text-[10px]"
+                  className="px-2 py-0.5 rounded-md bg-surface-elevated text-muted-foreground border border-subtle/50 text-[10px]"
                 >
                   {skill}
                 </span>
@@ -307,7 +307,7 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-white/[0.08] bg-[#0D0E11] flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-subtle/50 bg-surface-subtle flex items-center justify-between">
           <div>
             {draftSaved && (
               <span className="text-xs text-emerald-400 flex items-center space-x-1 font-semibold">
@@ -321,9 +321,9 @@ export default function JobProposalModal({ job, onClose }: JobProposalModalProps
             <button
               onClick={handleSaveDraft}
               disabled={isSavingDraft}
-              className="px-3.5 py-2 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] text-xs font-medium border border-white/[0.08] transition flex items-center space-x-1.5"
+              className="px-3.5 py-2 rounded-xl bg-surface-elevated hover:bg-surface-secondary text-foreground text-xs font-medium border border-subtle/50 transition flex items-center space-x-1.5"
             >
-              <Save className="w-3.5 h-3.5 text-[#989BA3]" />
+              <Save className="w-3.5 h-3.5 text-muted-foreground" />
               <span>{isSavingDraft ? "Saving..." : "Save Draft"}</span>
             </button>
 

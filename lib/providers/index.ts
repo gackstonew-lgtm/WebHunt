@@ -340,17 +340,43 @@ export class LeadProviderAggregator {
       cached: false,
     };
 
+    let finalFilteredLeads = finalLeads;
+    if (params.filters) {
+      finalFilteredLeads = finalFilteredLeads.filter((lead) => {
+        if (params.filters?.website === 'exists' && !lead.hasWebsite) return false;
+        if (params.filters?.website === 'missing' && lead.hasWebsite) return false;
+        if (params.filters?.website === 'weak') {
+          const isWeak = lead.websiteOpportunity === 'WEAK_WEB_PRESENCE' || lead.websiteOpportunity === 'BROKEN_WEBSITE' || lead.websiteOpportunity === 'SOCIAL_ONLY';
+          if (!isWeak) return false;
+        }
+        
+        const hasSocial = !!lead.enrichment?.socials?.length || !!lead.socialProfiles?.facebook || !!lead.socialProfiles?.instagram || !!lead.socialProfiles?.linkedin;
+        if (params.filters?.hasSocial === true && !hasSocial) return false;
+        if (params.filters?.hasSocial === false && hasSocial) return false;
+
+        const hasWhatsapp = !!lead.enrichment?.whatsapp?.length || !!lead.whatsapp;
+        if (params.filters?.hasWhatsapp === true && !hasWhatsapp) return false;
+        if (params.filters?.hasWhatsapp === false && hasWhatsapp) return false;
+
+        const hasEmail = !!lead.enrichment?.emails?.length || !!lead.email;
+        if (params.filters?.hasEmail === true && !hasEmail) return false;
+        if (params.filters?.hasEmail === false && hasEmail) return false;
+
+        return true;
+      });
+    }
+
     const searchResult: SearchResult = {
       mode: "physical",
       query: displayQuery,
       location: locationStr,
       provider: selected,
       totalFetched: rawLeads.length,
-      qualifiedCount: finalLeads.length,
+      qualifiedCount: finalFilteredLeads.length,
       fromCache: false,
       sourcesQueried,
       failedSources,
-      leads: finalLeads,
+      leads: finalFilteredLeads,
       diagnostics,
     };
 
@@ -516,17 +542,44 @@ export class LeadProviderAggregator {
       })),
     };
 
+    let finalFilteredJobs = finalJobs;
+    if (params.filters) {
+      finalFilteredJobs = finalFilteredJobs.filter((job) => {
+        if (params.filters?.salaryMin) {
+          const salaryStr = String(job.salary || "").toLowerCase();
+          // Extract first group of digits. If none, skip filter or drop? Drop is safer if they want salary.
+          const match = salaryStr.match(/\d+/);
+          if (!match) return false;
+          let val = parseInt(match[0], 10);
+          if (salaryStr.includes("k")) val *= 1000;
+          if (val < params.filters.salaryMin) return false;
+        }
+        if (params.filters?.experienceLevel && job.experienceLevel) {
+          if (!job.experienceLevel.toLowerCase().includes(params.filters.experienceLevel.toLowerCase())) {
+            return false;
+          }
+        }
+        if (params.filters?.remoteType && job.remoteType !== params.filters.remoteType) {
+          return false;
+        }
+        if (params.filters?.employmentType && job.opportunityType !== params.filters.employmentType) {
+          return false;
+        }
+        return true;
+      });
+    }
+
     const searchResult: SearchResult = {
       mode: "online",
       query: displayQuery,
       location: "Worldwide Remote",
       provider: selected,
       totalFetched: rawJobs.length,
-      qualifiedCount: finalJobs.length,
+      qualifiedCount: finalFilteredJobs.length,
       fromCache: false,
       sourcesQueried,
       failedSources,
-      leads: finalJobs,
+      leads: finalFilteredJobs,
       diagnostics,
     };
 

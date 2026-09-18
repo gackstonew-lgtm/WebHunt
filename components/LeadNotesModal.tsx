@@ -36,18 +36,18 @@ export default function LeadNotesModal({ lead, onSave, onClose }: LeadNotesModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#111214] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden text-[#EEEEEE]">
+      <div className="relative w-full max-w-lg bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden text-foreground">
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#0D0E11]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-subtle/50 bg-surface-subtle">
             <div>
-              <h3 className="font-bold text-[#EEEEEE] text-base truncate max-w-sm">{title}</h3>
-              <p className="text-xs text-[#989BA3]">Prospect Progress, Notes &amp; Estimated Deal Value</p>
+              <h3 className="font-bold text-foreground text-base truncate max-w-sm">{title}</h3>
+              <p className="text-xs text-muted-foreground">Prospect Progress, Notes &amp; Estimated Deal Value</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] transition"
+              className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -57,8 +57,8 @@ export default function LeadNotesModal({ lead, onSave, onClose }: LeadNotesModal
           <div className="p-6 space-y-4 text-sm">
             {/* Deal Value */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#EEEEEE] flex items-center space-x-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-[#989BA3]" />
+              <label className="text-xs font-semibold text-foreground flex items-center space-x-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Estimated Contract / Deal Value ($ USD)</span>
               </label>
               <input
@@ -68,14 +68,14 @@ export default function LeadNotesModal({ lead, onSave, onClose }: LeadNotesModal
                 max="100000"
                 value={estimatedValue}
                 onChange={(e) => setEstimatedValue(parseFloat(e.target.value) || 0)}
-                className="w-full bg-[#0D0E11] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20 transition"
+                className="w-full bg-surface-subtle border border-subtle/50 rounded-xl px-5 py-3 text-sm rounded-xl text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition"
               />
             </div>
 
             {/* Notes textarea */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[#EEEEEE] flex items-center space-x-1.5">
-                <FileText className="w-3.5 h-3.5 text-[#989BA3]" />
+              <label className="text-xs font-semibold text-foreground flex items-center space-x-1.5">
+                <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Notes &amp; Interaction History</span>
               </label>
               <textarea
@@ -83,17 +83,17 @@ export default function LeadNotesModal({ lead, onSave, onClose }: LeadNotesModal
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Log discussion details, client requirements, scheduled callback time..."
-                className="w-full bg-[#0D0E11] border border-white/[0.08] rounded-xl p-3 text-xs text-[#EEEEEE] placeholder-[#989BA3]/50 focus:outline-none focus:ring-1 focus:ring-white/20 resize-none transition"
+                className="w-full bg-surface-subtle border border-subtle/50 rounded-xl p-3 text-xs text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none transition"
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-white/[0.08] bg-[#0D0E11] flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-subtle/50 bg-surface-subtle flex items-center justify-between">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#989BA3] hover:text-[#EEEEEE] text-xs font-medium border border-white/[0.08] transition"
+              className="px-4 py-2 rounded-xl bg-surface-elevated hover:bg-surface-secondary text-muted-foreground hover:text-foreground text-xs font-medium border border-subtle/50 transition"
             >
               Cancel
             </button>

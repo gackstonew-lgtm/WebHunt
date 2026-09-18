@@ -14,6 +14,7 @@ export interface SearchHistoryItem {
   totalFetched: number;
   qualifiedCount: number;
   createdAt: string;
+  filters?: any;
 }
 
 export function getStoredSearchHistory(): SearchHistoryItem[] {

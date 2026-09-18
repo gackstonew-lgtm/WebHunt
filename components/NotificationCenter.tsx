@@ -49,18 +49,18 @@ export function NotificationCenter() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] rounded-xl transition relative"
+        className="p-2 text-muted-foreground hover:text-foreground hover:bg-surface-elevated rounded-xl transition relative"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full border-2 border-[#111214]" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full border-2 border-background" />
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-[#111214] border border-white/[0.08] rounded-2xl shadow-2xl z-50 overflow-hidden">
-          <div className="p-4 border-b border-white/[0.08] bg-[#0D0E11] flex items-center justify-between">
-            <h3 className="font-bold text-[#EEEEEE] text-sm flex items-center space-x-2">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-surface border border-subtle/50 rounded-2xl shadow-2xl z-50 overflow-hidden">
+          <div className="p-4 border-b border-subtle/50 bg-surface-subtle flex items-center justify-between">
+            <h3 className="font-bold text-foreground text-sm flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span>Opportunities</span>
             </h3>
@@ -73,7 +73,7 @@ export function NotificationCenter() {
           
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-6 text-center text-[#989BA3] text-xs">
+              <div className="p-6 text-center text-muted-foreground text-xs">
                 No new opportunities yet. We'll notify you when matching jobs are found.
               </div>
             ) : (
@@ -81,23 +81,23 @@ export function NotificationCenter() {
                 <div
                   key={notif.id}
                   onClick={() => markAsRead(notif.id)}
-                  className={`p-4 border-b border-white/[0.04] hover:bg-[#18191D] transition cursor-pointer flex gap-3 ${
-                    notif.read ? "opacity-70" : "bg-[#18191D]/50"
+                  className={`p-4 border-b border-subtle/50 hover:bg-surface-elevated transition cursor-pointer flex gap-3 ${
+                    notif.read ? "opacity-70" : "bg-surface-elevated/50"
                   }`}
                 >
-                  <div className={`mt-0.5 shrink-0 ${notif.read ? "text-[#989BA3]" : "text-emerald-400"}`}>
+                  <div className={`mt-0.5 shrink-0 ${notif.read ? "text-muted-foreground" : "text-emerald-400"}`}>
                     {notif.type === "NEW_OPPORTUNITY" ? <Briefcase className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                   </div>
                   <div>
                     <div className="flex items-start justify-between gap-2">
-                      <div className={`text-xs font-semibold ${notif.read ? "text-[#989BA3]" : "text-[#EEEEEE]"}`}>
+                      <div className={`text-xs font-semibold ${notif.read ? "text-muted-foreground" : "text-foreground"}`}>
                         {notif.title}
                       </div>
-                      <div className="text-[9px] text-[#989BA3] whitespace-nowrap">
+                      <div className="text-[9px] text-muted-foreground whitespace-nowrap">
                         {new Date(notif.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="text-xs text-[#989BA3] mt-1 line-clamp-2 leading-relaxed">
+                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                       {notif.message}
                     </div>
                   </div>

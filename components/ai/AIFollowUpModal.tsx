@@ -100,21 +100,21 @@ export default function AIFollowUpModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-[#111214] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden text-[#EEEEEE] max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-xl bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden text-foreground max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#0D0E11]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-subtle/50 bg-surface-subtle">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-[#18191D] text-[#EEEEEE] border border-white/[0.08]">
+            <div className="p-2.5 rounded-xl bg-surface-elevated text-foreground border border-subtle/50">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-[#EEEEEE] text-sm">AI Follow-Up</h3>
-              <p className="text-xs text-[#989BA3] truncate max-w-xs">{leadName}</p>
+              <h3 className="font-bold text-foreground text-sm">AI Follow-Up</h3>
+              <p className="text-xs text-muted-foreground truncate max-w-xs">{leadName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] transition"
+            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -124,7 +124,7 @@ export default function AIFollowUpModal({
         <div className="p-5 overflow-y-auto space-y-4 text-sm">
           {/* Channel selector */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
               Channel
             </label>
             <div className="flex gap-2">
@@ -134,8 +134,8 @@ export default function AIFollowUpModal({
                   onClick={() => setChannel(ch)}
                   className={`flex-1 py-1.5 rounded-xl text-xs font-medium border transition ${
                     channel === ch
-                      ? "bg-[#18191D] border-white/20 text-[#EEEEEE]"
-                      : "bg-[#0D0E11] border-white/[0.06] text-[#989BA3] hover:text-[#EEEEEE]"
+                      ? "bg-surface-elevated border-subtle/50 text-foreground"
+                      : "bg-surface-subtle border-subtle text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {ch.charAt(0).toUpperCase() + ch.slice(1)}
@@ -149,7 +149,7 @@ export default function AIFollowUpModal({
             <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full px-4 py-2.5 rounded-xl bg-[#18191D] hover:bg-[#22242A] disabled:opacity-50 text-[#EEEEEE] text-xs font-semibold border border-white/[0.08] transition flex items-center justify-center space-x-2"
+              className="w-full px-4 py-2.5 rounded-xl bg-surface-elevated hover:bg-surface-secondary disabled:opacity-50 text-foreground text-xs font-semibold border border-subtle/50 transition flex items-center justify-center space-x-2"
             >
               {isGenerating ? (
                 <>
@@ -167,7 +167,7 @@ export default function AIFollowUpModal({
 
           {/* Error */}
           {error && (
-            <div className="p-3 rounded-xl bg-[#18191D] border border-red-500/20 text-xs text-[#989BA3]">
+            <div className="p-3 rounded-xl bg-surface-elevated border border-red-500/20 text-xs text-muted-foreground">
               {error}
             </div>
           )}
@@ -177,24 +177,24 @@ export default function AIFollowUpModal({
             <div className="space-y-3">
               {followUp.subject && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                     Subject
                   </label>
-                  <div className="px-3 py-2 rounded-xl bg-[#0D0E11] border border-white/[0.08] text-xs text-[#EEEEEE] font-mono">
+                  <div className="px-5 py-3 rounded-xl bg-surface-subtle border border-subtle/50 text-xs text-foreground font-mono">
                     {followUp.subject}
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Message Body
                 </label>
                 <textarea
                   rows={6}
                   value={editableBody}
                   onChange={(e) => setEditableBody(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-[#0D0E11] border border-white/[0.08] text-xs text-[#EEEEEE] leading-relaxed focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full p-3 rounded-xl bg-surface-subtle border border-subtle/50 text-xs text-foreground leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export default function AIFollowUpModal({
               {followUp.assumptions.length > 0 && (
                 <button
                   onClick={() => setShowAssumptions(!showAssumptions)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#0D0E11] border border-white/[0.06] text-[10px] text-[#989BA3] hover:text-[#EEEEEE] transition"
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-subtle border border-subtle text-[10px] text-muted-foreground hover:text-foreground transition"
                 >
                   <div className="flex items-center space-x-1.5">
                     <Info className="w-3 h-3" />
@@ -212,7 +212,7 @@ export default function AIFollowUpModal({
                 </button>
               )}
               {showAssumptions && (
-                <ul className="text-[10px] text-[#989BA3] space-y-1 px-1">
+                <ul className="text-[10px] text-muted-foreground space-y-1 px-1">
                   {followUp.assumptions.map((a, i) => (
                     <li key={i} className="flex items-start space-x-1.5">
                       <span className="text-amber-400 shrink-0">→</span>
@@ -227,10 +227,10 @@ export default function AIFollowUpModal({
 
         {/* Footer */}
         {followUp && (
-          <div className="px-5 py-4 border-t border-white/[0.08] bg-[#0D0E11] flex items-center justify-between">
+          <div className="px-5 py-4 border-t border-subtle/50 bg-surface-subtle flex items-center justify-between">
             <button
               onClick={() => { setFollowUp(null); setEditableBody(""); }}
-              className="px-3 py-1.5 rounded-lg text-xs text-[#989BA3] hover:text-[#EEEEEE] border border-white/[0.06] hover:bg-[#18191D] transition"
+              className="px-3 py-1.5 rounded-xl text-xs text-muted-foreground hover:text-foreground border border-subtle hover:bg-surface-elevated transition"
             >
               Regenerate
             </button>
@@ -238,7 +238,7 @@ export default function AIFollowUpModal({
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleCopy}
-                className="px-3 py-1.5 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] text-xs border border-white/[0.08] transition flex items-center space-x-1.5"
+                className="px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-secondary text-foreground text-xs border border-subtle/50 transition flex items-center space-x-1.5"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? "Copied!" : "Copy"}</span>
@@ -247,7 +247,7 @@ export default function AIFollowUpModal({
               {channel === "whatsapp" && leadPhone && (
                 <button
                   onClick={handleOpenWhatsApp}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#111A14] text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 font-semibold text-xs transition flex items-center space-x-1.5"
+                  className="px-3.5 py-1.5 rounded-xl bg-success/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 font-semibold text-xs transition flex items-center space-x-1.5"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>WhatsApp</span>

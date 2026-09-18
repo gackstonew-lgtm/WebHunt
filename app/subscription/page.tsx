@@ -177,32 +177,32 @@ function SubscriptionContent() {
       <div className="flex items-center justify-between">
         <Link
           href={getReturnHref()}
-          className="inline-flex items-center space-x-2 text-xs font-semibold text-neutral-600 dark:text-[#989BA3] hover:text-neutral-900 dark:hover:text-[#EEEEEE] transition px-3 py-1.5 rounded-lg bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08]"
+          className="inline-flex items-center space-x-2 text-xs font-semibold text-neutral-600 dark:text-muted-foreground hover:text-neutral-900 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Return to {returnTo === "online" ? "Remote Gigs Radar" : "Local Lead Radar"}</span>
         </Link>
 
         {userSession && (
-          <div className="text-xs text-neutral-500 dark:text-[#989BA3]">
-            Signed in as <span className="font-semibold text-neutral-900 dark:text-[#EEEEEE]">{userSession.email}</span>
+          <div className="text-xs text-neutral-500 dark:text-muted-foreground">
+            Signed in as <span className="font-semibold text-neutral-900 dark:text-foreground">{userSession.email}</span>
           </div>
         )}
       </div>
 
       {/* Success Banner */}
       {verificationSuccessMessage && (
-        <div className="p-4 rounded-xl bg-[#111A14] border border-emerald-500/30 text-emerald-300 flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top-2">
+        <div className="p-4 rounded-xl bg-success/10 border border-emerald-500/30 text-emerald-300 flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top-2">
           <div className="flex items-center space-x-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <div className="font-bold text-sm text-[#EEEEEE]">Subscription Active!</div>
-              <div className="text-[#989BA3]">{verificationSuccessMessage}</div>
+              <div className="font-bold text-sm text-foreground">Subscription Active!</div>
+              <div className="text-muted-foreground">{verificationSuccessMessage}</div>
             </div>
           </div>
           <Link
             href={getReturnHref()}
-            className="px-4 py-2 bg-white text-black hover:bg-neutral-200 font-semibold rounded-lg shrink-0 transition"
+            className="px-4 py-2 bg-white text-black hover:bg-neutral-200 font-semibold rounded-xl shrink-0 transition"
           >
             Launch Radar Now
           </Link>
@@ -211,22 +211,22 @@ function SubscriptionContent() {
 
       {/* Current Active Status Card (Only shown for verified paid subscriptions) */}
       {subStatus?.subscription && (
-        <div className="bg-[#111214] dark:bg-[#111214] border border-white/20 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div className="bg-surface dark:bg-surface border border-subtle/50 rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-xl bg-[#18191D] border border-white/[0.08] text-[#EEEEEE] flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-surface-elevated border border-subtle/50 text-foreground flex items-center justify-center">
                 <Crown className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-semibold text-neutral-900 dark:text-[#EEEEEE]">
+                  <h3 className="text-base font-semibold text-neutral-900 dark:text-foreground">
                     Active Subscription
                   </h3>
-                  <span className="px-2 py-0.5 rounded-md bg-[#111A14] text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded-md bg-success/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold uppercase tracking-wider">
                     Active
                   </span>
                 </div>
-                <p className="text-xs text-neutral-500 dark:text-[#989BA3] mt-0.5">
+                <p className="text-xs text-neutral-500 dark:text-muted-foreground mt-0.5">
                   {"Plan: " + (subStatus.subscription.plan === "annual" ? "Annual Pass ($200/yr)" : "Monthly Access ($50/mo)") + " • " + (subStatus.subscription.daysRemaining || 0) + " days remaining"}
                 </p>
               </div>
@@ -234,7 +234,7 @@ function SubscriptionContent() {
 
             <Link
               href={getReturnHref()}
-              className="inline-flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-white text-black hover:bg-neutral-200 text-xs font-semibold shadow-sm transition shrink-0"
+              className="inline-flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-semibold shadow-sm transition shrink-0"
             >
               <Radar className="w-4 h-4" />
               <span>Launch Lead Radar</span>
@@ -246,28 +246,28 @@ function SubscriptionContent() {
 
       {/* Hero Header Banner */}
       <div className="text-center space-y-3 pt-2">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] text-neutral-600 dark:text-[#989BA3] text-xs font-medium">
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 text-neutral-600 dark:text-muted-foreground text-xs font-medium">
           <Sparkles className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-300" />
           <span>Production Radar Access Control</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-[#EEEEEE] tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-foreground tracking-tight">
           Unlock Unlimited Discovery Radar
         </h1>
-        <p className="text-sm text-neutral-600 dark:text-[#989BA3] max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm text-neutral-600 dark:text-muted-foreground max-w-xl mx-auto leading-relaxed">
           Access high-intent physical business leads with no websites, remote tech contracts, enriched WhatsApp &amp; phone contacts, and deal pipeline automation.
         </p>
 
         {/* Currency Switcher */}
-        <div className="inline-flex items-center p-1 rounded-xl bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] mt-4">
+        <div className="inline-flex items-center p-1 rounded-xl bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 mt-4">
           {(["USD", "KES", "NGN"] as const).map((curr) => (
             <button
               key={curr}
               type="button"
               onClick={() => setCurrency(curr)}
-              className={"px-4 py-1.5 rounded-lg text-xs font-semibold transition " + (
+              className={"px-4 py-1.5 rounded-xl text-xs font-semibold transition " + (
                 currency === curr
                   ? "bg-white text-black shadow-sm"
-                  : "text-neutral-600 dark:text-[#989BA3] hover:text-neutral-900 dark:hover:text-[#EEEEEE]"
+                  : "text-neutral-600 dark:text-muted-foreground hover:text-neutral-900 dark:hover:text-foreground"
               )}
             >
               {curr === "USD" ? "USD ($)" : curr === "KES" ? "KES (KSh)" : "NGN (₦)"}
@@ -286,8 +286,8 @@ function SubscriptionContent() {
               key={plan.id}
               className={"relative rounded-2xl p-6 sm:p-8 border transition flex flex-col justify-between space-y-6 " + (
                 isAnnual
-                  ? "bg-[#111214] dark:bg-[#111214] border-white/20 shadow-xl"
-                  : "bg-[#111214] dark:bg-[#111214] border-black/[0.08] dark:border-white/[0.08] hover:border-black/[0.16] dark:hover:border-white/[0.16]"
+                  ? "bg-surface dark:bg-surface border-subtle/50 shadow-xl"
+                  : "bg-surface dark:bg-surface border-black/[0.08] dark:border-subtle/50 hover:border-black/[0.16] dark:hover:border-white/[0.16]"
               )}
             >
               {isAnnual && (
@@ -300,35 +300,35 @@ function SubscriptionContent() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-neutral-900 dark:text-[#EEEEEE]">{plan.name}</h3>
-                    <p className="text-xs text-neutral-500 dark:text-[#989BA3] mt-1">{plan.tagline}</p>
+                    <h3 className="text-xl font-bold text-neutral-900 dark:text-foreground">{plan.name}</h3>
+                    <p className="text-xs text-neutral-500 dark:text-muted-foreground mt-1">{plan.tagline}</p>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#18191D] text-neutral-600 dark:text-[#989BA3] border border-black/[0.08] dark:border-white/[0.08]">
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-surface-elevated text-neutral-600 dark:text-muted-foreground border border-black/[0.08] dark:border-subtle/50">
                     {plan.durationDays} Days
                   </span>
                 </div>
 
                 <div className="pt-2">
                   <div className="flex items-baseline space-x-2">
-                    <span className="text-4xl sm:text-5xl font-extrabold text-neutral-900 dark:text-[#EEEEEE] tracking-tight">
+                    <span className="text-4xl sm:text-5xl font-extrabold text-neutral-900 dark:text-foreground tracking-tight">
                       {getPlanPrice(plan)}
                     </span>
-                    <span className="text-sm font-semibold text-neutral-500 dark:text-[#989BA3]">
+                    <span className="text-sm font-semibold text-neutral-500 dark:text-muted-foreground">
                       {isAnnual ? "/ year" : "/ month"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-neutral-500 dark:text-[#989BA3] mt-1">
+                  <p className="text-[11px] text-neutral-500 dark:text-muted-foreground mt-1">
                     {isAnnual ? "Billed annually • Full 365-day uncapped discovery" : "Billed monthly • 30-day flexible pass"}
                   </p>
                 </div>
 
                 {/* Features List */}
-                <div className="pt-4 border-t border-black/[0.08] dark:border-white/[0.08] space-y-2.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-[#989BA3]">
+                <div className="pt-4 border-t border-black/[0.08] dark:border-subtle/50 space-y-2.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-muted-foreground">
                     Included Features
                   </div>
                   {plan.features.map((feat) => (
-                    <div key={feat} className="flex items-start space-x-2 text-xs text-neutral-700 dark:text-[#EEEEEE]">
+                    <div key={feat} className="flex items-start space-x-2 text-xs text-neutral-700 dark:text-foreground">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                       <span className="leading-snug">{feat}</span>
                     </div>
@@ -337,7 +337,7 @@ function SubscriptionContent() {
               </div>
 
               {/* Checkout CTA */}
-              <div className="pt-4 border-t border-black/[0.08] dark:border-white/[0.08]">
+              <div className="pt-4 border-t border-black/[0.08] dark:border-subtle/50">
                 <button
                   type="button"
                   onClick={() => {
@@ -345,10 +345,10 @@ function SubscriptionContent() {
                     handleCheckout(plan.id);
                   }}
                   disabled={isCheckingOut}
-                  className={"w-full py-3 px-6 rounded-lg font-semibold text-sm transition flex items-center justify-center space-x-2 " + (
+                  className={"w-full py-3 px-6 rounded-xl font-semibold text-sm transition flex items-center justify-center space-x-2 " + (
                     isAnnual
                       ? "bg-white text-black hover:bg-neutral-200 shadow-sm"
-                      : "bg-[#18191D] hover:bg-[#22242A] text-neutral-900 dark:text-[#EEEEEE] border border-black/[0.08] dark:border-white/[0.08]"
+                      : "bg-surface-elevated hover:bg-surface-secondary text-neutral-900 dark:text-foreground border border-black/[0.08] dark:border-subtle/50"
                   )}
                 >
                   {isCheckingOut && selectedPlanId === plan.id ? (
@@ -380,14 +380,14 @@ function SubscriptionContent() {
 
       {/* Guest Email Field if Not Signed In */}
       {!userSession && (
-        <div className="bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl p-6 space-y-4">
-          <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#989BA3]">
-            <Lock className="w-4 h-4 text-neutral-400 dark:text-[#EEEEEE]" />
+        <div className="bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-neutral-600 dark:text-muted-foreground">
+            <Lock className="w-4 h-4 text-neutral-400 dark:text-foreground" />
             <span>Account Details for Invoice &amp; Subscription Setup</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-neutral-600 dark:text-[#989BA3] mb-1">
+              <label className="block text-xs font-medium text-neutral-600 dark:text-muted-foreground mb-1">
                 Your Full Name / Agency
               </label>
               <input
@@ -395,11 +395,11 @@ function SubscriptionContent() {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="e.g. Baraka Tech"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#18191D] dark:bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08] text-xs text-neutral-900 dark:text-[#EEEEEE] placeholder:text-neutral-500 dark:placeholder:text-[#989BA3]/50 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-elevated dark:bg-surface-elevated border border-black/[0.08] dark:border-subtle/50 text-xs text-neutral-900 dark:text-foreground placeholder:text-neutral-500 dark:placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/40"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-neutral-600 dark:text-[#989BA3] mb-1">
+              <label className="block text-xs font-medium text-neutral-600 dark:text-muted-foreground mb-1">
                 Email Address <span className="text-red-400">*</span>
               </label>
               <input
@@ -407,7 +407,7 @@ function SubscriptionContent() {
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#18191D] dark:bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08] text-xs text-neutral-900 dark:text-[#EEEEEE] placeholder:text-neutral-500 dark:placeholder:text-[#989BA3]/50 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-elevated dark:bg-surface-elevated border border-black/[0.08] dark:border-subtle/50 text-xs text-neutral-900 dark:text-foreground placeholder:text-neutral-500 dark:placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/40"
               />
             </div>
           </div>
@@ -415,38 +415,38 @@ function SubscriptionContent() {
       )}
 
       {/* Supported Payment Rails Badges */}
-      <div className="bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 rounded-2xl p-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="flex items-center space-x-3 p-3.5 rounded-xl bg-[#18191D] dark:bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08]">
+          <div className="flex items-center space-x-3 p-5 rounded-xl bg-surface-elevated dark:bg-surface-elevated border border-black/[0.08] dark:border-subtle/50">
             <Smartphone className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <div className="font-semibold text-neutral-900 dark:text-[#EEEEEE]">M-Pesa &amp; Mobile Money</div>
-              <div className="text-[10px] text-neutral-500 dark:text-[#989BA3]">Instant STK Push in Kenya, Ghana &amp; Africa</div>
+              <div className="font-semibold text-neutral-900 dark:text-foreground">M-Pesa &amp; Mobile Money</div>
+              <div className="text-[10px] text-neutral-500 dark:text-muted-foreground">Instant STK Push in Kenya, Ghana &amp; Africa</div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 p-3.5 rounded-xl bg-[#18191D] dark:bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08]">
-            <CreditCard className="w-5 h-5 text-neutral-400 dark:text-[#EEEEEE] shrink-0" />
+          <div className="flex items-center space-x-3 p-5 rounded-xl bg-surface-elevated dark:bg-surface-elevated border border-black/[0.08] dark:border-subtle/50">
+            <CreditCard className="w-5 h-5 text-neutral-400 dark:text-foreground shrink-0" />
             <div>
-              <div className="font-semibold text-neutral-900 dark:text-[#EEEEEE]">Global Visa &amp; Mastercard</div>
-              <div className="text-[10px] text-neutral-500 dark:text-[#989BA3]">3D-Secure 256-bit encrypted checkout</div>
+              <div className="font-semibold text-neutral-900 dark:text-foreground">Global Visa &amp; Mastercard</div>
+              <div className="text-[10px] text-neutral-500 dark:text-muted-foreground">3D-Secure 256-bit encrypted checkout</div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 p-3.5 rounded-xl bg-[#18191D] dark:bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08]">
-            <ShieldCheck className="w-5 h-5 text-neutral-400 dark:text-[#EEEEEE] shrink-0" />
+          <div className="flex items-center space-x-3 p-5 rounded-xl bg-surface-elevated dark:bg-surface-elevated border border-black/[0.08] dark:border-subtle/50">
+            <ShieldCheck className="w-5 h-5 text-neutral-400 dark:text-foreground shrink-0" />
             <div>
-              <div className="font-semibold text-neutral-900 dark:text-[#EEEEEE]">Instant Radar Activation</div>
-              <div className="text-[10px] text-neutral-500 dark:text-[#989BA3]">Automatic server verification &amp; access sync</div>
+              <div className="font-semibold text-neutral-900 dark:text-foreground">Instant Radar Activation</div>
+              <div className="text-[10px] text-neutral-500 dark:text-muted-foreground">Automatic server verification &amp; access sync</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Manual Verification Accordion */}
-      <div className="bg-[#111214] dark:bg-[#111214] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl p-5 text-xs space-y-3">
+      <div className="bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 rounded-2xl p-5 text-xs space-y-3">
         <details className="group cursor-pointer">
-          <summary className="font-semibold text-neutral-600 dark:text-[#989BA3] hover:text-neutral-900 dark:hover:text-[#EEEEEE] flex items-center justify-between list-none">
+          <summary className="font-semibold text-neutral-600 dark:text-muted-foreground hover:text-neutral-900 dark:hover:text-foreground flex items-center justify-between list-none">
             <span>Already paid via Kora? Click here to verify your reference number</span>
             <span className="text-xs group-open:rotate-180 transition">▼</span>
           </summary>
@@ -458,12 +458,12 @@ function SubscriptionContent() {
                 value={manualRef}
                 onChange={(e) => setManualRef(e.target.value)}
                 placeholder="Enter transaction reference (e.g. WH-1726045...)"
-                className="flex-1 px-3.5 py-2.5 rounded-lg bg-[#18191D] border border-black/[0.08] dark:border-white/[0.08] text-xs text-neutral-900 dark:text-[#EEEEEE] font-mono focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-surface-elevated border border-black/[0.08] dark:border-subtle/50 text-xs text-neutral-900 dark:text-foreground font-mono focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/40"
               />
               <button
                 type="submit"
                 disabled={isVerifyingRef}
-                className="px-4 py-2.5 bg-[#18191D] hover:bg-[#22242A] text-neutral-900 dark:text-[#EEEEEE] font-semibold rounded-lg border border-black/[0.08] dark:border-white/[0.08] flex items-center justify-center space-x-2 transition"
+                className="px-4 py-2.5 bg-surface-elevated hover:bg-surface-secondary text-neutral-900 dark:text-foreground font-semibold rounded-xl border border-black/[0.08] dark:border-subtle/50 flex items-center justify-center space-x-2 transition"
               >
                 {isVerifyingRef ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <span>Verify Reference</span>}
               </button>
@@ -472,10 +472,10 @@ function SubscriptionContent() {
             {manualVerifyResult && (
               <div className={"p-4 rounded-xl text-xs border " + (
                 manualVerifyResult.status && manualVerifyResult.data?.status === "success"
-                  ? "bg-[#111A14] border-emerald-500/30 text-emerald-300"
-                  : "bg-[#18191D] border-black/[0.08] dark:border-white/[0.08] text-neutral-600 dark:text-[#989BA3]"
+                  ? "bg-success/10 border-emerald-500/30 text-emerald-300"
+                  : "bg-surface-elevated border-black/[0.08] dark:border-subtle/50 text-neutral-600 dark:text-muted-foreground"
               )}>
-                <div className="font-semibold text-neutral-900 dark:text-[#EEEEEE]">
+                <div className="font-semibold text-neutral-900 dark:text-foreground">
                   {manualVerifyResult.status ? "Transaction Verified Successfully:" : "Verification Notice:"}
                 </div>
                 <div>{manualVerifyResult.message}</div>
@@ -497,8 +497,8 @@ function SubscriptionContent() {
 export default function SubscriptionPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[50vh] text-neutral-500 dark:text-[#989BA3] space-x-2 text-xs">
-        <RefreshCw className="w-4 h-4 animate-spin text-neutral-400 dark:text-[#EEEEEE]" />
+      <div className="flex items-center justify-center min-h-[50vh] text-neutral-500 dark:text-muted-foreground space-x-2 text-xs">
+        <RefreshCw className="w-4 h-4 animate-spin text-neutral-400 dark:text-foreground" />
         <span>Loading subscription status...</span>
       </div>
     }>

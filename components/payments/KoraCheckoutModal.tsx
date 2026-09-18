@@ -109,25 +109,25 @@ export default function KoraCheckoutModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-2xl max-h-[92vh] bg-[#111214] border border-white/[0.1] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#EEEEEE] animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl max-h-[92vh] bg-surface border border-subtle/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-foreground animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#0D0E11]">
+        <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-subtle/50 bg-surface-subtle">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-[#18191D] border border-white/[0.08] flex items-center justify-center text-[#EEEEEE]">
+            <div className="w-9 h-9 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center justify-center text-foreground">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#EEEEEE] tracking-tight">
+                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
                   WebHunt Delta Subscription
                 </h3>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#18191D] text-[#EEEEEE] border border-white/[0.1]">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-elevated text-foreground border border-subtle/50">
                   Kora Gateway
                 </span>
               </div>
-              <p className="text-xs text-[#989BA3]">
+              <p className="text-xs text-muted-foreground">
                 Choose your pass to unlock unrestricted lead radar scans &amp; CRM pipeline tools
               </p>
             </div>
@@ -136,7 +136,7 @@ export default function KoraCheckoutModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] p-2 rounded-xl transition border border-transparent hover:border-white/[0.08]"
+            className="text-muted-foreground hover:text-foreground hover:bg-surface-elevated p-2 rounded-xl transition border border-transparent hover:border-subtle/50"
             title="Close modal"
           >
             <X className="w-5 h-5" />
@@ -147,47 +147,47 @@ export default function KoraCheckoutModal({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs">
           
           {/* Supported Channels Banner */}
-          <div className="grid grid-cols-3 gap-2 bg-[#0D0E11] p-3 rounded-2xl border border-white/[0.08]">
-            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-[#18191D]">
+          <div className="grid grid-cols-3 gap-2 bg-surface-subtle p-3 rounded-2xl border border-subtle/50">
+            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-surface-elevated">
               <Smartphone className="w-4 h-4 text-emerald-400 shrink-0 mb-1 sm:mb-0" />
               <div>
-                <span className="font-bold text-[#EEEEEE] block text-[11px]">M-Pesa / Mobile</span>
-                <span className="text-[9px] text-[#989BA3] block">Kenya &amp; Africa</span>
+                <span className="font-bold text-foreground block text-[11px]">M-Pesa / Mobile</span>
+                <span className="text-[9px] text-muted-foreground block">Kenya &amp; Africa</span>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-[#18191D]">
-              <CreditCard className="w-4 h-4 text-[#EEEEEE] shrink-0 mb-1 sm:mb-0" />
+            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-surface-elevated">
+              <CreditCard className="w-4 h-4 text-foreground shrink-0 mb-1 sm:mb-0" />
               <div>
-                <span className="font-bold text-[#EEEEEE] block text-[11px]">Visa / Mastercard</span>
-                <span className="text-[9px] text-[#989BA3] block">Global Cards</span>
+                <span className="font-bold text-foreground block text-[11px]">Visa / Mastercard</span>
+                <span className="text-[9px] text-muted-foreground block">Global Cards</span>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-[#18191D]">
-              <Building2 className="w-4 h-4 text-[#989BA3] shrink-0 mb-1 sm:mb-0" />
+            <div className="flex flex-col sm:flex-row items-center sm:space-x-2 text-center sm:text-left p-1.5 rounded-xl bg-surface-elevated">
+              <Building2 className="w-4 h-4 text-muted-foreground shrink-0 mb-1 sm:mb-0" />
               <div>
-                <span className="font-bold text-[#EEEEEE] block text-[11px]">Bank Transfer</span>
-                <span className="text-[9px] text-[#989BA3] block">Direct Electronic</span>
+                <span className="font-bold text-foreground block text-[11px]">Bank Transfer</span>
+                <span className="text-[9px] text-muted-foreground block">Direct Electronic</span>
               </div>
             </div>
           </div>
 
           {/* Currency Toggle */}
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Select Currency
             </span>
-            <div className="flex items-center p-1 rounded-xl bg-[#18191D] border border-white/[0.08]">
+            <div className="flex items-center p-1 rounded-xl bg-surface-elevated border border-subtle/50">
               {(["USD", "KES", "NGN"] as const).map((curr) => (
                 <button
                   key={curr}
                   type="button"
                   onClick={() => setCurrency(curr)}
-                  className={"px-3 py-1 rounded-lg text-xs font-semibold transition " + (
+                  className={"px-3 py-1 rounded-xl text-xs font-semibold transition " + (
                     currency === curr
                       ? "bg-white text-black shadow-sm"
-                      : "text-[#989BA3] hover:text-[#EEEEEE]"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {curr === "USD" ? "$ (USD)" : curr === "KES" ? "KSh (KES)" : "₦ (NGN)"}
@@ -207,8 +207,8 @@ export default function KoraCheckoutModal({
                   onClick={() => setSelectedPlanId(plan.id)}
                   className={"w-full text-left p-4 sm:p-5 rounded-2xl border transition flex flex-col justify-between space-y-4 relative " + (
                     isSelected
-                      ? "bg-[#18191D] border-white/20 text-[#EEEEEE] shadow-sm"
-                      : "bg-[#0D0E11] hover:bg-[#18191D]/60 border-white/[0.06] text-[#989BA3] hover:text-[#EEEEEE]"
+                      ? "bg-surface-elevated border-subtle/50 text-foreground shadow-sm"
+                      : "bg-surface-subtle hover:bg-surface-elevated/60 border-subtle text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {plan.isPopular && (
@@ -220,24 +220,24 @@ export default function KoraCheckoutModal({
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <div className="font-bold text-base text-[#EEEEEE]">{plan.name}</div>
-                      <span className="text-[10px] font-semibold text-[#989BA3] uppercase tracking-wider">
+                      <div className="font-bold text-base text-foreground">{plan.name}</div>
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                         {plan.id === "monthly" ? "30 Days" : "365 Days"}
                       </span>
                     </div>
-                    <div className="text-[11px] text-[#989BA3] mt-1 line-clamp-2">{plan.tagline}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{plan.tagline}</div>
                   </div>
 
                   <div>
                     <div className="flex items-baseline space-x-1">
-                      <span className="text-2xl font-extrabold text-[#EEEEEE]">
+                      <span className="text-2xl font-extrabold text-foreground">
                         {getPlanPrice(plan)}
                       </span>
-                      <span className="text-[11px] text-[#989BA3]">
+                      <span className="text-[11px] text-muted-foreground">
                         {plan.id === "monthly" ? "/ month" : "/ year"}
                       </span>
                     </div>
-                    <div className="text-[11px] text-[#989BA3] mt-3 space-y-1.5">
+                    <div className="text-[11px] text-muted-foreground mt-3 space-y-1.5">
                       {plan.features.slice(0, 4).map((f) => (
                         <div key={f} className="flex items-start space-x-1.5">
                           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
@@ -247,10 +247,10 @@ export default function KoraCheckoutModal({
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs font-semibold">
+                  <div className="pt-3 border-t border-subtle flex items-center justify-between text-xs font-semibold">
                     <span>{isSelected ? "Selected Plan" : "Choose " + plan.name}</span>
                     <div className={"w-5 h-5 rounded-full border flex items-center justify-center " + (
-                      isSelected ? "border-white bg-white text-black" : "border-white/20"
+                      isSelected ? "border-white bg-white text-black" : "border-subtle/50"
                     )}>
                       {isSelected && <Check className="w-3 h-3" />}
                     </div>
@@ -261,14 +261,14 @@ export default function KoraCheckoutModal({
           </div>
 
           {/* Customer Details Form */}
-          <div className="bg-[#0D0E11] border border-white/[0.08] rounded-2xl p-4 space-y-3">
-            <div className="text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider">
+          <div className="bg-surface-subtle border border-subtle/50 rounded-2xl p-4 space-y-3">
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Receipt &amp; Account Information
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-[#989BA3] mb-1">
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
                   Full Name / Business
                 </label>
                 <input
@@ -276,12 +276,12 @@ export default function KoraCheckoutModal({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Baraka Tech"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-[#989BA3] mb-1">
+                <label className="block text-[11px] font-medium text-muted-foreground mb-1">
                   Email Address <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -289,7 +289,7 @@ export default function KoraCheckoutModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
             </div>
@@ -297,16 +297,16 @@ export default function KoraCheckoutModal({
 
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 flex items-center space-x-2 text-xs">
+            <div className="p-5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 flex items-center space-x-2 text-xs">
               <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Verify Existing Payment Reference Accordion */}
-          <div className="pt-2 border-t border-white/[0.06]">
+          <div className="pt-2 border-t border-subtle">
             <details className="group cursor-pointer">
-              <summary className="text-[11px] text-[#989BA3] hover:text-[#EEEEEE] flex items-center justify-between list-none">
+              <summary className="text-[11px] text-muted-foreground hover:text-foreground flex items-center justify-between list-none">
                 <span>Already made a payment? Verify reference number</span>
                 <span className="text-xs group-open:rotate-180 transition">▼</span>
               </summary>
@@ -318,12 +318,12 @@ export default function KoraCheckoutModal({
                     value={verificationRef}
                     onChange={(e) => setVerificationRef(e.target.value)}
                     placeholder="Enter reference (e.g. WH-1726045...)"
-                    className="flex-1 px-3 py-2 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none font-mono"
+                    className="flex-1 px-5 py-3 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none font-mono"
                   />
                   <button
                     type="submit"
                     disabled={isVerifying}
-                    className="px-4 py-2 bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] font-semibold text-xs rounded-xl border border-white/[0.08] flex items-center space-x-1"
+                    className="px-4 py-2 bg-surface-elevated hover:bg-surface-secondary text-foreground font-semibold text-xs rounded-xl border border-subtle/50 flex items-center space-x-1"
                   >
                     {isVerifying ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <span>Verify</span>}
                   </button>
@@ -333,7 +333,7 @@ export default function KoraCheckoutModal({
                   <div className={"p-3 rounded-xl text-xs border " + (
                     verificationResult.status && verificationResult.data?.status === "success"
                       ? "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
-                      : "bg-[#18191D] border-white/[0.08] text-[#989BA3]"
+                      : "bg-surface-elevated border-subtle/50 text-muted-foreground"
                   )}>
                     <div className="font-bold">
                       {verificationResult.status ? "Transaction Verified:" : "Verification Notice:"}
@@ -353,8 +353,8 @@ export default function KoraCheckoutModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-white/[0.08] bg-[#0D0E11] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 text-[11px] text-[#989BA3]">
+        <div className="px-6 py-4 border-t border-subtle/50 bg-surface-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Kora 256-bit Encrypted Checkout • PCI-DSS Certified</span>
           </div>
@@ -363,7 +363,7 @@ export default function KoraCheckoutModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] rounded-xl transition"
+              className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-elevated rounded-xl transition"
             >
               Cancel
             </button>

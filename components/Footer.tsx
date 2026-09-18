@@ -14,23 +14,23 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="border-t border-white/[0.08] bg-[#08090B] py-6 text-xs text-[#989BA3]">
+      <footer className="border-t border-subtle/50 bg-background py-6 text-xs text-muted-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
             <span>© {new Date().getFullYear()} WebHunt Delta • Worldwide Intelligence Radar</span>
           </div>
-          <div className="flex items-center space-x-3 text-xs text-[#989BA3]">
+          <div className="flex items-center space-x-3 text-xs text-muted-foreground">
             <button
               onClick={() => openLegalModal("privacy")}
-              className="hover:text-[#EEEEEE] transition underline-offset-4 hover:underline focus:outline-none"
+              className="hover:text-foreground transition underline-offset-4 hover:underline focus:outline-none"
             >
               Privacy Policy
             </button>
             <span className="text-white/20">•</span>
             <button
               onClick={() => openLegalModal("terms")}
-              className="hover:text-[#EEEEEE] transition underline-offset-4 hover:underline focus:outline-none"
+              className="hover:text-foreground transition underline-offset-4 hover:underline focus:outline-none"
             >
               Terms of Service
             </button>

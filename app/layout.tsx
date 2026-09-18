@@ -81,7 +81,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-[#08090B] text-[#EEEEEE] font-sans min-h-screen flex flex-col antialiased selection:bg-white/20 selection:text-white transition-colors duration-150">
+      <body className="bg-background text-foreground font-sans min-h-screen flex flex-col antialiased selection:bg-primary/20 selection:text-foreground transition-colors duration-300">
         <ThemeProvider>
           <PwaRegister />
           <Navbar />

@@ -119,36 +119,36 @@ export default function ApplicationTrackerDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-[#111214] border-l border-white/[0.1] text-[#EEEEEE] h-full flex flex-col shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-xl bg-surface border-l border-subtle/50 text-foreground h-full flex flex-col shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08] bg-[#0D0E11]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-subtle/50 bg-surface-subtle">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-[#18191D] text-[#EEEEEE] border border-white/[0.08]">
+            <div className="p-2.5 rounded-xl bg-surface-elevated text-foreground border border-subtle/50">
               <Briefcase className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-[#EEEEEE] text-base truncate max-w-xs sm:max-w-md">
+              <h3 className="font-bold text-foreground text-base truncate max-w-xs sm:max-w-md">
                 {job.title}
               </h3>
-              <p className="text-xs text-[#989BA3]">
-                Application Tracking for <span className="text-[#EEEEEE] font-semibold">{job.company}</span>
+              <p className="text-xs text-muted-foreground">
+                Application Tracking for <span className="text-foreground font-semibold">{job.company}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[#989BA3] hover:text-[#EEEEEE] hover:bg-[#18191D] transition"
+            className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-6 text-xs text-[#EEEEEE] flex-1">
+        <div className="p-6 overflow-y-auto space-y-6 text-xs text-foreground flex-1">
           {/* Quick Apply Action Strip */}
-          <div className="p-4 rounded-2xl bg-[#0D0E11] border border-white/[0.08] space-y-3">
+          <div className="p-4 rounded-2xl bg-surface-subtle border border-subtle/50 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Application Pipeline Stage
               </span>
               <select
@@ -158,21 +158,21 @@ export default function ApplicationTrackerDrawer({
                   setAppData({ ...appData, status: newStatus });
                   handleSave({ status: newStatus });
                 }}
-                className="bg-[#18191D] border border-white/20 text-xs text-[#EEEEEE] px-3 py-1.5 rounded-xl font-semibold focus:outline-none cursor-pointer"
+                className="bg-surface-elevated border border-subtle/50 text-xs text-foreground px-3 py-1.5 rounded-xl font-semibold focus:outline-none cursor-pointer"
               >
-                <option value="SAVED" className="bg-[#111214]">Saved / Researching</option>
-                <option value="PREPARING" className="bg-[#111214]">Preparing Application</option>
-                <option value="APPLIED" className="bg-[#111214]">Applied / Submitted</option>
-                <option value="INTERVIEW" className="bg-[#111214]">Interview Scheduled</option>
-                <option value="OFFER" className="bg-[#111214]">Offer Received</option>
-                <option value="REJECTED" className="bg-[#111214]">Rejected</option>
-                <option value="WITHDRAWN" className="bg-[#111214]">Withdrawn</option>
+                <option value="SAVED" className="bg-surface">Saved / Researching</option>
+                <option value="PREPARING" className="bg-surface">Preparing Application</option>
+                <option value="APPLIED" className="bg-surface">Applied / Submitted</option>
+                <option value="INTERVIEW" className="bg-surface">Interview Scheduled</option>
+                <option value="OFFER" className="bg-surface">Offer Received</option>
+                <option value="REJECTED" className="bg-surface">Rejected</option>
+                <option value="WITHDRAWN" className="bg-surface">Withdrawn</option>
               </select>
             </div>
 
             {/* Direct Official Apply Link */}
-            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
-              <span className="text-[11px] text-[#989BA3]">Original Listing on {job.source}</span>
+            <div className="pt-2 border-t border-subtle flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">Original Listing on {job.source}</span>
               <a
                 href={job.url}
                 target="_blank"
@@ -186,29 +186,29 @@ export default function ApplicationTrackerDrawer({
           </div>
 
           {/* Regional Eligibility & Timezone Overlap Badge */}
-          <div className="p-3.5 rounded-2xl bg-[#111A14] border border-emerald-500/20 space-y-1.5">
+          <div className="p-5 rounded-2xl bg-success/10 border border-emerald-500/20 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-bold text-emerald-400 flex items-center space-x-1.5 text-xs">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{eligibility.badgeText}</span>
               </span>
-              <span className="text-[10px] text-[#989BA3] bg-[#0D0E11] px-2 py-0.5 rounded-md border border-white/[0.06]">
+              <span className="text-[10px] text-muted-foreground bg-surface-subtle px-2 py-0.5 rounded-md border border-subtle">
                 ~{eligibility.timezoneOverlapHours}h EAT Overlap
               </span>
             </div>
-            <p className="text-[11px] text-[#989BA3] leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               {eligibility.reasons[0] || "General worldwide remote role"}
             </p>
           </div>
 
           {/* Document Preparation Checklist */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-[#EEEEEE] uppercase tracking-wider flex items-center space-x-1.5">
-              <CheckSquare className="w-3.5 h-3.5 text-[#989BA3]" />
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center space-x-1.5">
+              <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Document Preparation Checklist</span>
             </h4>
 
-            <div className="space-y-2 bg-[#0D0E11] p-3.5 rounded-2xl border border-white/[0.08]">
+            <div className="space-y-2 bg-surface-subtle p-5 rounded-2xl border border-subtle/50">
               {[
                 { key: "tailoredResumeReady", label: "Tailored CV / Resume highlighted for this role" },
                 { key: "coverLetterPrepared", label: "Proposal / Cover Letter generated & personalized" },
@@ -222,14 +222,14 @@ export default function ApplicationTrackerDrawer({
                     key={item.key}
                     type="button"
                     onClick={() => toggleChecklistItem(item.key as any)}
-                    className="w-full flex items-center space-x-2.5 text-left p-1.5 rounded-xl hover:bg-[#18191D] transition text-[11px]"
+                    className="w-full flex items-center space-x-2.5 text-left p-1.5 rounded-xl hover:bg-surface-elevated transition text-[11px]"
                   >
                     {isChecked ? (
                       <CheckSquare className="w-4 h-4 text-emerald-400 shrink-0" />
                     ) : (
-                      <Square className="w-4 h-4 text-[#989BA3] shrink-0" />
+                      <Square className="w-4 h-4 text-muted-foreground shrink-0" />
                     )}
-                    <span className={isChecked ? "text-[#EEEEEE] font-medium" : "text-[#989BA3]"}>
+                    <span className={isChecked ? "text-foreground font-medium" : "text-muted-foreground"}>
                       {item.label}
                     </span>
                   </button>
@@ -240,36 +240,36 @@ export default function ApplicationTrackerDrawer({
 
           {/* Recruiter & Follow-up Details */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-[#EEEEEE] uppercase tracking-wider flex items-center space-x-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#989BA3]" />
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center space-x-1.5">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Recruiter Contact & Follow-up</span>
             </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0D0E11] p-3.5 rounded-2xl border border-white/[0.08]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-subtle p-5 rounded-2xl border border-subtle/50">
               <div>
-                <label className="block text-[10px] font-medium text-[#989BA3] mb-1">Recruiter / Hiring Contact</label>
+                <label className="block text-[10px] font-medium text-muted-foreground mb-1">Recruiter / Hiring Contact</label>
                 <input
                   type="text"
                   value={appData.recruiterName || ""}
                   onChange={(e) => setAppData({ ...appData, recruiterName: e.target.value })}
                   placeholder="e.g. Sarah Jenkins (Talent Partner)"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3 py-1.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-[#989BA3] mb-1">Recruiter Email</label>
+                <label className="block text-[10px] font-medium text-muted-foreground mb-1">Recruiter Email</label>
                 <input
                   type="email"
                   value={appData.recruiterEmail || ""}
                   onChange={(e) => setAppData({ ...appData, recruiterEmail: e.target.value })}
                   placeholder="e.g. jobs@company.com"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3 py-1.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-[#989BA3] mb-1">Target Follow-up Date</label>
+                <label className="block text-[10px] font-medium text-muted-foreground mb-1">Target Follow-up Date</label>
                 <input
                   type="date"
                   value={
@@ -278,18 +278,18 @@ export default function ApplicationTrackerDrawer({
                       : ""
                   }
                   onChange={(e) => setAppData({ ...appData, followUpDate: e.target.value })}
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3 py-1.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-medium text-[#989BA3] mb-1">Salary / Rate Offer</label>
+                <label className="block text-[10px] font-medium text-muted-foreground mb-1">Salary / Rate Offer</label>
                 <input
                   type="text"
                   value={appData.salaryOffer || ""}
                   onChange={(e) => setAppData({ ...appData, salaryOffer: e.target.value })}
                   placeholder="e.g. $80,000 / yr"
-                  className="w-full px-3 py-1.5 rounded-xl bg-[#18191D] border border-white/[0.08] text-xs text-[#EEEEEE] focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-3 py-1.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
             </div>
@@ -297,7 +297,7 @@ export default function ApplicationTrackerDrawer({
 
           {/* Internal Notes */}
           <div className="space-y-2">
-            <label className="block text-[11px] font-semibold text-[#989BA3] uppercase tracking-wider">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Application Notes & Interview Prep
             </label>
             <textarea
@@ -305,14 +305,14 @@ export default function ApplicationTrackerDrawer({
               value={appData.notes || ""}
               onChange={(e) => setAppData({ ...appData, notes: e.target.value })}
               placeholder="Add key talking points, interviewer feedback, technical test notes..."
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#0D0E11] border border-white/[0.08] focus:outline-none focus:ring-1 focus:ring-white/20 text-xs text-[#EEEEEE] leading-relaxed"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-surface-subtle border border-subtle/50 focus:outline-none focus:ring-1 focus:ring-primary/40 text-xs text-foreground leading-relaxed"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/[0.08] bg-[#0D0E11] flex items-center justify-between">
-          <div className="text-xs text-[#989BA3]">
+        <div className="px-6 py-4 border-t border-subtle/50 bg-surface-subtle flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
             {saveSuccess && (
               <span className="text-emerald-400 flex items-center space-x-1 font-semibold">
                 <Check className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export default function ApplicationTrackerDrawer({
           <div className="flex items-center space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#18191D] hover:bg-[#22242A] text-[#EEEEEE] text-xs font-medium border border-white/[0.08] transition"
+              className="px-4 py-2 rounded-xl bg-surface-elevated hover:bg-surface-secondary text-foreground text-xs font-medium border border-subtle/50 transition"
             >
               Close
             </button>
