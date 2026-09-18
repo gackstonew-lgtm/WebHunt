@@ -355,7 +355,7 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
                 type="checkbox"
                 checked={forceRefresh}
                 onChange={(e) => setForceRefresh(e.target.checked)}
-                className="rounded border-white/20 text-white focus:ring-0 bg-surface-subtle"
+                className="rounded border-border text-white focus:ring-0 bg-surface-subtle"
               />
               <span>Fresh Scan</span>
             </label>
@@ -365,7 +365,7 @@ export default function SearchForm({ onSearch, isLoading, providersStatus }: Sea
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center space-x-2 px-8 py-3.5 rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-0.5 bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-sm shadow-sm disabled:opacity-50 transition duration-150"
+            className="inline-flex items-center justify-center space-x-2 px-8 py-3.5 rounded-2xl shadow-md hover:shadow-lg hover:-translate-y-0.5 bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold text-sm shadow-sm disabled:opacity-50 transition duration-150"
           >
             {isLoading ? (
               <>

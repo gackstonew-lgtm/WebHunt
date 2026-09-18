@@ -177,7 +177,7 @@ export default function Navbar() {
                 {!userSession && (
                   <Link
                     href="/auth?mode=signin"
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground shadow-sm transition"
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 shadow-sm transition"
                     title="Sign In to WebHunt"
                   >
                     <LogIn className="w-3.5 h-3.5" />

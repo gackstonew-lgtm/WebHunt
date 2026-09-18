@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="flex items-center space-x-2 shrink-0">
             <a
               href={"/auth?mode=signin&returnTo=" + encodeURIComponent("/?mode=" + lastSearchMode)}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5"
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5"
             >
               <span>Sign In / Register</span>
               <ArrowRight className="w-3.5 h-3.5" />

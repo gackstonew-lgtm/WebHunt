@@ -79,6 +79,22 @@ const config: Config = {
         subtle: "var(--border-subtle)",
         strong: "var(--border-strong)",
       },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.6)',
+        'glass-hover': '0 16px 40px -8px rgba(45, 125, 255, 0.15), 0 8px 24px -4px rgba(0, 0, 0, 0.8)',
+        'floating': '0 20px 40px -15px rgba(0, 0, 0, 0.9)',
+        'glow': '0 0 25px rgba(45, 125, 255, 0.25)',
+        'glow-red': '0 0 25px rgba(255, 59, 78, 0.25)',
+        'glow-lg': '0 0 40px rgba(45, 125, 255, 0.35)',
+        'brand-btn': '0 4px 20px rgba(45, 125, 255, 0.25)',
+        'red-btn': '0 4px 20px rgba(255, 59, 78, 0.25)',
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+        'blue-gradient': 'linear-gradient(135deg, #0251B8 0%, #2D7DFF 100%)',
+        'red-gradient': 'linear-gradient(135deg, #DE0F1F 0%, #FF3B4E 100%)',
+        'card-gradient': 'linear-gradient(135deg, rgba(18, 18, 18, 0.9) 0%, rgba(5, 5, 5, 0.95) 100%)',
+      }
     },
   },
   plugins: [],

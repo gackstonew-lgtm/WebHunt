@@ -209,7 +209,7 @@ export default function LeadPipeline({
             }}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
               pipelineMode === "sales"
-                ? "bg-surface-elevated text-foreground border border-white/20 shadow-sm"
+                ? "bg-surface-elevated text-foreground border border-border shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/60"
             }`}
           >
@@ -227,7 +227,7 @@ export default function LeadPipeline({
             }}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
               pipelineMode === "jobs"
-                ? "bg-surface-elevated text-foreground border border-white/20 shadow-sm"
+                ? "bg-surface-elevated text-foreground border border-border shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/60"
             }`}
           >
@@ -271,7 +271,7 @@ export default function LeadPipeline({
               onClick={() => setCurrentTab(stage.key)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                 isActive
-                  ? "bg-surface-elevated text-foreground border border-white/20 shadow-sm"
+                  ? "bg-surface-elevated text-foreground border border-border shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/60"
               }`}
             >
@@ -310,7 +310,7 @@ export default function LeadPipeline({
             return (
               <div
                 key={lead.id}
-                className="bg-surface border border-subtle/50 hover:border-white/20 rounded-2xl p-5 shadow-sm transition flex flex-col justify-between space-y-4 relative group"
+                className="bg-surface border border-subtle/50 hover:border-border rounded-2xl p-5 shadow-sm transition flex flex-col justify-between space-y-4 relative group"
               >
                 <div>
                   {/* Top Channel Badge & Stage Selector */}

@@ -231,7 +231,7 @@ export default function ResultsTable({
           <button
             onClick={handleSaveAll}
             disabled={filteredLeads.length === 0}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs shadow-sm disabled:opacity-50 transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold text-xs shadow-sm disabled:opacity-50 transition"
           >
             <BookmarkCheck className="w-3.5 h-3.5" />
             <span>
@@ -589,7 +589,7 @@ export default function ResultsTable({
                             className={`px-3 py-1 rounded-xl font-medium transition flex items-center space-x-1 ${
                               isSaved
                                 ? "bg-surface-elevated/60 text-success border border-subtle/50 cursor-default"
-                                : "bg-primary hover:bg-primary-hover text-primary-foreground font-bold shadow-sm"
+                                : "bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold shadow-sm"
                             }`}
                           >
                             {isSaved ? (

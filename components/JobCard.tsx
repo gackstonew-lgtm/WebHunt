@@ -183,7 +183,7 @@ export default function JobCard({
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1 transition ${
                 isSaved
                   ? "bg-surface-elevated/60 text-success border border-subtle/50 cursor-default"
-                  : "bg-primary hover:bg-primary-hover text-primary-foreground font-bold shadow-sm"
+                  : "bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold shadow-sm"
               }`}
             >
               {isSaved ? (

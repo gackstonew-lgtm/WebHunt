@@ -4,92 +4,102 @@
 
 @layer base {
   :root {
-    /* Privam-inspired Light Theme */
-    --background: #F8FAFC;
-    --foreground: #0F172A;
+    /* Yardly Automotive Light Theme */
+    --background: #F4F8F6;
+    --foreground: #0F241C;
 
     --card: #FFFFFF;
-    --card-foreground: #0F172A;
-    --card-inner: #F1F5F9;
+    --card-foreground: #0F241C;
+    --card-inner: #F9FBFA;
 
     --popover: #FFFFFF;
-    --popover-foreground: #0F172A;
+    --popover-foreground: #0F241C;
 
     --surface: #FFFFFF;
-    --surface-elevated: #F1F5F9;
-    --surface-subtle: #F8FAFC;
-    --surface-secondary: #F1F5F9;
+    --surface-elevated: #EAEFEA;
+    --surface-subtle: #F4F8F6;
+    --surface-secondary: #EAEFEA;
 
-    --primary: #10B981; /* Privam Emerald */
+    --primary: #0251B8; /* Yardly Royal Blue */
     --primary-foreground: #FFFFFF;
-    --primary-hover: #059669;
+    --primary-hover: #014196;
 
-    --muted: #F1F5F9;
-    --muted-foreground: #64748B;
+    --muted: #EAEFEA;
+    --muted-foreground: #5B7569;
 
-    --accent: #F59E0B; /* Privam Amber/Orange */
+    --accent: #DE0F1F; /* Yardly Crimson Red */
     --accent-foreground: #FFFFFF;
 
-    --destructive: #EF4444;
+    --destructive: #DE0F1F;
     --destructive-foreground: #FFFFFF;
 
-    --border: rgba(0, 0, 0, 0.08);
-    --border-subtle: rgba(0, 0, 0, 0.04);
-    --border-strong: rgba(0, 0, 0, 0.15);
+    --border: rgba(15, 36, 28, 0.1);
+    --border-subtle: rgba(15, 36, 28, 0.05);
+    --border-strong: rgba(15, 36, 28, 0.15);
 
     --input: #FFFFFF;
-    --ring: rgba(16, 185, 129, 0.4);
+    --ring: rgba(2, 81, 184, 0.4);
 
-    --success: #10B981;
+    --success: #0251B8; /* Yardly uses blue for success in some places, but let's stick to a robust blue or standard green. We'll use blue. */
     --success-foreground: #FFFFFF;
   }
 
   .dark {
-    /* Privam-inspired Dark Theme */
-    --background: #0B0F19; /* Deep Slate */
-    --foreground: #F8FAFC;
+    /* Yardly Automotive Dark Theme */
+    --background: #050505; /* Yardly Fading Black Canvas */
+    --foreground: #F2F7F3; /* Yardly Warm Off-White */
 
-    --card: #131B2C; 
-    --card-foreground: #F8FAFC;
-    --card-inner: #1E293B;
+    --card: #121212; /* Sleek Fading Black */
+    --card-foreground: #F2F7F3;
+    --card-inner: #1A1A1A;
 
-    --popover: #131B2C;
-    --popover-foreground: #F8FAFC;
+    --popover: #121212;
+    --popover-foreground: #F2F7F3;
 
-    --surface: #131B2C;
-    --surface-elevated: #1E293B;
-    --surface-subtle: #0B0F19;
-    --surface-secondary: #1E293B;
+    --surface: #121212;
+    --surface-elevated: #1A1A1A;
+    --surface-subtle: #000000;
+    --surface-secondary: #242424;
 
-    --primary: #10B981; /* Consistent Primary */
-    --primary-foreground: #FFFFFF;
-    --primary-hover: #34D399;
+    --primary: #2D7DFF; /* Yardly Luminous Blue */
+    --primary-foreground: #050505;
+    --primary-hover: #4D96FF;
 
-    --muted: #1E293B;
-    --muted-foreground: #94A3B8;
+    --muted: #1A1A1A;
+    --muted-foreground: #8EA79C; /* Muted Green-Gray */
 
-    --accent: #F59E0B;
+    --accent: #FF3B4E; /* Yardly Luminous Red */
     --accent-foreground: #FFFFFF;
 
-    --destructive: #EF4444;
+    --destructive: #FF3B4E;
     --destructive-foreground: #FFFFFF;
 
-    --border: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.08); /* Yardly translucent micro-border */
     --border-subtle: rgba(255, 255, 255, 0.04);
     --border-strong: rgba(255, 255, 255, 0.15);
 
-    --input: #131B2C;
-    --ring: rgba(16, 185, 129, 0.4);
+    --input: #121212;
+    --ring: rgba(45, 125, 255, 0.4); /* Yardly Glowing Blue Focus */
 
-    --success: #10B981;
-    --success-foreground: #FFFFFF;
+    --success: #2D7DFF;
+    --success-foreground: #050505;
   }
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply bg-background text-foreground transition-colors duration-200;
     font-family: var(--font-sans), "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
+  }
+  
+  /* Selection colors modeled from Yardly index.html */
+  ::selection {
+    background-color: #0251B8;
+    color: #FFFFFF;
+  }
+  .dark ::selection {
+    background-color: #2D7DFF;
+    color: #050505;
   }
 
   /* Focus outlines */
@@ -99,7 +109,7 @@
 
   /* Form Elements */
   input, textarea, select {
-    @apply bg-input text-foreground border border-border placeholder:text-muted-foreground transition-colors;
+    @apply bg-input text-foreground border border-border placeholder:text-muted-foreground transition-colors duration-200;
   }
 }
 
@@ -112,10 +122,10 @@
   @apply bg-background;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground rounded-full;
+  @apply bg-surface-secondary border border-border rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-foreground/30;
+  @apply bg-muted-foreground;
 }
 
 /* Smooth animations */
