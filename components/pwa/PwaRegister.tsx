@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Download, WifiOff, X, Check } from "lucide-react";
+import { Download, WifiOff, X, Radar, Share } from "lucide-react";
 
 export default function PwaRegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -9,6 +9,7 @@ export default function PwaRegister() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isIosPrompt, setIsIosPrompt] = useState(false);
 
   useEffect(() => {
     // 1. Check if running as installed standalone PWA
@@ -18,8 +19,9 @@ export default function PwaRegister() {
         (window.navigator as any).standalone === true ||
         document.referrer.includes("android-app://");
       setIsStandalone(isStandaloneMode);
+      return isStandaloneMode;
     };
-    checkStandalone();
+    const standalone = checkStandalone();
 
     // 2. Register Service Worker safely
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -28,18 +30,6 @@ export default function PwaRegister() {
           .register("/sw.js", { scope: "/" })
           .then((registration) => {
             console.log("[PWA] ServiceWorker registered with scope:", registration.scope);
-
-            // Handle service worker updates
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = () => {
-                  if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-                    console.log("[PWA] New version available. Refresh to update.");
-                  }
-                };
-              }
-            };
           })
           .catch((error) => {
             console.warn("[PWA] ServiceWorker registration skipped/failed:", error);
@@ -53,8 +43,8 @@ export default function PwaRegister() {
       setDeferredPrompt(e);
       setIsInstallable(true);
 
-      // Check if dismissed before
-      const hasDismissed = localStorage.getItem("webhunt_pwa_dismissed");
+      // Check if dismissed before THIS session (so it appears again on a future visit)
+      const hasDismissed = sessionStorage.getItem("webhunt_pwa_dismissed_session");
       if (!hasDismissed) {
         setShowToast(true);
       }
@@ -64,8 +54,8 @@ export default function PwaRegister() {
 
     // 4. Listen for App Installed Event
     const handleAppInstalled = () => {
-      console.log("[PWA] WebHunt Delta installed successfully");
       setIsInstallable(false);
+      setIsIosPrompt(false);
       setDeferredPrompt(null);
       setShowToast(false);
       setIsStandalone(true);
@@ -81,6 +71,19 @@ export default function PwaRegister() {
       setIsOffline(!navigator.onLine);
       window.addEventListener("online", handleOnline);
       window.addEventListener("offline", handleOffline);
+
+      // Setup iOS fallback if not standalone
+      if (!standalone) {
+        const ua = window.navigator.userAgent;
+        const isIosDevice = /iphone|ipad|ipod/.test(ua.toLowerCase()) && !(window as any).MSStream;
+        if (isIosDevice) {
+          const hasDismissed = sessionStorage.getItem("webhunt_pwa_dismissed_session");
+          if (!hasDismissed) {
+            setIsIosPrompt(true);
+            setShowToast(true);
+          }
+        }
+      }
     }
 
     return () => {
@@ -95,7 +98,6 @@ export default function PwaRegister() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`[PWA] User installation choice: ${outcome}`);
     if (outcome === "accepted") {
       setIsInstallable(false);
       setShowToast(false);
@@ -105,7 +107,8 @@ export default function PwaRegister() {
 
   const handleDismissToast = () => {
     setShowToast(false);
-    localStorage.setItem("webhunt_pwa_dismissed", "true");
+    // Use sessionStorage instead of localStorage so it appears again on next session
+    sessionStorage.setItem("webhunt_pwa_dismissed_session", "true");
   };
 
   return (
@@ -118,32 +121,51 @@ export default function PwaRegister() {
         </div>
       )}
 
-      {/* Subtle Install Floating Banner (Only when installable and not in standalone mode) */}
-      {isInstallable && !isStandalone && showToast && (
-        <div className="fixed bottom-5 right-5 z-40 max-w-sm w-[calc(100vw-40px)] sm:w-auto bg-surface dark:bg-surface border border-black/[0.08] dark:border-subtle/50 rounded-xl p-5 shadow-2xl shadow-black/80 flex items-center justify-between space-x-3.5 animate-in fade-in slide-in-from-bottom-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-surface-elevated border border-black/[0.08] dark:border-subtle/50 flex items-center justify-center text-neutral-900 dark:text-foreground shrink-0">
-              <Download className="w-4 h-4" />
+      {/* Top Right Compact Install Banner */}
+      {!isStandalone && showToast && (isInstallable || isIosPrompt) && (
+        <div className="fixed top-20 right-4 sm:right-6 lg:right-8 z-40 w-[calc(100vw-32px)] sm:w-80 md:w-96 bg-surface border border-subtle/50 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3 animate-in fade-in slide-in-from-top-4 slide-in-from-right-4 duration-300 motion-reduce:transition-none motion-reduce:animate-none">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center justify-center text-primary shrink-0 shadow-sm">
+                <Radar className="w-5 h-5 text-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-sm font-extrabold text-foreground tracking-tight">Install WebHunt</h3>
+                <p className="text-xs text-muted-foreground leading-snug mt-0.5">
+                  Get quick access from your device.
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="text-xs font-semibold text-neutral-900 dark:text-foreground">Install WebHunt Delta App</div>
-              <div className="text-[11px] text-neutral-500 dark:text-muted-foreground">Fast standalone access on your device</div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleInstallClick}
-              className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-semibold shadow-sm transition shrink-0"
-            >
-              Install
-            </button>
             <button
               onClick={handleDismissToast}
-              className="p-1.5 rounded-xl text-neutral-500 hover:text-neutral-900 dark:text-muted-foreground dark:hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition shrink-0"
-              aria-label="Dismiss install prompt"
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition shrink-0"
+              aria-label="Close install prompt"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
+          </div>
+
+          <div className="flex items-center justify-end space-x-2 mt-1">
+            <button
+              onClick={handleDismissToast}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-subtle transition"
+            >
+              Later
+            </button>
+            {isInstallable ? (
+              <button
+                onClick={handleInstallClick}
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold shadow-sm transition-all duration-300 shadow-brand-btn flex items-center space-x-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Install</span>
+              </button>
+            ) : (
+              <div className="px-3 py-1.5 rounded-xl bg-surface-subtle border border-subtle/50 text-xs font-medium text-muted-foreground flex items-center space-x-1.5">
+                <Share className="w-3.5 h-3.5" />
+                <span>Tap Share then 'Add to Home Screen'</span>
+              </div>
+            )}
           </div>
         </div>
       )}
