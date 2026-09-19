@@ -31,6 +31,7 @@ import PitchScriptModal from "./PitchScriptModal";
 import JobProposalModal from "./JobProposalModal";
 import LeadNotesModal from "./LeadNotesModal";
 import JobCard from "./JobCard";
+import PhysicalCard from "./PhysicalCard";
 import { exportLeadsToCsv } from "@/lib/export";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import MapResultsView from "./MapResultsView";
@@ -248,7 +249,27 @@ export default function ResultsTable({
         /* ================= PHYSICAL TABLE & MAP ================= */
         <div className="space-y-5">
           <MapResultsView leads={filteredLeads as any} location={searchResult.location} />
-          <div className="bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden">
+                    {/* Mobile Card Layout (Hidden on MD+) */}
+          <div className="grid grid-cols-1 md:hidden gap-4">
+            {filteredLeads.map((item, i) => {
+              const lead = item as PhysicalLead;
+              return (
+                <PhysicalCard
+                  key={`${lead.id}-${lead.sourceProvider || "prov"}-${i}`}
+                  lead={lead}
+                  isSaved={savedLeadIds.has(lead.id)}
+                  isSelected={selectedLeadIds.has(lead.id)}
+                  onToggleSelect={toggleSelect}
+                  onSave={onSaveLead}
+                  onPitch={setPitchLead}
+                  onNotes={setNotesLead}
+                />
+              );
+            })}
+          </div>
+
+          {/* Desktop Table Layout (Hidden on mobile) */}
+          <div className="hidden md:block bg-surface border border-subtle/50 rounded-2xl shadow-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
               <thead>
