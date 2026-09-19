@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "WebHunt Delta | Worldwide Local Businesses & Remote Job Radar",
   description: "Find local businesses without websites across Kenya & worldwide + discover remote tech opportunities via public APIs.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   applicationName: "WebHunt Delta",
   appleWebApp: {
     capable: true,
@@ -65,6 +65,11 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              window.__deferredPrompt = null;
+              window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                window.__deferredPrompt = e;
+              });
               try {
                 const t = localStorage.getItem('webhunt_theme');
                 if (t === 'light') {

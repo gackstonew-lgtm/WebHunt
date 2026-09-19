@@ -3,117 +3,118 @@
 import React, { useEffect, useState } from "react";
 import { Download, WifiOff, X, Radar, Share } from "lucide-react";
 
+type InstallState = "checking" | "install_available" | "ios_instructions" | "already_installed" | "unsupported" | "dismissed";
+
 export default function PwaRegister() {
+  const [installState, setInstallState] = useState<InstallState>("checking");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [isIosPrompt, setIsIosPrompt] = useState(false);
 
   useEffect(() => {
-    // 1. Check if running as installed standalone PWA
-    const checkStandalone = () => {
-      const isStandaloneMode =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true ||
-        document.referrer.includes("android-app://");
-      setIsStandalone(isStandaloneMode);
-      return isStandaloneMode;
-    };
-    const standalone = checkStandalone();
-
-    // 2. Register Service Worker safely
+    // 1. Service Worker Registration
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js", { scope: "/" })
-          .then((registration) => {
-            console.log("[PWA] ServiceWorker registered with scope:", registration.scope);
-          })
-          .catch((error) => {
-            console.warn("[PWA] ServiceWorker registration skipped/failed:", error);
-          });
+          .then((reg) => console.log("[PWA] SW registered:", reg.scope))
+          .catch((err) => console.warn("[PWA] SW error:", err));
       });
     }
 
-    // 3. Listen for PWA Install Prompt Event
-    const handleBeforeInstallPrompt = (e: Event) => {
+    // 2. Offline Detection
+    if (typeof window !== "undefined") {
+      setIsOffline(!navigator.onLine);
+      window.addEventListener("online", () => setIsOffline(false));
+      window.addEventListener("offline", () => setIsOffline(true));
+    }
+
+    // 3. Standalone Detection
+    const isStandaloneMode = () => {
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes("android-app://")
+      );
+    };
+
+    if (isStandaloneMode()) {
+      setInstallState("already_installed");
+      return;
+    }
+
+    // Check if dismissed in this session
+    if (sessionStorage.getItem("webhunt_pwa_dismissed_session")) {
+      setInstallState("dismissed");
+      return;
+    }
+
+    // 4. Install Event Handler
+    const handleBeforeInstallPrompt = (e: any) => {
+      console.log("[PWA] beforeinstallprompt fired/caught");
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
-
-      // Check if dismissed before THIS session (so it appears again on a future visit)
-      const hasDismissed = sessionStorage.getItem("webhunt_pwa_dismissed_session");
-      if (!hasDismissed) {
-        setShowToast(true);
-      }
+      setInstallState("install_available");
     };
+
+    // Important: Check if it already fired and was captured by our layout script
+    if ((window as any).__deferredPrompt) {
+      handleBeforeInstallPrompt((window as any).__deferredPrompt);
+    }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // 4. Listen for App Installed Event
-    const handleAppInstalled = () => {
-      setIsInstallable(false);
-      setIsIosPrompt(false);
-      setDeferredPrompt(null);
-      setShowToast(false);
-      setIsStandalone(true);
-    };
-
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    // 5. Network status monitoring
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    if (typeof window !== "undefined") {
-      setIsOffline(!navigator.onLine);
-      window.addEventListener("online", handleOnline);
-      window.addEventListener("offline", handleOffline);
-
-      // Setup iOS fallback if not standalone
-      if (!standalone) {
-        const ua = window.navigator.userAgent;
-        const isIosDevice = /iphone|ipad|ipod/.test(ua.toLowerCase()) && !(window as any).MSStream;
-        if (isIosDevice) {
-          const hasDismissed = sessionStorage.getItem("webhunt_pwa_dismissed_session");
-          if (!hasDismissed) {
-            setIsIosPrompt(true);
-            setShowToast(true);
-          }
+    // 5. Fallback timer if beforeinstallprompt doesn't fire
+    const fallbackTimer = setTimeout(() => {
+      setInstallState((prev) => {
+        if (prev === "checking") {
+          const ua = window.navigator.userAgent;
+          const isIosDevice = /iphone|ipad|ipod/.test(ua.toLowerCase()) && !(window as any).MSStream;
+          return isIosDevice ? "ios_instructions" : "unsupported";
         }
-      }
-    }
+        return prev;
+      });
+    }, 1500);
+
+    // 6. App Installed Event
+    const handleAppInstalled = () => {
+      console.log("[PWA] App installed event received");
+      setInstallState("already_installed");
+      setDeferredPrompt(null);
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      clearTimeout(fallbackTimer);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setIsInstallable(false);
-      setShowToast(false);
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log("[PWA] User choice:", outcome);
+      if (outcome === "accepted") {
+        setInstallState("already_installed");
+      }
+      setDeferredPrompt(null);
+    } catch (err) {
+      console.error("[PWA] Install error:", err);
     }
-    setDeferredPrompt(null);
   };
 
-  const handleDismissToast = () => {
-    setShowToast(false);
-    // Use sessionStorage instead of localStorage so it appears again on next session
+  const handleDismiss = () => {
+    setInstallState("dismissed");
     sessionStorage.setItem("webhunt_pwa_dismissed_session", "true");
   };
 
+  const shouldShowBanner = installState === "install_available" || installState === "ios_instructions";
+
   return (
     <>
-      {/* Offline Status Warning Bar */}
+      {/* Offline Banner */}
       {isOffline && (
         <div className="bg-surface-elevated border-b border-red-500/20 text-red-400 px-4 py-2 text-xs flex items-center justify-center space-x-2 fixed top-0 left-0 right-0 z-50 animate-in slide-in-from-top">
           <WifiOff className="w-3.5 h-3.5 text-red-400" />
@@ -121,8 +122,8 @@ export default function PwaRegister() {
         </div>
       )}
 
-      {/* Top Right Compact Install Banner */}
-      {!isStandalone && showToast && (isInstallable || isIosPrompt) && (
+      {/* PWA Install Banner */}
+      {shouldShowBanner && (
         <div className="fixed top-20 right-4 sm:right-6 lg:right-8 z-40 w-[calc(100vw-32px)] sm:w-80 md:w-96 bg-surface border border-subtle/50 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3 animate-in fade-in slide-in-from-top-4 slide-in-from-right-4 duration-300 motion-reduce:transition-none motion-reduce:animate-none">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center space-x-3">
@@ -137,7 +138,7 @@ export default function PwaRegister() {
               </div>
             </div>
             <button
-              onClick={handleDismissToast}
+              onClick={handleDismiss}
               className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition shrink-0"
               aria-label="Close install prompt"
             >
@@ -147,12 +148,12 @@ export default function PwaRegister() {
 
           <div className="flex items-center justify-end space-x-2 mt-1">
             <button
-              onClick={handleDismissToast}
+              onClick={handleDismiss}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-subtle transition"
             >
               Later
             </button>
-            {isInstallable ? (
+            {installState === "install_available" ? (
               <button
                 onClick={handleInstallClick}
                 className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold shadow-sm transition-all duration-300 shadow-brand-btn flex items-center space-x-1.5"

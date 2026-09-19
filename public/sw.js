@@ -11,7 +11,7 @@ const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [
   '/',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/icon.svg',
   '/favicon.ico',
   '/icons/icon-192.png',
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/icons/') ||
     url.pathname === '/icon.svg' ||
     url.pathname === '/favicon.ico' ||
-    url.pathname === '/manifest.json' ||
+    url.pathname === '/manifest.webmanifest' ||
     url.pathname.endsWith('.woff2') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.svg')
