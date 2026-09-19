@@ -61,7 +61,7 @@ export default function PhysicalCard({
             {lead.businessName}
           </h4>
           <span className="text-xs font-medium text-muted-foreground">
-            {lead.industry}
+            {lead.category || "Local Business"}
           </span>
         </div>
 
@@ -156,7 +156,7 @@ export default function PhysicalCard({
             </span>
           )}
 
-          {lead.socialLinks?.whatsapp && (
+          {lead.whatsapp && (
             <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20">
               <MessageCircle className="w-3 h-3" />
               <span>WA</span>
