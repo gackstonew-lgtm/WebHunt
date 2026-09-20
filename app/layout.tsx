@@ -24,14 +24,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "WebHunt Delta | Worldwide Local Businesses & Remote Job Radar",
+  title: "WebHunt | Worldwide Local Businesses & Remote Job Radar",
   description: "Find local businesses without websites across Kenya & worldwide + discover remote tech opportunities via public APIs.",
   manifest: "/manifest.webmanifest",
-  applicationName: "WebHunt Delta",
+  applicationName: "WebHunt",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "WebHunt Delta",
+    title: "WebHunt",
   },
   other: {
     "mobile-web-app-capable": "yes",
