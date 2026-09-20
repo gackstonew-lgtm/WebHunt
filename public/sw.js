@@ -1,13 +1,13 @@
 /**
  * WebHunt Production Progressive Web App Service Worker
- * Version: webhunt-pwa-v1
+ * Version: webhunt-pwa-v2
  * Conservative Caching Policy:
  * - Static Assets: Cache -> Network Fallback (safe public resources & immutable chunks)
  * - Navigation: Network -> Offline Fallback (/offline.html)
  * - Dynamic Lead Radar & APIs: Strictly Network-Only (No stale lead data or cached auth)
  */
 
-const CACHE_NAME = 'webhunt-pwa-v1';
+const CACHE_NAME = 'webhunt-pwa-v2';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [
@@ -75,13 +75,11 @@ const OFFLINE_HTML_FALLBACK = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// 1. Install Event: Precache static core assets
+// 1. Install Event: Precache static core assets strictly without swallowing missing files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[PWA ServiceWorker] Precache warning:', err);
-      });
+      return cache.addAll(PRECACHE_ASSETS);
     })
   );
   self.skipWaiting();

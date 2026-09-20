@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-// Global declaration for deferred beforeinstallprompt event
+// Global declaration for early captured beforeinstallprompt event
 declare global {
   interface Window {
-    __deferredPrompt?: any;
+    __pwaDeferredPrompt?: any;
   }
 }
 
@@ -49,14 +49,16 @@ export function usePwaInstall(): PwaInstallState {
       const isStandaloneMedia =
         window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: fullscreen)").matches ||
-        window.matchMedia("(display-mode: minimal-ui)").matches ||
-        window.matchMedia("(display-mode: window-controls-overlay)").matches;
+        window.matchMedia("(display-mode: minimal-ui)").matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
       const isAndroidApp = document.referrer?.startsWith("android-app://") || false;
       return Boolean(isStandaloneMedia || isIOSStandalone || isAndroidApp);
     };
 
     if (checkIsStandalone()) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] Standalone mode detected - application is running installed");
+      }
       setIsInstalled(true);
       setCanInstall(false);
       return;
@@ -71,6 +73,9 @@ export function usePwaInstall(): PwaInstallState {
 
     const handleMediaChange = () => {
       if (checkIsStandalone()) {
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[PWA] Standalone mode activated dynamically");
+        }
         setIsInstalled(true);
         setCanInstall(false);
       }
@@ -84,41 +89,48 @@ export function usePwaInstall(): PwaInstallState {
       }
     });
 
-    // 3. Capture beforeinstallprompt (both native and custom dispatched from head)
-    const handleBeforeInstallPrompt = (e: Event | CustomEvent) => {
-      if ("preventDefault" in e) {
-        e.preventDefault();
+    // 3. Capture beforeinstallprompt
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent browser default mini-infobar on mobile
+      e.preventDefault();
+      
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] beforeinstallprompt received");
+        console.log("[PWA] Install prompt available");
       }
-      const promptObj = (e as CustomEvent).detail || e;
-      window.__deferredPrompt = promptObj;
-      setPromptEvent(promptObj);
+
+      window.__pwaDeferredPrompt = e;
+      setPromptEvent(e);
       setCanInstall(true);
     };
 
-    // If already captured by global head script
-    if (window.__deferredPrompt) {
-      setPromptEvent(window.__deferredPrompt);
+    // If already captured by early document script before React hydrated
+    if (window.__pwaDeferredPrompt) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] beforeinstallprompt captured from early page load");
+        console.log("[PWA] Install prompt available");
+      }
+      setPromptEvent(window.__pwaDeferredPrompt);
       setCanInstall(true);
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("webhunt:beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
 
     // 4. App Installed listener
     const handleAppInstalled = () => {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] Application installed successfully");
+      }
       setIsInstalled(true);
       setCanInstall(false);
       setPromptEvent(null);
-      window.__deferredPrompt = null;
+      window.__pwaDeferredPrompt = null;
     };
     window.addEventListener("appinstalled", handleAppInstalled);
-    window.addEventListener("webhunt:appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("webhunt:beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
       window.removeEventListener("appinstalled", handleAppInstalled);
-      window.removeEventListener("webhunt:appinstalled", handleAppInstalled);
       mediaQueries.forEach((mq) => {
         if (mq.removeEventListener) {
           mq.removeEventListener("change", handleMediaChange);
@@ -129,12 +141,19 @@ export function usePwaInstall(): PwaInstallState {
     };
   }, []);
 
+  // 5. User-Initiated Installation Trigger
   const installApp = useCallback(async () => {
-    const currentPrompt = promptEvent || (typeof window !== "undefined" ? window.__deferredPrompt : null);
+    const currentPrompt = promptEvent || (typeof window !== "undefined" ? window.__pwaDeferredPrompt : null);
 
     if (!currentPrompt) {
-      // Native prompt not available in this browser/session; trigger instructional fallback
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] Install requested but no native prompt available in current browser session");
+      }
       return { success: false, isFallback: true };
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[PWA] User selected install");
     }
 
     setIsInstalling(true);
@@ -144,19 +163,27 @@ export function usePwaInstall(): PwaInstallState {
       const outcome = choiceResult?.outcome as "accepted" | "dismissed";
       setInstallOutcome(outcome);
 
+      if (process.env.NODE_ENV !== "production") {
+        if (outcome === "accepted") {
+          console.log("[PWA] User accepted installation prompt");
+        } else {
+          console.log("[PWA] User dismissed install");
+        }
+      }
+
       if (outcome === "accepted") {
-        setIsInstalled(true);
+        // User agreed to install; prompt cannot be used again
         setCanInstall(false);
       }
 
       setPromptEvent(null);
       if (typeof window !== "undefined") {
-        window.__deferredPrompt = null;
+        window.__pwaDeferredPrompt = null;
       }
       setIsInstalling(false);
       return { success: outcome === "accepted", outcome };
     } catch (error) {
-      console.error("[PWA] Installation prompt error:", error);
+      console.error("[PWA] Installation prompt invocation failed:", error);
       setIsInstalling(false);
       return { success: false, isFallback: true };
     }

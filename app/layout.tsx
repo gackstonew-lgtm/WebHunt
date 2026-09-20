@@ -62,20 +62,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="alternate" type="application/manifest+json" href="/manifest.json" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.__deferredPrompt = null;
+              window.__pwaDeferredPrompt = null;
               window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
-                window.__deferredPrompt = e;
-                window.dispatchEvent(new CustomEvent('webhunt:beforeinstallprompt', { detail: e }));
+                window.__pwaDeferredPrompt = e;
               });
               window.addEventListener('appinstalled', function() {
-                window.__deferredPrompt = null;
-                window.dispatchEvent(new CustomEvent('webhunt:appinstalled'));
+                window.__pwaDeferredPrompt = null;
               });
               try {
                 const t = localStorage.getItem('webhunt_theme');

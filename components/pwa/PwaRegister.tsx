@@ -9,26 +9,34 @@ export default function PwaRegister() {
   const [isOffline, setIsOffline] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // 1. Service Worker Registration (Gated to production environments)
+  // 1. Authoritative Service Worker Registration
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator &&
-      (process.env.NODE_ENV === "production" || window.location.hostname !== "localhost")
-    ) {
-      window.addEventListener("load", () => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const registerWorker = () => {
         navigator.serviceWorker
           .register("/sw.js", { scope: "/" })
           .then((reg) => {
-            console.log("[PWA] SW registered successfully, scope:", reg.scope);
+            if (process.env.NODE_ENV !== "production") {
+              console.log("[PWA] Service worker registration successful, scope:", reg.scope);
+            }
           })
           .catch((err) => {
-            console.warn("[PWA] SW registration failed:", err);
+            console.warn("[PWA] Service worker registration failed:", err);
           });
-      });
-    }
+      };
 
-    // 2. Offline Detection
+      // Ensure registration fires regardless of whether window load already occurred before hydration
+      if (document.readyState === "complete") {
+        registerWorker();
+      } else {
+        window.addEventListener("load", registerWorker);
+        return () => window.removeEventListener("load", registerWorker);
+      }
+    }
+  }, []);
+
+  // 2. Offline Detection & Session Dismissal
+  useEffect(() => {
     if (typeof window !== "undefined") {
       setIsOffline(!navigator.onLine);
       const handleOnline = () => setIsOffline(false);
@@ -36,7 +44,6 @@ export default function PwaRegister() {
       window.addEventListener("online", handleOnline);
       window.addEventListener("offline", handleOffline);
 
-      // Check session dismissal state
       if (sessionStorage.getItem("webhunt_pwa_dismissed_session")) {
         setIsDismissed(true);
       }
@@ -52,6 +59,9 @@ export default function PwaRegister() {
     setIsDismissed(true);
     if (typeof window !== "undefined") {
       sessionStorage.setItem("webhunt_pwa_dismissed_session", "true");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[PWA] User dismissed install prompt for this session");
+      }
     }
   }, []);
 
@@ -66,11 +76,12 @@ export default function PwaRegister() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isDismissed, handleDismiss]);
 
+  // Show banner only if: not dismissed, not already installed, and supported
   const shouldShowBanner = !isDismissed && !isInstalled && (canInstall || platform === "ios");
 
   return (
     <>
-      {/* Offline Status Banner */}
+      {/* Offline Status Indicator */}
       {isOffline && (
         <aside
           role="status"
@@ -78,7 +89,7 @@ export default function PwaRegister() {
           className="bg-surface-elevated border-b border-red-500/20 text-red-400 px-4 py-2 text-xs flex items-center justify-center space-x-2 fixed top-0 left-0 right-0 z-50 animate-in slide-in-from-top"
         >
           <WifiOff className="w-3.5 h-3.5 text-red-400" aria-hidden="true" />
-          <span>You are currently offline. Live lead scanning requires an internet connection.</span>
+          <span>You are currently offline. Live lead discovery requires an internet connection.</span>
         </aside>
       )}
 
@@ -136,7 +147,7 @@ export default function PwaRegister() {
             ) : platform === "ios" ? (
               <div className="px-3 py-1.5 rounded-xl bg-surface-elevated border border-border text-[11px] font-medium text-muted-foreground flex items-center space-x-1.5">
                 <Share className="w-3 h-3 text-primary" aria-hidden="true" />
-                <span>Share → 'Add to Home Screen'</span>
+                <span>Tap Share → 'Add to Home Screen'</span>
               </div>
             ) : null}
           </div>

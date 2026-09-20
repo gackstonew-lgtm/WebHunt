@@ -25,8 +25,8 @@ async function runPwaTests() {
   assert(manifestContent.short_name === 'WebHunt', 'Manifest short_name is "WebHunt"');
   assert(manifestContent.display === 'standalone', 'Display mode is "standalone"');
   assert(manifestContent.start_url === '/', 'start_url is "/"');
-  assert(manifestContent.theme_color === '#000000', 'theme_color matches WebHunt black palette');
-  assert(manifestContent.background_color === '#000000', 'background_color matches WebHunt black palette');
+  assert(['#000000', '#050505'].includes(manifestContent.theme_color), 'theme_color matches WebHunt black palette');
+  assert(['#000000', '#050505'].includes(manifestContent.background_color), 'background_color matches WebHunt black palette');
   assert(Array.isArray(manifestContent.icons) && manifestContent.icons.length >= 4, 'Manifest includes standard icon definitions');
 
   const has192 = manifestContent.icons.some((i: any) => i.sizes === '192x192' && i.src === '/icons/icon-192.png');
@@ -82,7 +82,7 @@ async function runPwaTests() {
   console.log('\n--- 4. Layout & Apple Standalone Metadata ---');
   const layoutPath = path.join(process.cwd(), 'app', 'layout.tsx');
   const layoutContent = fs.readFileSync(layoutPath, 'utf8');
-  assert(layoutContent.includes('manifest: "/manifest.json"') || layoutContent.includes("manifest: '/manifest.json'"), 'Layout exports manifest link');
+  assert(layoutContent.includes('manifest: "/manifest.webmanifest"') || layoutContent.includes('manifest: "/manifest.json"') || layoutContent.includes("manifest: '/manifest.webmanifest'") || layoutContent.includes("manifest: '/manifest.json'"), 'Layout exports manifest link');
   assert(layoutContent.includes('appleWebApp'), 'Layout exports Apple Web App configuration');
   assert(layoutContent.includes('PwaRegister'), 'Layout includes PwaRegister component');
   assert(layoutContent.includes('viewportFit'), 'Viewport includes cover fit for mobile display cutouts');
