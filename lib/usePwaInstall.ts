@@ -84,11 +84,14 @@ export function usePwaInstall(): PwaInstallState {
       }
     });
 
-    // 3. Capture beforeinstallprompt
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      window.__deferredPrompt = e;
-      setPromptEvent(e);
+    // 3. Capture beforeinstallprompt (both native and custom dispatched from head)
+    const handleBeforeInstallPrompt = (e: Event | CustomEvent) => {
+      if ("preventDefault" in e) {
+        e.preventDefault();
+      }
+      const promptObj = (e as CustomEvent).detail || e;
+      window.__deferredPrompt = promptObj;
+      setPromptEvent(promptObj);
       setCanInstall(true);
     };
 
@@ -99,6 +102,7 @@ export function usePwaInstall(): PwaInstallState {
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("webhunt:beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
 
     // 4. App Installed listener
     const handleAppInstalled = () => {
@@ -108,10 +112,13 @@ export function usePwaInstall(): PwaInstallState {
       window.__deferredPrompt = null;
     };
     window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("webhunt:appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("webhunt:beforeinstallprompt", handleBeforeInstallPrompt as EventListener);
       window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("webhunt:appinstalled", handleAppInstalled);
       mediaQueries.forEach((mq) => {
         if (mq.removeEventListener) {
           mq.removeEventListener("change", handleMediaChange);

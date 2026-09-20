@@ -19,6 +19,7 @@ export async function middleware(request: NextRequest) {
     pathname === "/icon.svg" ||
     pathname === "/sw.js" ||
     pathname === "/manifest.json" ||
+    pathname === "/manifest.webmanifest" ||
     pathname.startsWith("/icons/") ||
     PUBLIC_FILE_PATTERN.test(pathname)
   ) {

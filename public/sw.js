@@ -10,8 +10,8 @@ const CACHE_NAME = 'webhunt-v1-static';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [
-  '/',
   '/manifest.webmanifest',
+  '/manifest.json',
   '/icon.svg',
   '/favicon.ico',
   '/icons/icon-192.png',
