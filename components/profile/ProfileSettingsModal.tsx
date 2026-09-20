@@ -21,12 +21,15 @@ import {
   Palette,
   CreditCard,
   Sparkles,
-  Smartphone
+  Smartphone,
+  Download,
+  Share
 } from "lucide-react";
 import { getUserProfileAction, saveUserProfileAction, UserProfileData } from "@/app/actions/profile";
 import { logoutAction } from "@/app/actions/auth";
 import { clearAllClientStorage } from "@/lib/pipeline-store";
 import { useTheme } from "@/lib/theme-context";
+import { usePwaInstall } from "@/lib/usePwaInstall";
 import KoraCheckoutModal from "@/components/payments/KoraCheckoutModal";
 
 interface ProfileSettingsModalProps {
@@ -36,12 +39,14 @@ interface ProfileSettingsModalProps {
 
 export default function ProfileSettingsModal({ onClose, onProfileUpdated }: ProfileSettingsModalProps) {
   const { theme, setTheme } = useTheme();
+  const { isInstalled, canInstall, isIOS, isInstalling, installApp } = usePwaInstall();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [showKoraCheckout, setShowKoraCheckout] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -225,9 +230,9 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
               </div>
 
               {/* Currency & Region Row */}
-              <div className="pt-3.5 flex items-center justify-between gap-3">
+              <div className="py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center justify-center text-foreground">
+                  <div className="w-8 h-8 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center justify-center text-foreground shrink-0">
                     <Coins className="w-4 h-4" />
                   </div>
                   <div>
@@ -244,6 +249,79 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
                   <option value="USD" className="bg-surface">USD ($)</option>
                   <option value="KES" className="bg-surface">KES (KSh)</option>
                 </select>
+              </div>
+
+              {/* PWA App Installation Row */}
+              <div className="pt-3.5 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-xl bg-surface-elevated border border-subtle/50 flex items-center justify-center text-foreground shrink-0">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-foreground text-xs block">WebHunt Application</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        {isInstalled
+                          ? "Application is running in standalone mode"
+                          : "Install Web Hunt directly on your device"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    {isInstalled ? (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated border border-subtle/50 text-xs font-semibold text-foreground"
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>App installed</span>
+                      </div>
+                    ) : canInstall ? (
+                      <button
+                        type="button"
+                        onClick={installApp}
+                        disabled={isInstalling}
+                        aria-label="Install App"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-bold shadow-sm transition disabled:opacity-50"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isInstalling ? "Installing..." : "Install App"}</span>
+                      </button>
+                    ) : isIOS ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowIosGuide(!showIosGuide)}
+                        aria-expanded={showIosGuide}
+                        aria-label="Install App Guide for iOS"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-secondary border border-subtle/50 text-xs font-semibold text-foreground transition"
+                      >
+                        <Share className="w-3.5 h-3.5 text-primary" />
+                        <span>Install App</span>
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground px-2.5 py-1 rounded-xl bg-surface-elevated border border-subtle/50">
+                        Browser Mode
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* iOS Safari Guided Steps */}
+                {isIOS && !isInstalled && showIosGuide && (
+                  <div className="mt-1 p-3 rounded-xl bg-surface-elevated border border-subtle/60 text-[11px] text-muted-foreground space-y-1.5 animate-in fade-in">
+                    <p className="font-semibold text-foreground flex items-center space-x-1.5">
+                      <Share className="w-3 h-3 text-primary" />
+                      <span>How to install on iOS / iPadOS Safari:</span>
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 pl-1">
+                      <li>Tap the <strong className="text-foreground">Share</strong> button in Safari toolbar.</li>
+                      <li>Scroll and tap <strong className="text-foreground">Add to Home Screen</strong>.</li>
+                      <li>Tap <strong className="text-foreground">Add</strong> in the top right corner.</li>
+                    </ol>
+                  </div>
+                )}
               </div>
             </div>
           </div>
