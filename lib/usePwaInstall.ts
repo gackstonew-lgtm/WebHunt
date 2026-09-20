@@ -9,31 +9,48 @@ declare global {
   }
 }
 
+export type PwaPlatform = "ios" | "android" | "desktop";
+
 export interface PwaInstallState {
   isInstalled: boolean;
   canInstall: boolean;
-  isIOS: boolean;
+  platform: PwaPlatform;
   isInstalling: boolean;
-  isUnsupported: boolean;
   installOutcome: "accepted" | "dismissed" | null;
-  installApp: () => Promise<{ success: boolean; outcome?: "accepted" | "dismissed" }>;
+  installApp: () => Promise<{ success: boolean; outcome?: "accepted" | "dismissed"; isFallback?: boolean }>;
 }
 
 export function usePwaInstall(): PwaInstallState {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [canInstall, setCanInstall] = useState<boolean>(false);
-  const [isIOS, setIsIOS] = useState<boolean>(false);
+  const [platform, setPlatform] = useState<PwaPlatform>("desktop");
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
-  const [isUnsupported, setIsUnsupported] = useState<boolean>(false);
   const [installOutcome, setInstallOutcome] = useState<"accepted" | "dismissed" | null>(null);
   const [promptEvent, setPromptEvent] = useState<any>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. Detect Standalone Mode (Installed PWA)
+    // 1. Detect Platform
+    const ua = window.navigator.userAgent || "";
+    const isIOSDevice = /iphone|ipad|ipod/i.test(ua) && !(window as any).MSStream;
+    const isAndroidDevice = /android/i.test(ua);
+
+    if (isIOSDevice) {
+      setPlatform("ios");
+    } else if (isAndroidDevice) {
+      setPlatform("android");
+    } else {
+      setPlatform("desktop");
+    }
+
+    // 2. Comprehensive Standalone Detection
     const checkIsStandalone = (): boolean => {
-      const isStandaloneMedia = window.matchMedia("(display-mode: standalone)").matches;
+      const isStandaloneMedia =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches ||
+        window.matchMedia("(display-mode: window-controls-overlay)").matches;
       const isIOSStandalone = (window.navigator as any).standalone === true;
       const isAndroidApp = document.referrer?.startsWith("android-app://") || false;
       return Boolean(isStandaloneMedia || isIOSStandalone || isAndroidApp);
@@ -45,27 +62,27 @@ export function usePwaInstall(): PwaInstallState {
       return;
     }
 
-    // Listen for display-mode standalone changes (e.g. if user opened app in standalone window)
-    const mediaQuery = window.matchMedia("(display-mode: standalone)");
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      if (e.matches) {
+    // Listen for display-mode standalone changes
+    const mediaQueries = [
+      window.matchMedia("(display-mode: standalone)"),
+      window.matchMedia("(display-mode: fullscreen)"),
+      window.matchMedia("(display-mode: minimal-ui)"),
+    ];
+
+    const handleMediaChange = () => {
+      if (checkIsStandalone()) {
         setIsInstalled(true);
         setCanInstall(false);
       }
     };
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleMediaChange);
-    } else if ((mediaQuery as any).addListener) {
-      (mediaQuery as any).addListener(handleMediaChange);
-    }
 
-    // 2. Detect iOS / iPadOS Safari (where beforeinstallprompt is not supported)
-    const ua = window.navigator.userAgent || "";
-    const isIosDevice =
-      /iphone|ipad|ipod/i.test(ua) &&
-      !(window as any).MSStream &&
-      !(window.navigator as any).standalone;
-    setIsIOS(isIosDevice);
+    mediaQueries.forEach((mq) => {
+      if (mq.addEventListener) {
+        mq.addEventListener("change", handleMediaChange);
+      } else if ((mq as any).addListener) {
+        (mq as any).addListener(handleMediaChange);
+      }
+    });
 
     // 3. Capture beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -73,7 +90,6 @@ export function usePwaInstall(): PwaInstallState {
       window.__deferredPrompt = e;
       setPromptEvent(e);
       setCanInstall(true);
-      setIsUnsupported(false);
     };
 
     // If already captured by global head script
@@ -93,22 +109,16 @@ export function usePwaInstall(): PwaInstallState {
     };
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // 5. Fallback timer if prompt doesn't fire and not iOS
-    const timeoutId = setTimeout(() => {
-      if (!window.__deferredPrompt && !isIosDevice && !checkIsStandalone()) {
-        setIsUnsupported(true);
-      }
-    }, 1500);
-
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", handleMediaChange);
-      } else if ((mediaQuery as any).removeListener) {
-        (mediaQuery as any).removeListener(handleMediaChange);
-      }
-      clearTimeout(timeoutId);
+      mediaQueries.forEach((mq) => {
+        if (mq.removeEventListener) {
+          mq.removeEventListener("change", handleMediaChange);
+        } else if ((mq as any).removeListener) {
+          (mq as any).removeListener(handleMediaChange);
+        }
+      });
     };
   }, []);
 
@@ -116,7 +126,8 @@ export function usePwaInstall(): PwaInstallState {
     const currentPrompt = promptEvent || (typeof window !== "undefined" ? window.__deferredPrompt : null);
 
     if (!currentPrompt) {
-      return { success: false };
+      // Native prompt not available in this browser/session; trigger instructional fallback
+      return { success: false, isFallback: true };
     }
 
     setIsInstalling(true);
@@ -140,16 +151,15 @@ export function usePwaInstall(): PwaInstallState {
     } catch (error) {
       console.error("[PWA] Installation prompt error:", error);
       setIsInstalling(false);
-      return { success: false };
+      return { success: false, isFallback: true };
     }
   }, [promptEvent]);
 
   return {
     isInstalled,
     canInstall,
-    isIOS,
+    platform,
     isInstalling,
-    isUnsupported,
     installOutcome,
     installApp,
   };

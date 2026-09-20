@@ -5,7 +5,7 @@ import { Download, WifiOff, X, Radar, Share } from "lucide-react";
 import { usePwaInstall } from "@/lib/usePwaInstall";
 
 export default function PwaRegister() {
-  const { isInstalled, canInstall, isIOS, isInstalling, installApp } = usePwaInstall();
+  const { isInstalled, canInstall, platform, isInstalling, installApp } = usePwaInstall();
   const [isOffline, setIsOffline] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -47,7 +47,7 @@ export default function PwaRegister() {
     }
   };
 
-  const shouldShowBanner = !isDismissed && !isInstalled && (canInstall || isIOS);
+  const shouldShowBanner = !isDismissed && !isInstalled && (canInstall || platform === "ios");
 
   return (
     <>

@@ -39,14 +39,14 @@ interface ProfileSettingsModalProps {
 
 export default function ProfileSettingsModal({ onClose, onProfileUpdated }: ProfileSettingsModalProps) {
   const { theme, setTheme } = useTheme();
-  const { isInstalled, canInstall, isIOS, isInstalling, installApp } = usePwaInstall();
+  const { isInstalled, canInstall, platform, isInstalling, installApp } = usePwaInstall();
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [showKoraCheckout, setShowKoraCheckout] = useState(false);
-  const [showIosGuide, setShowIosGuide] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -278,48 +278,70 @@ export default function ProfileSettingsModal({ onClose, onProfileUpdated }: Prof
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
                         <span>App installed</span>
                       </div>
-                    ) : canInstall ? (
+                    ) : (
                       <button
                         type="button"
-                        onClick={installApp}
+                        onClick={async () => {
+                          const res = await installApp();
+                          if (res.isFallback || !canInstall) {
+                            setShowGuide((prev) => !prev);
+                          }
+                        }}
                         disabled={isInstalling}
+                        aria-expanded={showGuide}
                         aria-label="Install App"
                         className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white text-black hover:bg-neutral-200 text-xs font-bold shadow-sm transition disabled:opacity-50"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>{isInstalling ? "Installing..." : "Install App"}</span>
                       </button>
-                    ) : isIOS ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowIosGuide(!showIosGuide)}
-                        aria-expanded={showIosGuide}
-                        aria-label="Install App Guide for iOS"
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-surface-elevated hover:bg-surface-secondary border border-subtle/50 text-xs font-semibold text-foreground transition"
-                      >
-                        <Share className="w-3.5 h-3.5 text-primary" />
-                        <span>Install App</span>
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground px-2.5 py-1 rounded-xl bg-surface-elevated border border-subtle/50">
-                        Browser Mode
-                      </span>
                     )}
                   </div>
                 </div>
 
-                {/* iOS Safari Guided Steps */}
-                {isIOS && !isInstalled && showIosGuide && (
-                  <div className="mt-1 p-3 rounded-xl bg-surface-elevated border border-subtle/60 text-[11px] text-muted-foreground space-y-1.5 animate-in fade-in">
-                    <p className="font-semibold text-foreground flex items-center space-x-1.5">
-                      <Share className="w-3 h-3 text-primary" />
-                      <span>How to install on iOS / iPadOS Safari:</span>
-                    </p>
-                    <ol className="list-decimal list-inside space-y-1 pl-1">
-                      <li>Tap the <strong className="text-foreground">Share</strong> button in Safari toolbar.</li>
-                      <li>Scroll and tap <strong className="text-foreground">Add to Home Screen</strong>.</li>
-                      <li>Tap <strong className="text-foreground">Add</strong> in the top right corner.</li>
-                    </ol>
+                {/* Platform-Specific Guided Installation Instructions */}
+                {!isInstalled && showGuide && (
+                  <div className="mt-1 p-3.5 rounded-xl bg-surface-elevated border border-subtle/60 text-[11px] text-muted-foreground space-y-2 animate-in fade-in">
+                    <div className="font-semibold text-foreground flex items-center justify-between">
+                      <span className="flex items-center space-x-1.5">
+                        <Download className="w-3.5 h-3.5 text-primary" />
+                        <span>
+                          {platform === "ios"
+                            ? "Install on iOS / iPadOS Safari:"
+                            : platform === "android"
+                            ? "Install on Android:"
+                            : "Install on Desktop:"}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowGuide(false)}
+                        className="text-muted-foreground hover:text-foreground text-xs px-1.5 py-0.5 rounded hover:bg-surface-subtle transition"
+                        aria-label="Close installation instructions"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {platform === "ios" ? (
+                      <ol className="list-decimal list-inside space-y-1 pl-1 leading-relaxed">
+                        <li>Tap the <strong className="text-foreground">Share</strong> icon in the Safari toolbar.</li>
+                        <li>Scroll down and select <strong className="text-foreground">Add to Home Screen</strong>.</li>
+                        <li>Tap <strong className="text-foreground">Add</strong> in the top-right corner to complete.</li>
+                      </ol>
+                    ) : platform === "android" ? (
+                      <ol className="list-decimal list-inside space-y-1 pl-1 leading-relaxed">
+                        <li>Tap the browser menu icon (<strong className="text-foreground">⋮</strong>) in the top-right.</li>
+                        <li>Select <strong className="text-foreground">Install app</strong> or <strong className="text-foreground">Add to Home screen</strong>.</li>
+                        <li>Confirm by tapping <strong className="text-foreground">Install</strong>.</li>
+                      </ol>
+                    ) : (
+                      <ol className="list-decimal list-inside space-y-1 pl-1 leading-relaxed">
+                        <li>Click the <strong className="text-foreground">Install</strong> icon (⊕) in your browser address bar.</li>
+                        <li>Or open the browser menu (<strong className="text-foreground">⋮</strong>) and select <strong className="text-foreground">Install WebHunt</strong>.</li>
+                        <li>Confirm in the prompt to launch as a standalone desktop app.</li>
+                      </ol>
+                    )}
                   </div>
                 )}
               </div>
