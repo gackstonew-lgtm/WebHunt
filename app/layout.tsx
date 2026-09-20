@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import PwaRegister from "@/components/pwa/PwaRegister";
 import { ThemeProvider } from "@/lib/theme-context";
+import { getCurrentSession } from "@/lib/auth/session";
+import AppLayoutClient from "@/components/AppLayoutClient";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -54,11 +56,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getCurrentSession();
+  const isAuthenticated = !!session?.userId;
+
   return (
     <html lang="en" className={`dark ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <head>
@@ -92,12 +97,9 @@ export default function RootLayout({
       <body className="bg-background text-foreground font-sans min-h-screen flex flex-col antialiased transition-colors duration-300">
         <ThemeProvider>
           <PwaRegister />
-          <Navbar />
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-8">
+          <AppLayoutClient initialAuthenticated={isAuthenticated}>
             {children}
-          </main>
-          <Footer />
-          <BottomNav />
+          </AppLayoutClient>
         </ThemeProvider>
       </body>
     </html>

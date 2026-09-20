@@ -1,0 +1,207 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+import SearchForm from "@/components/SearchForm";
+import ResultsTable from "@/components/ResultsTable";
+import { SearchParams, SearchResult } from "@/lib/types";
+import { executeSearchAction, getProviderStatusesAction } from "@/app/actions/search";
+import { useLeadPipeline } from "@/lib/pipeline-store";
+import { logSearchHistory } from "@/lib/search-history-store";
+import { 
+  AlertCircle, 
+  Store, 
+  Terminal, 
+  Layers, 
+  ArrowRight, 
+  LogIn,
+  ExternalLink,
+  Sparkles
+} from "lucide-react";
+
+interface SearchDashboardProps {
+  initialMode?: string;
+}
+
+export default function SearchDashboard({ initialMode = "physical" }: SearchDashboardProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState<boolean>(false);
+  const [lastSearchMode, setLastSearchMode] = useState<string>(initialMode);
+
+  const [providersStatus, setProvidersStatus] = useState<{
+    physical: { key: string; name: string; configured: boolean; isFree: boolean }[];
+    online: { key: string; name: string; configured: boolean; isFree: boolean }[];
+  }>({
+    physical: [],
+    online: [],
+  });
+
+  const { leads: pipelineLeads, saveLead, bulkSaveLeads } = useLeadPipeline();
+
+  const savedLeadIds = new Set(pipelineLeads.map((l) => l.id));
+
+  useEffect(() => {
+    async function loadStatus() {
+      try {
+        const statuses = await getProviderStatusesAction();
+        setProvidersStatus(statuses);
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+    loadStatus();
+  }, []);
+
+  const handleSearch = async (params: SearchParams) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setAuthRequired(false);
+    setLastSearchMode(params.mode || "physical");
+
+    try {
+      const res = await executeSearchAction(params);
+
+      if (res.requireAuth) {
+        setAuthRequired(true);
+        setErrorMessage(res.error || "Please sign in to launch lead radar scans.");
+        return;
+      }
+
+      if (res.requireSubscription) {
+        const mode = res.returnTo || params.mode || "physical";
+        router.push("/subscription?returnTo=" + encodeURIComponent(mode));
+        return;
+      }
+
+      if (res.success && res.data) {
+        setSearchResult(res.data);
+        // Log to client search history
+        logSearchHistory({
+          mode: res.data.mode,
+          query: res.data.query,
+          location: res.data.location,
+          provider: res.data.provider,
+          totalFetched: res.data.totalFetched,
+          qualifiedCount: res.data.qualifiedCount,
+          filters: params.filters,
+        });
+      } else {
+        setErrorMessage(res.error || "No leads found matching your search parameters.");
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to execute lead discovery search.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 pb-12">
+      {/* Quick view switcher for authenticated users */}
+      <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-semibold text-foreground">Active Radar Workspace</span>
+        </div>
+        <Link
+          href="/?view=landing"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface border border-subtle/60 text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition text-[11px] font-medium"
+        >
+          <Sparkles className="w-3 h-3 text-primary" />
+          <span>View Product Overview</span>
+          <ExternalLink className="w-3 h-3 ml-0.5" />
+        </Link>
+      </div>
+
+      {/* Search Input Hero Form */}
+      <SearchForm
+        onSearch={handleSearch}
+        isLoading={isLoading}
+        providersStatus={providersStatus}
+      />
+
+      {/* Authentication Required Notice Banner */}
+      {authRequired && (
+        <div className="p-5 rounded-2xl bg-surface border border-strong/60 text-foreground flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl animate-in slide-in-from-top-2">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-surface-elevated text-foreground border border-subtle/50 flex items-center justify-center shrink-0">
+              <LogIn className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-foreground">Sign In Required</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Please sign in or create an account with your email to launch lead scans and save CRM contacts.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            <a
+              href={"/auth?mode=signin&returnTo=" + encodeURIComponent("/?mode=" + lastSearchMode)}
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground shadow-brand-btn transition-all duration-300 font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5"
+            >
+              <span>Sign In / Register</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Standard Error Notice */}
+      {errorMessage && !authRequired && (
+        <div className="p-4 rounded-xl bg-surface border border-red-500/25 text-red-300 text-xs flex items-center space-x-3">
+          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {/* Results View */}
+      {searchResult ? (
+        <ResultsTable
+          searchResult={searchResult}
+          onSaveLead={saveLead}
+          onBulkSave={bulkSaveLeads}
+          savedLeadIds={savedLeadIds}
+        />
+      ) : (
+        /* Feature Highlights Grid */
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-150">
+          <div className="bg-surface/50 border border-subtle/50 rounded-3xl p-8 hover:bg-surface hover:shadow-xl hover:-translate-y-1 space-y-3 hover:border-strong/60 transition duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-surface-elevated text-foreground flex items-center justify-center">
+              <Store className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-foreground text-lg tracking-tight">Worldwide Physical Radar</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Find local businesses across Kenya and 240+ countries that have an active phone number but zero website on record to pitch custom websites and POS systems.
+            </p>
+          </div>
+
+          <div className="bg-surface/50 border border-subtle/50 rounded-3xl p-8 hover:bg-surface hover:shadow-xl hover:-translate-y-1 space-y-3 hover:border-strong/60 transition duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-surface-elevated text-foreground flex items-center justify-center">
+              <Terminal className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-foreground text-lg tracking-tight">Remote Opportunities Radar</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Query official public developer endpoints (Remotive, Arbeitnow, Himalayas, RemoteOK, WWR) for genuine remote software, writing, design, and AI gigs.
+            </p>
+          </div>
+
+          <div className="bg-surface/50 border border-subtle/50 rounded-3xl p-8 hover:bg-surface hover:shadow-xl hover:-translate-y-1 space-y-3 hover:border-strong/60 transition duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-surface-elevated text-foreground flex items-center justify-center">
+              <Layers className="w-5 h-5" />
+            </div>
+            <h3 className="font-extrabold text-foreground text-lg tracking-tight">In-Session Pipeline CRM</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Track outreach stages (New to Contacted to Interested to Closed), generate customized pitch scripts and job proposals, and export to CSV instantly.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

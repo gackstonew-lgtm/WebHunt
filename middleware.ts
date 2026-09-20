@@ -32,9 +32,10 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = !!session && !!session.userId;
 
   const isAuthRoute = pathname.startsWith("/auth");
+  const isPublicRoute = pathname === "/" || pathname === "/privacy" || pathname === "/terms" || pathname.startsWith("/api/public") || pathname.startsWith("/api/contact");
 
   // 3. If unauthenticated user tries to access a protected route -> redirect to /auth
-  if (!isAuthenticated && !isAuthRoute) {
+  if (!isAuthenticated && !isAuthRoute && !isPublicRoute) {
     const returnUrl = encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search);
     const authUrl = new URL(`/auth?returnUrl=${returnUrl}`, request.url);
     return NextResponse.redirect(authUrl);
