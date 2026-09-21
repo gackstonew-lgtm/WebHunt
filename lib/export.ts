@@ -34,6 +34,18 @@ export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "webhunt-le
     "Estimated Value ($)",
     "Notes",
     "Date Added",
+    // Additive Social Enrichment Columns (Section 19)
+    "Instagram Confidence",
+    "Instagram Verification Status",
+    "Facebook Confidence",
+    "Facebook Verification Status",
+    "TikTok Confidence",
+    "TikTok Verification Status",
+    "Social Enrichment Status",
+    "Social Last Checked",
+    "Additional Phones",
+    "Additional Emails",
+    "Contact Sources",
   ];
 
   const escapeCsv = (val: any) => {
@@ -45,6 +57,16 @@ export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "webhunt-le
   const rows = leads.map((lead) => {
     const secondaryEmail = (lead.emails && lead.emails.length > 1) ? lead.emails[1] : "";
     const soc = lead.socialProfiles || {};
+    const detailed = lead.detailedProfiles || lead.enrichment?.detailedProfiles || (soc.detailed || {});
+    const addPhones = (lead.additionalPhones || lead.enrichment?.additionalPhones || []).map(p => `${p.value} (${p.source})`).join("; ");
+    const addEmails = (lead.additionalEmails || lead.enrichment?.additionalEmails || []).map(e => `${e.value} (${e.source})`).join("; ");
+    const enrichmentStatus = lead.socialEnrichmentStatus || lead.enrichment?.socialEnrichmentStatus || "not_checked";
+    const lastChecked = lead.socialLastCheckedAt || lead.enrichment?.socialLastCheckedAt ? new Date(lead.socialLastCheckedAt || lead.enrichment?.socialLastCheckedAt!).toISOString() : "";
+    const contactSources = (lead.contacts || lead.enrichment?.phones || []).map(c => c.source).filter((v, i, a) => a.indexOf(v) === i).join("; ");
+
+    const igDetail = detailed.instagram;
+    const fbDetail = detailed.facebook;
+    const tkDetail = detailed.tiktok;
 
     if (lead.type === "physical") {
       const p = lead as PhysicalLead;
@@ -79,6 +101,17 @@ export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "webhunt-le
         escapeCsv(p.estimatedValue || 1500),
         escapeCsv(p.notes || ""),
         escapeCsv(new Date(p.createdAt).toISOString().split("T")[0]),
+        escapeCsv(igDetail ? `${(igDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(igDetail?.verificationStatus || ""),
+        escapeCsv(fbDetail ? `${(fbDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(fbDetail?.verificationStatus || ""),
+        escapeCsv(tkDetail ? `${(tkDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(tkDetail?.verificationStatus || ""),
+        escapeCsv(enrichmentStatus),
+        escapeCsv(lastChecked),
+        escapeCsv(addPhones),
+        escapeCsv(addEmails),
+        escapeCsv(contactSources),
       ];
     } else {
       const o = lead as OnlineJobLead;
@@ -113,6 +146,17 @@ export function exportLeadsToCsv(leads: LeadItem[], filenamePrefix = "webhunt-le
         escapeCsv(o.estimatedValue || 3500),
         escapeCsv(o.notes || ""),
         escapeCsv(new Date(o.createdAt).toISOString().split("T")[0]),
+        escapeCsv(igDetail ? `${(igDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(igDetail?.verificationStatus || ""),
+        escapeCsv(fbDetail ? `${(fbDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(fbDetail?.verificationStatus || ""),
+        escapeCsv(tkDetail ? `${(tkDetail.confidence * 100).toFixed(0)}%` : ""),
+        escapeCsv(tkDetail?.verificationStatus || ""),
+        escapeCsv(enrichmentStatus),
+        escapeCsv(lastChecked),
+        escapeCsv(addPhones),
+        escapeCsv(addEmails),
+        escapeCsv(contactSources),
       ];
     }
   });

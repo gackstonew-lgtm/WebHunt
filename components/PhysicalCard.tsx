@@ -163,6 +163,67 @@ export default function PhysicalCard({
             </span>
           )}
         </div>
+
+        {/* Discovered Social Profiles (Instagram, Facebook, TikTok) */}
+        {(lead.socialProfiles?.instagram || lead.socialProfiles?.facebook || lead.socialProfiles?.tiktok || lead.socialProfiles?.linkedin || (lead.detailedProfiles && Object.keys(lead.detailedProfiles).length > 0)) && (
+          <div className="mt-3 pt-2.5 border-t border-subtle/40">
+            <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1.5">Social Profiles</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {lead.socialProfiles?.instagram && (
+                <a
+                  href={lead.socialProfiles.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                  title={`Instagram: ${lead.detailedProfiles?.instagram?.verificationStatus ? `${lead.detailedProfiles.instagram.verificationStatus} (${Math.round((lead.detailedProfiles.instagram.confidence || 0) * 100)}%)` : "Discovered"}`}
+                >
+                  <span className="font-bold text-pink-400">IG</span>
+                  <span className="text-muted-foreground text-[9px] capitalize">{lead.detailedProfiles?.instagram?.verificationStatus || "Verified"}</span>
+                </a>
+              )}
+              {lead.socialProfiles?.facebook && (
+                <a
+                  href={lead.socialProfiles.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                  title={`Facebook: ${lead.detailedProfiles?.facebook?.verificationStatus ? `${lead.detailedProfiles.facebook.verificationStatus} (${Math.round((lead.detailedProfiles.facebook.confidence || 0) * 100)}%)` : "Discovered"}`}
+                >
+                  <span className="font-bold text-blue-400">FB</span>
+                  <span className="text-muted-foreground text-[9px] capitalize">{lead.detailedProfiles?.facebook?.verificationStatus || "Verified"}</span>
+                </a>
+              )}
+              {lead.socialProfiles?.tiktok && (
+                <a
+                  href={lead.socialProfiles.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                  title={`TikTok: ${lead.detailedProfiles?.tiktok?.verificationStatus ? `${lead.detailedProfiles.tiktok.verificationStatus} (${Math.round((lead.detailedProfiles.tiktok.confidence || 0) * 100)}%)` : "Discovered"}`}
+                >
+                  <span className="font-bold text-cyan-400">TT</span>
+                  <span className="text-muted-foreground text-[9px] capitalize">{lead.detailedProfiles?.tiktok?.verificationStatus || "Possible"}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Additional Discovered Public Contacts */}
+        {((lead.additionalPhones && lead.additionalPhones.length > 0) || (lead.additionalEmails && lead.additionalEmails.length > 0)) && (
+          <div className="mt-2 text-[10px] text-muted-foreground flex flex-col gap-0.5">
+            {lead.additionalPhones?.map((ap, idx) => (
+              <span key={idx} className="truncate">
+                Alt Phone: <strong className="text-foreground font-mono">{ap.formattedValue || ap.value}</strong> ({ap.source})
+              </span>
+            ))}
+            {lead.additionalEmails?.map((ae, idx) => (
+              <span key={idx} className="truncate">
+                Alt Email: <strong className="text-foreground">{ae.value}</strong> ({ae.source})
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="pt-3 border-t border-subtle/50 space-y-3">

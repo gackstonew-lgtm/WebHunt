@@ -249,7 +249,7 @@ export default function ResultsTable({
         /* ================= PHYSICAL TABLE & MAP ================= */
         <div className="space-y-5">
           <MapResultsView leads={filteredLeads as any} location={searchResult.location} />
-                    {/* Mobile Card Layout (Hidden on MD+) */}
+          {/* Mobile Card Layout (Hidden on MD+) */}
           <div className="grid grid-cols-1 md:hidden gap-4">
             {filteredLeads.map((item, i) => {
               const lead = item as PhysicalLead;
@@ -452,27 +452,40 @@ export default function ResultsTable({
                                 </a>
                               )}
 
-                              {/* Social Profiles */}
-                              {lead.socialProfiles?.facebook && (
-                                <a
-                                  href={lead.socialProfiles.facebook}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
-                                  title="Facebook Page"
-                                >
-                                  fb
-                                </a>
-                              )}
+                              {/* Social Profiles (Instagram, Facebook, TikTok, LinkedIn, Twitter) */}
                               {lead.socialProfiles?.instagram && (
                                 <a
                                   href={lead.socialProfiles.instagram}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-[10px] font-bold transition"
-                                  title="Instagram Profile"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-pink-400 hover:text-white border border-subtle/50 text-[10px] font-bold transition flex items-center space-x-0.5"
+                                  title={`Instagram: ${lead.detailedProfiles?.instagram?.verificationStatus ? `${lead.detailedProfiles.instagram.verificationStatus} (${Math.round((lead.detailedProfiles.instagram.confidence || 0) * 100)}%)` : "Verified"}`}
                                 >
-                                  ig
+                                  <span>ig</span>
+                                  {lead.detailedProfiles?.instagram?.verificationStatus === "verified" && <Check className="w-2.5 h-2.5 text-success inline ml-0.5" />}
+                                </a>
+                              )}
+                              {lead.socialProfiles?.facebook && (
+                                <a
+                                  href={lead.socialProfiles.facebook}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-blue-400 hover:text-white border border-subtle/50 text-[10px] font-bold transition flex items-center space-x-0.5"
+                                  title={`Facebook: ${lead.detailedProfiles?.facebook?.verificationStatus ? `${lead.detailedProfiles.facebook.verificationStatus} (${Math.round((lead.detailedProfiles.facebook.confidence || 0) * 100)}%)` : "Verified"}`}
+                                >
+                                  <span>fb</span>
+                                  {lead.detailedProfiles?.facebook?.verificationStatus === "verified" && <Check className="w-2.5 h-2.5 text-success inline ml-0.5" />}
+                                </a>
+                              )}
+                              {lead.socialProfiles?.tiktok && (
+                                <a
+                                  href={lead.socialProfiles.tiktok}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-1.5 py-0.5 rounded bg-surface-elevated text-cyan-400 hover:text-white border border-subtle/50 text-[10px] font-bold transition flex items-center space-x-0.5"
+                                  title={`TikTok: ${lead.detailedProfiles?.tiktok?.verificationStatus ? `${lead.detailedProfiles.tiktok.verificationStatus} (${Math.round((lead.detailedProfiles.tiktok.confidence || 0) * 100)}%)` : "Discovered"}`}
+                                >
+                                  <span>tt</span>
                                 </a>
                               )}
                               {lead.socialProfiles?.linkedin && (
@@ -497,6 +510,17 @@ export default function ResultsTable({
                                   X
                                 </a>
                               )}
+                            </div>
+                          )}
+
+                          {/* Additional Discovered Contact Channels */}
+                          {((lead.additionalPhones && lead.additionalPhones.length > 0) || (lead.additionalEmails && lead.additionalEmails.length > 0)) && (
+                            <div className="text-[10px] text-muted-foreground pt-0.5 flex flex-col gap-0.5">
+                              {lead.additionalPhones?.slice(0, 1).map((ap, idx) => (
+                                <span key={idx} className="truncate">
+                                  Alt: <strong className="text-foreground font-mono">{ap.formattedValue || ap.value}</strong> ({ap.source})
+                                </span>
+                              ))}
                             </div>
                           )}
                         </div>

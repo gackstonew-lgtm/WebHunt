@@ -18,8 +18,12 @@ import { EnrichmentOptions } from "./types";
 // In-memory enrichment cache keyed by URL/Domain to avoid redundant crawling
 const enrichmentCache = new Map<string, { data: EnrichedLeadContacts; expiresAt: number }>();
 
+import { enrichSocialProfilesForBusiness, BusinessIdentity } from "./social-discovery";
+
 /**
- * Extracts all legitimate contact channels for a single lead.
+ * Extracts all legitimate contact channels for a single lead,
+ * including Social Profile Discovery & Public Contact Enrichment (Instagram, Facebook, TikTok).
+ * Runs for ALL leads regardless of whether a phone number exists.
  */
 export async function enrichLeadContacts(
   lead: PhysicalLead | OnlineJobLead,
@@ -31,6 +35,7 @@ export async function enrichLeadContacts(
 
   const country = isPhysical ? pLead!.country : (jLead!.country || "Worldwide");
   const websiteUrl = isPhysical ? pLead!.websiteUrl : jLead!.url;
+  const businessName = isPhysical ? pLead!.businessName : (jLead!.company || jLead!.title);
 
   // Check in-memory cache if website exists
   if (websiteUrl && !options.forceRefresh) {
@@ -129,7 +134,78 @@ export async function enrichLeadContacts(
   }
 
   // -------------------------------------------------------------
-  // 3. DEDUPLICATION & CONSOLIDATION
+  // 3. SOCIAL PROFILE DISCOVERY & PUBLIC CONTACT ENRICHMENT
+  // Runs for ALL leads independently of phone availability!
+  // -------------------------------------------------------------
+  const businessIdentity: BusinessIdentity = {
+    businessName,
+    address: isPhysical ? pLead!.address : jLead!.location,
+    city: isPhysical ? pLead!.city : undefined,
+    country,
+    category: isPhysical ? pLead!.category : jLead!.category,
+    website: websiteUrl,
+    domain: websiteUrl ? websiteUrl.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0] : undefined,
+    existingPhone: isPhysical ? pLead!.phone : undefined,
+    existingEmail: isPhysical ? pLead!.email : jLead!.email,
+    latitude: isPhysical ? pLead!.latitude : undefined,
+    longitude: isPhysical ? pLead!.longitude : undefined,
+    sourceProvider: isPhysical ? pLead!.sourceProvider : jLead!.source,
+    sourceUrl: isPhysical ? pLead!.sourceUrl : jLead!.sourceUrl,
+  };
+
+  let socialEnrichmentResult;
+  try {
+    socialEnrichmentResult = await enrichSocialProfilesForBusiness(businessIdentity, {
+      forceRefresh: options.forceRefresh,
+      timeoutMs: options.timeoutMs || 2500,
+    });
+  } catch (socErr) {
+    console.warn(`[Enrichment] Social profile enrichment non-fatal error:`, socErr);
+  }
+
+  // Add discovered social contacts to raw arrays
+  if (socialEnrichmentResult) {
+    for (const [platform, detail] of Object.entries(socialEnrichmentResult.detailedProfiles)) {
+      rawSocials.push({
+        type: "social",
+        value: detail.profileUrl,
+        formattedValue: detail.username ? `@${detail.username}` : detail.profileUrl,
+        platform: detail.platform,
+        label: `${detail.platform.toUpperCase()} (${detail.verificationStatus})`,
+        source: detail.platform as any,
+        sourceUrl: detail.profileUrl,
+        verified: detail.verificationStatus === "verified",
+        status: detail.verificationStatus === "verified" ? "source_verified" : "unverified",
+      });
+    }
+
+    // Include additional contacts found from social
+    for (const c of socialEnrichmentResult.additionalContacts) {
+      if (c.type === "phone") {
+        rawPhones.push({
+          type: "phone",
+          value: c.value,
+          formattedValue: c.formattedValue || c.value,
+          label: `${c.source.toUpperCase()} Public Phone`,
+          source: c.source as any,
+          verified: c.verified,
+          status: c.verified ? "source_verified" : "unverified",
+        });
+      } else if (c.type === "email") {
+        rawEmails.push({
+          type: "email",
+          value: c.value,
+          label: `${c.source.toUpperCase()} Public Email`,
+          source: c.source as any,
+          verified: c.verified,
+          status: c.verified ? "source_verified" : "unverified",
+        });
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // 4. DEDUPLICATION & CONSOLIDATION
   // -------------------------------------------------------------
   const phones = deduplicateContacts(rawPhones);
   const emails = deduplicateContacts(rawEmails);
@@ -139,7 +215,10 @@ export async function enrichLeadContacts(
   const bookingPages = deduplicateContacts(rawBookingPages);
 
   // Extract structured SocialProfiles map
-  const socialProfiles: SocialProfiles = {};
+  const socialProfiles: SocialProfiles = {
+    ...(socialEnrichmentResult?.socialProfiles || {}),
+    detailed: socialEnrichmentResult?.detailedProfiles || {},
+  };
   for (const s of socials) {
     if (s.platform && s.platform !== "other" && !socialProfiles[s.platform]) {
       socialProfiles[s.platform] = s.value;
@@ -168,6 +247,12 @@ export async function enrichLeadContacts(
     primaryBookingPage,
     hasContactForm,
     socialProfiles,
+    detailedProfiles: socialEnrichmentResult?.detailedProfiles,
+    additionalPhones: socialEnrichmentResult?.additionalPhones,
+    additionalEmails: socialEnrichmentResult?.additionalEmails,
+    additionalContacts: socialEnrichmentResult?.additionalContacts,
+    socialEnrichmentStatus: socialEnrichmentResult?.status,
+    socialLastCheckedAt: socialEnrichmentResult?.lastCheckedAt,
     lastEnrichedAt: new Date(),
   };
 
@@ -234,6 +319,12 @@ export async function enrichLeadsBatch(
           bookingUrl: recovery.recoveredBookingUrl || enrichment.primaryBookingPage,
           hasContactForm: recovery.hasContactForm || enrichment.hasContactForm,
           socialProfiles: Object.keys(mergedSocials).length > 0 ? mergedSocials : undefined,
+          detailedProfiles: enrichment.detailedProfiles,
+          additionalPhones: enrichment.additionalPhones,
+          additionalEmails: enrichment.additionalEmails,
+          additionalContacts: enrichment.additionalContacts,
+          socialEnrichmentStatus: enrichment.socialEnrichmentStatus,
+          socialLastCheckedAt: enrichment.socialLastCheckedAt,
           contacts: allContacts,
           websiteStatus: recovery.websiteStatus,
           websiteOpportunity: recovery.websiteOpportunity,
@@ -262,6 +353,12 @@ export async function enrichLeadsBatch(
           bookingUrl: enrichment.primaryBookingPage,
           hasContactForm: enrichment.hasContactForm,
           socialProfiles: enrichment.socialProfiles,
+          detailedProfiles: enrichment.detailedProfiles,
+          additionalPhones: enrichment.additionalPhones,
+          additionalEmails: enrichment.additionalEmails,
+          additionalContacts: enrichment.additionalContacts,
+          socialEnrichmentStatus: enrichment.socialEnrichmentStatus,
+          socialLastCheckedAt: enrichment.socialLastCheckedAt,
           contacts: allContacts,
           enrichment,
         };

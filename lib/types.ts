@@ -92,6 +92,54 @@ export interface DiscoveredContact {
   status?: 'syntax_valid' | 'source_verified' | 'unverified';
 }
 
+export type SocialProfileVerificationStatus = 'verified' | 'probable' | 'possible' | 'unverified' | 'rejected';
+
+export type SocialEnrichmentStatus = 
+  | 'not_checked' 
+  | 'searching' 
+  | 'enriched' 
+  | 'partially_enriched' 
+  | 'no_public_profile_found' 
+  | 'source_unavailable';
+
+export interface SocialProfileDetail {
+  platform: SocialPlatform;
+  profileUrl: string;
+  username?: string;
+  displayName?: string;
+  confidence: number;
+  verificationStatus: SocialProfileVerificationStatus;
+  lastCheckedAt?: string | Date;
+  publicPhone?: string;
+  publicEmail?: string;
+  publicWebsite?: string;
+}
+
+export interface EnrichedContact {
+  type: 'phone' | 'email' | 'website';
+  value: string;
+  formattedValue?: string;
+  source: 'existing' | 'website' | 'instagram' | 'facebook' | 'tiktok' | 'linkedin' | 'twitter' | 'youtube' | 'telegram' | 'other' | string;
+  confidence: number;
+  verified: boolean;
+  discoveredAt: string | Date;
+}
+
+export interface AdditionalPhone {
+  value: string;
+  formattedValue?: string;
+  source: string;
+  confidence: number;
+  verified?: boolean;
+}
+
+export interface AdditionalEmail {
+  value: string;
+  source: string;
+  confidence: number;
+  verified?: boolean;
+}
+
 export interface SocialProfiles {
   facebook?: string | null;
   instagram?: string | null;
@@ -100,7 +148,8 @@ export interface SocialProfiles {
   youtube?: string | null;
   tiktok?: string | null;
   telegram?: string | null;
-  [key: string]: string | null | undefined;
+  detailed?: Record<string, SocialProfileDetail>;
+  [key: string]: any;
 }
 
 export interface EnrichedLeadContacts {
@@ -119,6 +168,12 @@ export interface EnrichedLeadContacts {
   primaryBookingPage?: string | null;
   hasContactForm?: boolean;
   socialProfiles: SocialProfiles;
+  detailedProfiles?: Record<string, SocialProfileDetail>;
+  additionalPhones?: AdditionalPhone[];
+  additionalEmails?: AdditionalEmail[];
+  additionalContacts?: EnrichedContact[];
+  socialEnrichmentStatus?: SocialEnrichmentStatus;
+  socialLastCheckedAt?: string | Date;
   lastEnrichedAt?: string | Date;
 }
 
@@ -167,6 +222,12 @@ export interface PhysicalLead {
   bookingUrl?: string | null;
   hasContactForm?: boolean;
   socialProfiles?: SocialProfiles;
+  detailedProfiles?: Record<string, SocialProfileDetail>;
+  additionalPhones?: AdditionalPhone[];
+  additionalEmails?: AdditionalEmail[];
+  additionalContacts?: EnrichedContact[];
+  socialEnrichmentStatus?: SocialEnrichmentStatus;
+  socialLastCheckedAt?: string | Date;
   contacts?: DiscoveredContact[];
   enrichment?: EnrichedLeadContacts;
 
@@ -254,6 +315,12 @@ export interface OnlineJobLead {
   bookingUrl?: string | null;
   hasContactForm?: boolean;
   socialProfiles?: SocialProfiles;
+  detailedProfiles?: Record<string, SocialProfileDetail>;
+  additionalPhones?: AdditionalPhone[];
+  additionalEmails?: AdditionalEmail[];
+  additionalContacts?: EnrichedContact[];
+  socialEnrichmentStatus?: SocialEnrichmentStatus;
+  socialLastCheckedAt?: string | Date;
   contacts?: DiscoveredContact[];
   enrichment?: EnrichedLeadContacts;
 

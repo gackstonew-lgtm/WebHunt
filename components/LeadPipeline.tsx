@@ -27,7 +27,8 @@ import {
   Calendar,
   Layers,
   CheckSquare,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from "lucide-react";
 import { LeadItem, OnlineJobLead, PhysicalLead, PipelineStatus } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -39,6 +40,7 @@ import FollowUpQueue from "./pipeline/FollowUpQueue";
 import { exportLeadsToCsv } from "@/lib/export";
 import { PipelineStats } from "@/lib/pipeline-store";
 import { generateWhatsAppChatLink, createQuickWhatsAppLeadMessage } from "@/lib/outreach/whatsapp";
+import { refreshSocialProfilesAction } from "@/app/actions/social-enrichment";
 
 interface LeadPipelineProps {
   leads: LeadItem[];
@@ -85,8 +87,28 @@ export default function LeadPipeline({
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [currencyMode, setCurrencyMode] = useState<"USD" | "KES">("USD");
+  const [refreshingLeadId, setRefreshingLeadId] = useState<string | null>(null);
 
   const activeStages = pipelineMode === "jobs" ? JOB_STAGES : SALES_STAGES;
+
+    const handleRefreshSocial = async (physLead: PhysicalLead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRefreshingLeadId(physLead.id);
+    try {
+      const res = await refreshSocialProfilesAction(physLead.id, physLead);
+      if (res.success && res.data) {
+        physLead.socialProfiles = { ...physLead.socialProfiles, ...res.data.socialProfiles };
+        if (res.data.detailedProfiles) physLead.detailedProfiles = res.data.detailedProfiles;
+        if (res.data.additionalPhones) physLead.additionalPhones = res.data.additionalPhones;
+        if (res.data.additionalEmails) physLead.additionalEmails = res.data.additionalEmails;
+        if (res.data.additionalContacts) physLead.additionalContacts = res.data.additionalContacts;
+      }
+    } catch (err) {
+      console.error("Failed to refresh social profiles:", err);
+    } finally {
+      setRefreshingLeadId(null);
+    }
+  };
 
   const filteredLeads = leads.filter((l) => {
     if (pipelineMode === "sales" && l.type !== "physical") return false;
@@ -441,6 +463,64 @@ export default function LeadPipeline({
                           )}
                         </div>
                       )}
+
+                      {/* Discovered Social Profiles (Instagram, Facebook, TikTok) */}
+                      {(physLead.socialProfiles?.instagram || physLead.socialProfiles?.facebook || physLead.socialProfiles?.tiktok || physLead.socialProfiles?.linkedin || (physLead.detailedProfiles && Object.keys(physLead.detailedProfiles).length > 0)) && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-subtle/30">
+                          {physLead.socialProfiles?.instagram && (
+                            <a
+                              href={physLead.socialProfiles.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                              title={`Instagram: ${physLead.detailedProfiles?.instagram?.verificationStatus ? `${physLead.detailedProfiles.instagram.verificationStatus} (${Math.round((physLead.detailedProfiles.instagram.confidence || 0) * 100)}%)` : "Discovered"}`}
+                            >
+                              <span className="font-bold text-pink-400">IG</span>
+                              <span className="text-muted-foreground text-[9px] capitalize">{physLead.detailedProfiles?.instagram?.verificationStatus || "Verified"}</span>
+                            </a>
+                          )}
+                          {physLead.socialProfiles?.facebook && (
+                            <a
+                              href={physLead.socialProfiles.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                              title={`Facebook: ${physLead.detailedProfiles?.facebook?.verificationStatus ? `${physLead.detailedProfiles.facebook.verificationStatus} (${Math.round((physLead.detailedProfiles.facebook.confidence || 0) * 100)}%)` : "Discovered"}`}
+                            >
+                              <span className="font-bold text-blue-400">FB</span>
+                              <span className="text-muted-foreground text-[9px] capitalize">{physLead.detailedProfiles?.facebook?.verificationStatus || "Verified"}</span>
+                            </a>
+                          )}
+                          {physLead.socialProfiles?.tiktok && (
+                            <a
+                              href={physLead.socialProfiles.tiktok}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-surface-subtle hover:bg-surface-elevated text-foreground border border-subtle/50 text-[10px] font-medium transition"
+                              title={`TikTok: ${physLead.detailedProfiles?.tiktok?.verificationStatus ? `${physLead.detailedProfiles.tiktok.verificationStatus} (${Math.round((physLead.detailedProfiles.tiktok.confidence || 0) * 100)}%)` : "Discovered"}`}
+                            >
+                              <span className="font-bold text-cyan-400">TT</span>
+                              <span className="text-muted-foreground text-[9px] capitalize">{physLead.detailedProfiles?.tiktok?.verificationStatus || "Possible"}</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Additional Discovered Public Contacts */}
+                      {((physLead.additionalPhones && physLead.additionalPhones.length > 0) || (physLead.additionalEmails && physLead.additionalEmails.length > 0)) && (
+                        <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5 pt-1">
+                          {physLead.additionalPhones?.map((ap, idx) => (
+                            <span key={idx} className="truncate">
+                              Alt Phone: <strong className="text-foreground font-mono">{ap.formattedValue || ap.value}</strong> ({ap.source})
+                            </span>
+                          ))}
+                          {physLead.additionalEmails?.map((ae, idx) => (
+                            <span key={idx} className="truncate">
+                              Alt Email: <strong className="text-foreground">{ae.value}</strong> ({ae.source})
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -523,6 +603,18 @@ export default function LeadPipeline({
                       <FileText className="w-3 h-3" />
                       <span>Notes</span>
                     </button>
+
+                    {isPhysical && physLead && (
+                      <button
+                        onClick={(e) => handleRefreshSocial(physLead, e)}
+                        disabled={refreshingLeadId === physLead.id}
+                        className="px-2 py-1 rounded-xl bg-surface-subtle hover:bg-surface-elevated text-muted-foreground hover:text-foreground border border-subtle/50 text-xs font-medium flex items-center space-x-1 transition disabled:opacity-50"
+                        title="Re-scan and refresh social profiles & contacts"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${refreshingLeadId === physLead.id ? "animate-spin text-primary" : ""}`} />
+                        <span>Social</span>
+                      </button>
+                    )}
                   </div>
 
                   <button
