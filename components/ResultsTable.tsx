@@ -34,7 +34,6 @@ import JobCard from "./JobCard";
 import PhysicalCard from "./PhysicalCard";
 import { exportLeadsToCsv } from "@/lib/export";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import MapResultsView from "./MapResultsView";
 
 interface ResultsTableProps {
   searchResult: SearchResult;
@@ -246,9 +245,8 @@ export default function ResultsTable({
 
       {/* Results Content */}
       {searchResult.mode === "physical" ? (
-        /* ================= PHYSICAL TABLE & MAP ================= */
+        /* ================= PHYSICAL TABLE ================= */
         <div className="space-y-5">
-          <MapResultsView leads={filteredLeads as any} location={searchResult.location} />
           {/* Mobile Card Layout (Hidden on MD+) */}
           <div className="grid grid-cols-1 md:hidden gap-4">
             {filteredLeads.map((item, i) => {

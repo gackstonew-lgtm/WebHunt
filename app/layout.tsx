@@ -65,7 +65,7 @@ export default async function RootLayout({
   const isAuthenticated = !!session?.userId;
 
   return (
-    <html lang="en" className={`dark ${plusJakartaSans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`light ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -80,14 +80,14 @@ export default async function RootLayout({
               });
               try {
                 const t = localStorage.getItem('webhunt_theme');
-                if (t === 'light') {
-                  document.documentElement.classList.remove('dark');
-                  document.documentElement.classList.add('light');
-                  document.documentElement.style.colorScheme = 'light';
-                } else {
+                if (t === 'dark') {
                   document.documentElement.classList.remove('light');
                   document.documentElement.classList.add('dark');
                   document.documentElement.style.colorScheme = 'dark';
+                } else {
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.classList.add('light');
+                  document.documentElement.style.colorScheme = 'light';
                 }
               } catch (e) {}
             `,

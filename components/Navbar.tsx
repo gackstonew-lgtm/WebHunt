@@ -12,9 +12,7 @@ import {
   LogIn,
   Sparkles,
   CreditCard,
-  Crown,
-  Sun,
-  Moon
+  Crown
 } from "lucide-react";
 import ProfileSettingsModal from "./profile/ProfileSettingsModal";
 import KoraCheckoutModal from "./payments/KoraCheckoutModal";
@@ -24,10 +22,8 @@ import { syncLocalStorageWithDatabase } from "@/lib/sync-bridge";
 import { getAuthStatusAction, logoutAction } from "@/app/actions/auth";
 import { getUserSubscriptionAction } from "@/app/actions/payments";
 import { NotificationCenter } from "./NotificationCenter";
-import { useTheme } from "@/lib/theme-context";
 
 export default function Navbar() {
-  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const [showProfile, setShowProfile] = useState(false);
   const [showKoraCheckout, setShowKoraCheckout] = useState(false);
@@ -147,15 +143,6 @@ export default function Navbar() {
             {!isAuthRoute && (
               <div className="flex items-center space-x-2">
                 <NotificationCenter />
-                {/* Theme Toggle Button */}
-                <button
-                  onClick={toggleTheme}
-                  className="w-8 h-8 rounded-xl bg-surface border border-subtle/50 text-muted-foreground hover:text-foreground hover:bg-surface-elevated flex items-center justify-center transition shadow-sm"
-                  aria-label="Toggle theme"
-                  title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                >
-                  {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-primary" />}
-                </button>
                 {/* Profile & Settings Trigger */}
                 <button
                   onClick={() => setShowProfile(true)}

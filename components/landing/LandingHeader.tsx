@@ -91,16 +91,6 @@ export default function LandingHeader({ isAuthenticated = false }: LandingHeader
 
           {/* Action buttons */}
           <div className="flex items-center space-x-2.5">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-surface-elevated flex items-center justify-center transition-colors"
-              aria-label="Toggle theme"
-              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-primary" />}
-            </button>
-
             {isAuthenticated ? (
               <Link
                 href="/?view=app"
@@ -132,8 +122,9 @@ export default function LandingHeader({ isAuthenticated = false }: LandingHeader
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-9 h-9 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center"
+              className="w-9 h-9 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center"
               aria-label="Open menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -143,19 +134,19 @@ export default function LandingHeader({ isAuthenticated = false }: LandingHeader
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-background/95 backdrop-blur-xl px-4 pt-3 pb-6">
+        <div className="border-b border-border bg-background/95 backdrop-blur-xl px-4 pt-3 pb-6">
           <div className="flex flex-col space-y-2">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleSmoothScroll(e, link.href)}
-                className="px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+                className="md:hidden px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               >
                 {link.label}
               </a>
             ))}
-            <div className="pt-3 border-t border-border flex flex-col gap-2">
+            <div className="md:hidden pt-3 border-t border-border flex flex-col gap-2">
               {isAuthenticated ? (
                 <Link
                   href="/?view=app"
@@ -185,6 +176,16 @@ export default function LandingHeader({ isAuthenticated = false }: LandingHeader
                 </>
               )}
             </div>
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+              aria-label="Toggle theme"
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-primary" />}
+            </button>
           </div>
         </div>
       )}
