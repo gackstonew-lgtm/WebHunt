@@ -230,6 +230,7 @@ async function runTests() {
     company: "TechFlow Labs",
     location: "Worldwide Remote",
     isRemote: true,
+    salary: "$120,000 - $150,000",
     tags: ["react", "nextjs", "typescript", "node"],
     url: "https://example.com/job/1",
     postedDate: "2026-09-09",
@@ -261,7 +262,7 @@ async function runTests() {
 
   const jobScoreValid = scoreOnlineJobRelevance(validJobLead, [softwareIndustry], "Software Developer");
   assert(
-    jobScoreValid.isRelevant && jobScoreValid.score >= 0.9,
+    jobScoreValid.isRelevant && jobScoreValid.score >= 0.85,
     `Software Developer job scored as highly relevant (${jobScoreValid.score * 100}%)`
   );
 

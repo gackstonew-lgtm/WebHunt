@@ -136,50 +136,65 @@ export function scoreOnlineJobRelevance(
   const q = (rawQuery || "").toLowerCase().trim();
 
   // 1. Role Relevance (0 - 40 points)
-  let rolePoints = 15; // baseline
+  let rolePoints = 0;
   let matchReason = "Generic remote listing";
+  let hasRoleMatch = false;
 
   if (!targetIndustries || targetIndustries.length === 0) {
     if (q && title.includes(q)) {
       rolePoints = 40;
       matchReason = `Direct title match: "${q}"`;
+      hasRoleMatch = true;
     } else if (q && (tags.includes(q) || desc.includes(q))) {
       rolePoints = 32;
       matchReason = `Keyword match in tags or description: "${q}"`;
+      hasRoleMatch = true;
     } else if (q) {
       const tokens = q.split(/\s+/).filter((t) => t.length > 2);
       const matchedTokens = tokens.filter((t) => title.includes(t) || tags.includes(t));
       if (matchedTokens.length > 0) {
         rolePoints = 25;
         matchReason = `Partial token match: ${matchedTokens.join(", ")}`;
+        hasRoleMatch = true;
+      } else {
+        rolePoints = 10;
+        matchReason = "Unrelated remote listing";
       }
     } else {
       rolePoints = 30;
       matchReason = "General remote role";
+      hasRoleMatch = true;
     }
   } else {
     for (const ind of targetIndustries) {
-      const titles = ind.jobTerms.titles.map((t) => t.toLowerCase());
-      const keywords = ind.jobTerms.keywords.map((k) => k.toLowerCase());
-      const aliases = ind.aliases.map((a) => a.toLowerCase());
+      const titles = (ind.jobTerms?.titles || []).map((t) => t.toLowerCase());
+      const keywords = (ind.jobTerms?.keywords || []).map((k) => k.toLowerCase());
+      const aliases = (ind.aliases || []).map((a) => a.toLowerCase());
 
       if (titles.some((t) => title.includes(t)) || aliases.some((a) => title.includes(a))) {
         rolePoints = Math.max(rolePoints, 40);
         matchReason = `Direct role title match: ${job.title}`;
+        hasRoleMatch = true;
         continue;
       }
 
       if (keywords.some((k) => title.includes(k) || tags.includes(k))) {
-        rolePoints = Math.max(rolePoints, 34);
+        rolePoints = Math.max(rolePoints, 35);
         matchReason = `Technology/keyword match in title or skills`;
+        hasRoleMatch = true;
         continue;
       }
 
       if (keywords.some((k) => desc.includes(k))) {
         rolePoints = Math.max(rolePoints, 28);
         matchReason = `Keyword match in job description`;
+        hasRoleMatch = true;
         continue;
       }
+    }
+
+    if (!hasRoleMatch) {
+      matchReason = `Unmatched role for target industries`;
     }
   }
 
@@ -196,26 +211,26 @@ export function scoreOnlineJobRelevance(
   if (eligibility.badgeType === "kenya_eligible") {
     geoPoints = 25;
   } else if (eligibility.badgeType === "worldwide") {
-    geoPoints = 22;
+    geoPoints = 25;
   } else if (eligibility.badgeType === "timezone_overlap") {
-    geoPoints = 17;
+    geoPoints = 18;
   } else if (eligibility.badgeType === "country_restricted" || eligibility.badgeType === "regional_restricted") {
     geoPoints = 5;
   }
 
   // 3. Recency & Freshness (0 - 15 points)
-  let recencyPoints = 8;
+  let recencyPoints = 12;
   if (job.postedDate) {
     try {
       const ageMs = Date.now() - new Date(job.postedDate).getTime();
       const ageDays = ageMs / (1000 * 60 * 60 * 24);
       if (ageDays <= 1) recencyPoints = 15;
-      else if (ageDays <= 7) recencyPoints = 12;
-      else if (ageDays <= 14) recencyPoints = 9;
-      else if (ageDays <= 30) recencyPoints = 6;
-      else recencyPoints = 2;
+      else if (ageDays <= 7) recencyPoints = 14;
+      else if (ageDays <= 14) recencyPoints = 12;
+      else if (ageDays <= 30) recencyPoints = 8;
+      else recencyPoints = 4;
     } catch {
-      recencyPoints = 8;
+      recencyPoints = 10;
     }
   }
 
@@ -224,7 +239,7 @@ export function scoreOnlineJobRelevance(
   if (job.salary && job.salary !== "Competitive" && job.salary !== "Not specified") {
     infoPoints += 6;
   }
-  if (job.descriptionSnippet && job.descriptionSnippet.length > 80) {
+  if (job.descriptionSnippet && job.descriptionSnippet.length > 50) {
     infoPoints += 2;
   }
   if (job.tags && job.tags.length > 0) {
@@ -254,16 +269,24 @@ export function scoreOnlineJobRelevance(
   ) {
     sourcePoints = 10; // Direct Employer ATS & Verified AI Work Platforms
   } else if (src === "himalayas" || src === "weworkremotely" || src === "remotive" || src === "arbeitnow") {
-    sourcePoints = 8; // Verified Direct Remote Boards
+    sourcePoints = 9; // Verified Direct Remote Boards
   } else {
     sourcePoints = 6;
+  }
+
+  // If target industries are defined and role did NOT match, penalize heavily
+  if (targetIndustries && targetIndustries.length > 0 && !hasRoleMatch) {
+    return {
+      score: 0.15,
+      isRelevant: false,
+      matchReason: "Unrelated job role for selected industries",
+    };
   }
 
   const totalPoints = rolePoints + geoPoints + recencyPoints + infoPoints + sourcePoints;
   const normalizedScore = Math.min(1.0, Math.max(0.1, Math.round(totalPoints) / 100));
 
-  // Lead is relevant if role matched or total score is respectable
-  const isRelevant = totalPoints >= 35;
+  const isRelevant = hasRoleMatch && totalPoints >= 40;
 
   return {
     score: normalizedScore,

@@ -1,6 +1,6 @@
 import { LeadMode } from "../types";
 import { INDUSTRY_CATEGORIES, INDUSTRY_TAXONOMY } from "./industries";
-import { IndustryCategory, IndustryDefinition, SelectedIndustryItem } from "./types";
+import { IndustryCategory, IndustryDefinition } from "./types";
 
 export * from "./types";
 export * from "./industries";
@@ -30,6 +30,27 @@ export function getIndustriesByIds(ids: string[]): IndustryDefinition[] {
     if (item) found.push(item);
   }
   return found;
+}
+
+/**
+ * Get all available top-level sectors.
+ */
+export function getAllSectors(mode?: LeadMode): IndustryCategory[] {
+  return INDUSTRY_CATEGORIES.filter((cat) => {
+    if (mode && !cat.applicableModes.includes(mode)) return false;
+    return true;
+  });
+}
+
+/**
+ * Get all industries belonging to a specific sector.
+ */
+export function getIndustriesBySector(sectorId: string, mode?: LeadMode): IndustryDefinition[] {
+  return INDUSTRY_TAXONOMY.filter((ind) => {
+    if (ind.categoryId !== sectorId) return false;
+    if (mode && !ind.applicableModes.includes(mode)) return false;
+    return true;
+  });
 }
 
 /**
@@ -69,7 +90,7 @@ export function getCategoriesWithIndustries(mode?: LeadMode): {
  * Fast sub-millisecond search across taxonomy names, aliases, keywords, and categories.
  * Optimized for live autocomplete, type-ahead, and free-text matching.
  */
-export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 25): IndustryDefinition[] {
+export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 35): IndustryDefinition[] {
   if (!query || query.trim().length === 0) {
     return INDUSTRY_TAXONOMY.filter((ind) => !mode || ind.applicableModes.includes(mode)).slice(0, limit);
   }
@@ -95,6 +116,8 @@ export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 2
     const queryTerms = ind.businessTerms.queryTerms.map(t => t.toLowerCase());
     const jobTitles = ind.jobTerms.titles.map(t => t.toLowerCase());
     const jobKeywords = ind.jobTerms.keywords.map(k => k.toLowerCase());
+    const groupLower = (ind.industryGroup || "").toLowerCase();
+    const nicheLower = (ind.niche || "").toLowerCase();
 
     // 1. Exact ID or Name match
     if (nameLower === cleanQuery || idLower === cleanQuery) {
@@ -120,7 +143,11 @@ export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 2
       }
     }
 
-    // 5. Query terms & job titles match
+    // 5. Query terms, industry groups & niches match
+    if (groupLower.includes(cleanQuery) || nicheLower.includes(cleanQuery)) {
+      score += 45;
+    }
+
     for (const term of queryTerms) {
       if (term === cleanQuery) score = Math.max(score, 85);
       else if (term.includes(cleanQuery) || cleanQuery.includes(term)) score = Math.max(score, 50);
@@ -142,7 +169,9 @@ export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 2
         allAliases.some(a => a.includes(token) || a.includes(stem)) ||
         queryTerms.some(t => t.includes(token) || t.includes(stem)) ||
         jobTitles.some(t => t.includes(token) || t.includes(stem)) ||
-        jobKeywords.some(k => k.includes(token));
+        jobKeywords.some(k => k.includes(token)) ||
+        groupLower.includes(token) ||
+        nicheLower.includes(token);
 
       if (matches) {
         matchedTokenCount++;
@@ -171,8 +200,6 @@ export function searchTaxonomy(query: string, mode?: LeadMode, limit: number = 2
 
 /**
  * Intelligent fuzzy matcher to associate any user free-text query with a canonical taxonomy definition.
- * If user types "Solar panel installers", it matches "solar_renewable_energy".
- * If user types "Mechanics in Nairobi", it matches "auto_repair".
  */
 export function matchTextToTaxonomy(text: string, mode?: LeadMode): IndustryDefinition | null {
   if (!text || text.trim().length === 0) return null;

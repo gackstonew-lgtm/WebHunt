@@ -30,7 +30,11 @@ export interface JobTerms {
 export interface IndustryDefinition {
   id: string;
   name: string;
-  categoryId: string;
+  categoryId: string; // Top-level sector / category ID
+  industryGroup?: string; // Sub-industry / industry group
+  subCategory?: string; // Category within industry
+  niche?: string; // Specific niche
+  businessType?: string; // Specific physical business type
   isPopular?: boolean;
   applicableModes: LeadMode[];
   aliases: string[];
